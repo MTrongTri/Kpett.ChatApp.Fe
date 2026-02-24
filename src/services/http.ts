@@ -1,8 +1,8 @@
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 
 const http = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true,
+  //withCredentials: true,
 })
 
 // REQUEST INTERCEPTOR
@@ -24,7 +24,7 @@ http.interceptors.request.use(
 
 // RESPONSE INTERCEPTOR
 http.interceptors.response.use(
-  res => res.data,
+  (res: AxiosResponse) => res.data,
   err => Promise.reject(err.response?.data || err)
 )
 

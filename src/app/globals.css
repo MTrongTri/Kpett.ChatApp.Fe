@@ -4,6 +4,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+
+  /* --- FONTS --- */
+  --font-roboto: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
   /* Ánh xạ biến CSS vào class Tailwind */
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
@@ -26,8 +32,8 @@
   --foreground: oklch(0.145 0 0);
 
   /* Mã màu #1C1E21 */
-  --primary: 210 9% 12%; 
-  --primary-foreground: 0 0% 100%;
+  --primary: 38 95% 59%; 
+  --primary-foreground: 24 10% 10%;;
 
   /* Màu Destructive (Đỏ báo lỗi) */
   --destructive: 0 84% 60%;
@@ -46,9 +52,8 @@
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   
-  /* Giữ nguyên hoặc chỉnh sáng hơn 1 chút cho Dark mode */
-  --primary: 210 9% 12%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 38 95% 59%;
+  --primary-foreground: 24 10% 10%;
 
   --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 100%;
@@ -56,4 +61,10 @@
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
+}
+
+@layer base {
+  body {
+    @apply font-roboto;
+  }
 }

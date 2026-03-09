@@ -1,6 +1,6 @@
 // import Navbar from '@/components/layout/Navbar'
 
-import Sidebar from "@/components/layouts/side-bar";
+import Header from "@/components/layouts/main/header";
 
 export default function MainLayout({
   children,
@@ -10,13 +10,7 @@ export default function MainLayout({
   return (
     <>
       <main>
-        <div className="flex gap-4 py-8 max-w-337.5 mx-auto justify-between">
-          <Sidebar />
-          <div className="flex-1">
-            {children}
-          </div>
-          <div className="w-65">Right</div>
-        </div>
+        <Header />
       </main>
     </>
   );

@@ -8,11 +8,9 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <main>
+      <main className="max-w-[1440px] mx-auto">
         <Header />
         {children}
       </main>
-    </>
   );
 }

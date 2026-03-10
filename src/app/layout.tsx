@@ -24,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body className={`${roboto.variable} ${ibmMono.variable} font-roboto`}>
+      <body className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}>
         <StoreProvider>
           {children}
               {/* Toast */}

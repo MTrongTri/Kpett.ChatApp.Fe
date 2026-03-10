@@ -210,7 +210,7 @@ export default function Feed() {
       <div className="mt-6 flex justify-center">
         <button
           className="
-            font-mono text-[11px] uppercase tracking-widest
+            text-[11px] uppercase tracking-widest
             text-foreground/30 hover:text-primary
             border border-border hover:border-primary/50
             rounded-lg px-5 py-2.5

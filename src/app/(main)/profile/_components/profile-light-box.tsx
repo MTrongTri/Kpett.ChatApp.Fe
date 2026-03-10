@@ -75,7 +75,7 @@ export default function ProfileLightbox({
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent
-        className="md:max-w-[940px] w-[95vw] py-9 gap-0 bg-card border-border rounded-2xl overflow-hidden"
+        className="md:max-w-[940px] w-[95vw] max-h-[92vh] py-9 gap-0 bg-card border-border rounded-lg md:rounded-2xl overflow-hidden"
         aria-describedby={undefined}
       >
         <DialogTitle className="sr-only">
@@ -85,7 +85,7 @@ export default function ProfileLightbox({
         <div className="">
           {/* ── INFO PANEL ── */}
           <div className="flex flex-col w-full">
-            <div className="overflow-y-auto max-h-[92vh] md:max-h-[430px]">
+            <div className="overflow-y-auto max-h-100 md:max-h-[430px]">
               {/* Author row */}
               <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border flex-shrink-0">
                 <div

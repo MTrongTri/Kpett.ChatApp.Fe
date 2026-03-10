@@ -13,7 +13,8 @@ interface ProfilePageProps {
 export default function ProfilePage({ params }: ProfilePageProps) {
   // In production: fetch profile by params.username from your API
   const profile = MOCK_PROFILE;
-  const isOwner = params.username === "tuan.dev";
+  const isOwner = true;
+  // const isOwner = params.username === "tuan.dev";
 
   return (
     <div className="min-h-screen bg-background pt-[58px]">
@@ -27,10 +28,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           <ProfileAvatarRow profile={profile} isOwner={isOwner} />
 
           {/* 3 · Name, bio, meta, social links, stats */}
-          <ProfileInfo profile={profile} />
-
-          {/* 4 · Highlights strip */}
-          {/* <ProfileHighlights highlights={profile.highlights} isOwner={isOwner} /> */}
+          <ProfileInfo profile={profile} isOwner={isOwner} />
 
           {/* 5 · Tabs → Grid → Lightbox */}
           <ProfileTabs author={profile} isOwner={isOwner} />

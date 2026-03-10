@@ -9,7 +9,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background pt-[58px]">
       <div
         className="
-          grid max-w-[1440px] mx-auto
+          grid
           grid-cols-1
           md:grid-cols-[300px_1fr]       
           xl:grid-cols-[300px_1fr_300px]

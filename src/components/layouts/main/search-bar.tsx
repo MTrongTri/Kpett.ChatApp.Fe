@@ -25,7 +25,7 @@ export default function SearchBar() {
       "hidden lg:flex items-center gap-2 px-3 py-1.5 mx-4 w-[220px] rounded-lg transition-all duration-200",
       "bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800",
       "focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10",
-      "focus-within:w-[280px]" // Hiệu ứng giãn rộng khi click vào
+      "focus-within:w-[280px]"
     )}>
       <Search size={14} className="text-zinc-500 flex-shrink-0" />
       

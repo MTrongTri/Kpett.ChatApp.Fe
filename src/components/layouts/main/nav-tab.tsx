@@ -1,15 +1,24 @@
+'use client'
+
 import { cn } from "@/lib/utils";
-import { Bookmark, CalendarDays, Clapperboard, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { 
+  Home, 
+  Compass, 
+  Clapperboard, 
+  CalendarDays, 
+  Bookmark 
+} from "lucide-react";
 
-interface NavTab {
+// Tách interface để có thể tái sử dụng ở MobileMenu
+export interface NavTabItem {
   label: string;
   href: string;
   icon: React.ReactNode;
 }
 
-export const NAV_TABS: NavTab[] = [
+export const NAV_TABS: NavTabItem[] = [
   { label: "Feed",      href: "/",        icon: <Home size={14} /> },
   { label: "Khám phá",  href: "/explore", icon: <Compass size={14} /> },
   { label: "Reels",     href: "/reels",   icon: <Clapperboard size={14} /> },
@@ -21,23 +30,30 @@ export default function NavTabs() {
   const pathname = usePathname();
 
   return (
-    <nav className="hidden md:flex items-center gap-0.5 flex-1">
+    <nav className="hidden lg:flex items-center gap-1 flex-1 px-4">
       {NAV_TABS.map((tab) => {
         const active = pathname === tab.href;
+        
         return (
           <Link
             key={tab.href}
             href={tab.href}
             className={cn(
-              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-md",
-              "text-[11px] font-medium tracking-widest uppercase",
-              "transition-colors duration-150 whitespace-nowrap",
+              "flex items-center gap-2 px-4 py-2 rounded-lg",
+              "text-sm font-semibold",
+              "transition-all duration-200 whitespace-nowrap",
               active
-                ? "text-primary bg-primary/10"
-                : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
+                ? "text-primary bg-primary/10 dark:bg-primary/20"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
             )}
           >
-            {tab.icon}
+            {/* Thêm hiệu ứng cho icon khi active */}
+            <span className={cn(
+              "transition-transform duration-200",
+              active && "scale-110"
+            )}>
+              {tab.icon}
+            </span>
             {tab.label}
           </Link>
         );

@@ -6,13 +6,20 @@ function Logo() {
       href="/"
       className="
         font-serif italic font-black text-[26px] tracking-tighter leading-none
-        text-primary select-none transition-opacity hover:opacity-70
+        text-primary select-none transition-opacity
         flex-shrink-0 mr-8
       "
-      >
-      K<span className="not-italic font-light text-zinc-100">PET</span>
+    >
+      K
+      <span className="
+        not-italic font-light 
+        text-zinc-900 dark:text-zinc-100 
+        transition-colors duration-300
+      ">
+        PET
+      </span>
     </Link>
   );
 }
 
-export default Logo
+export default Logo;

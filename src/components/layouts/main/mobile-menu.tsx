@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from "react";
 import { Menu, Plus, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -12,20 +15,29 @@ import { Input } from "../../ui/input";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NAV_TABS } from "./nav-tab";
+import Logo from "./logo"; // Import Logo đã tạo
 
 export default function MobileMenu() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false); // State quản lý đóng mở
+
+  // Tự động đóng menu khi URL thay đổi
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="outline"
           size="icon"
           className="
             md:hidden h-9 w-9 rounded-md
-            bg-zinc-900 border-zinc-700 text-zinc-400
-            hover:bg-zinc-800 hover:text-zinc-100
+            bg-white dark:bg-zinc-900 
+            border-zinc-200 dark:border-zinc-700 
+            text-zinc-600 dark:text-zinc-400
+            hover:bg-zinc-100 dark:hover:bg-zinc-800
           "
         >
           <Menu size={16} />
@@ -34,75 +46,72 @@ export default function MobileMenu() {
 
       <SheetContent
         side="left"
-        className="w-64 bg-zinc-950 border-zinc-800 p-0"
+        className="w-72 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 p-0 flex flex-col"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Menu điều hướng</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col h-full">
-          {/* Mobile logo */}
-          <div className="px-6 py-5 border-b border-zinc-800">
-            <span
-              className="font-serif italic font-black text-2xl tracking-tighter text-primary"
-              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-            >
-              VŌ<span className="not-italic font-light text-zinc-100">ID</span>
-            </span>
-          </div>
 
-          {/* Mobile search */}
-          <div className="px-4 pt-4">
-            <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2">
-              <Search size={13} className="text-zinc-500" />
-              <Input
-                type="text"
-                placeholder="Tìm kiếm..."
-                className="
-                  bg-transparent border-none shadow-none p-0 h-auto
-                  text-[12px] text-zinc-200 placeholder:text-zinc-600
-                  focus-visible:ring-0 focus-visible:ring-offset-0
-                "
-              />
-            </div>
-          </div>
+        {/* Header của Menu: Sử dụng lại component Logo */}
+        <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
+           <Logo />
+        </div>
 
-          {/* Mobile nav items */}
-          <nav className="flex flex-col gap-0.5 px-3 pt-4">
-            {NAV_TABS.map((tab) => {
-              const active = pathname === tab.href;
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg",
-                    "text-[11px] font-medium tracking-widest uppercase",
-                    "transition-colors duration-150",
-                    active
-                      ? "text-primary bg-amber-400/10"
-                      : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800",
-                  )}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Mobile compose */}
-          <div className="px-4 pt-4">
-            <Button
+        {/* Ô tìm kiếm linh hoạt màu sắc */}
+        <div className="px-4 pt-4">
+          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
+            <Search size={13} className="text-zinc-500" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm..."
               className="
-              w-full bg-amber-400 text-zinc-900 text-[11px]
-              font-semibold tracking-wider uppercase h-10 rounded-lg
-              hover:bg-amber-300 gap-2
-            "
-            >
-              <Plus size={14} strokeWidth={2.5} />
-              Tạo bài mới
-            </Button>
+                bg-transparent border-none shadow-none p-0 h-auto
+                text-[13px] text-zinc-900 dark:text-zinc-200 
+                placeholder:text-zinc-400 dark:placeholder:text-zinc-600
+                focus-visible:ring-0 focus-visible:ring-offset-0
+              "
+            />
           </div>
+        </div>
+
+        {/* Danh sách điều hướng */}
+        <nav className="flex-1 px-3 pt-4 space-y-1">
+          {NAV_TABS.map((tab) => {
+            const active = pathname === tab.href;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  "flex items-center gap-4 px-4 py-3 rounded-xl",
+                  "text-[12px] font-semibold tracking-wider uppercase transition-all",
+                  active
+                    ? "text-primary bg-primary/10 dark:bg-amber-400/10"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50",
+                )}
+              >
+                {/* Clone icon để tùy chỉnh size nếu cần */}
+                <span className={cn(active ? "text-primary" : "text-zinc-400")}>
+                   {tab.icon}
+                </span>
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Nút Tạo mới ở dưới cùng (Footer của Menu) */}
+        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
+          <Button
+            className="
+              w-full bg-primary text-primary-foreground 
+              text-[12px] font-bold tracking-widest uppercase h-12 rounded-xl
+              hover:opacity-90 transition-opacity gap-2
+            "
+          >
+            <Plus size={16} strokeWidth={3} />
+            Tạo bài mới
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

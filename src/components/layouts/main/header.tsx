@@ -19,11 +19,13 @@ export default function Header() {
       className="
         fixed top-0 left-0 right-0 z-50
         h-[58px]
-        bg-zinc-950/90 backdrop-blur-xl
-        border-b border-zinc-800
+        bg-white/80 dark:bg-zinc-950/90 
+        backdrop-blur-xl
+        border-b border-zinc-200 dark:border-zinc-800
         flex items-center
         px-5 md:px-7
         gap-0
+        transition-colors duration-300 /* Thêm hiệu ứng chuyển màu mượt mà */
       "
     >
       {/* Logo */}

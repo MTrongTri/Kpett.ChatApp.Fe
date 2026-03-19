@@ -1,9 +1,90 @@
+import { Post, PostThumbnail } from "@/types/post";
+import http from "./http";
+import { MOCK_POST_THUMBNAILS, MOCK_POSTS } from "@/data/post";
+import { ProfileTab } from "@/app/(main)/[username]/components/profile-tabs";
+import { ApiResponse, PaginatedData } from "@/types/api";
 
-import { Post } from '@/types/post'
-import http from './http'
+export const getPostsByUsername = async (
+  username: string,
+  tab: ProfileTab = "posts",
+  cursor: string | null = null,
+  limit: number = 6,
+): Promise<ApiResponse<PaginatedData<PostThumbnail>>> => {
+  try {
+    // Giả lập delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
-export const getFeed = (page = 1): Promise<Post> =>
-  http.get(`/posts?page=${page}`)
+    console.log("fetch");
 
-export const createPost = (data: FormData) =>
-  http.post('/posts', data)
+    // Logic lọc dữ liệu (như đã làm ở bước trước)
+    let allFiltered = MOCK_POST_THUMBNAILS.filter((post) => {
+      if (tab === "posts") return post.author.username === username;
+      if (tab === "reels")
+        return post.author.username === username && post.type === "video";
+      if (tab === "saved") return post.viewerContext.isSaved;
+      return false;
+    }).sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    let startIndex = 0;
+    if (cursor) {
+      const idx = allFiltered.findIndex((p) => p.id === cursor);
+      if (idx !== -1) startIndex = idx + 1;
+    }
+
+    const items = allFiltered.slice(startIndex, startIndex + limit);
+    const hasMore = startIndex + limit < allFiltered.length;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    return {
+      return: true,
+      message: "Tải bài viết thành công",
+      statusCode: 200,
+      data: {
+        items: items,
+        pagination: {
+          nextCursor,
+          hasMore,
+          limit,
+          totalCount: allFiltered.length,
+        },
+      },
+    };
+  } catch (error) {
+    return {
+      return: false,
+      message: "Lỗi hệ thống",
+      statusCode: 500,
+      errorCode: "SERVER_ERROR",
+    };
+  }
+};
+
+export const getPostById = async (
+  postId: string,
+): Promise<ApiResponse<Post>> => {
+  try {
+    // Giả lập delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    const post = MOCK_POSTS.find((p) => p.id === postId);
+
+    return {
+      return: true,
+      message: "Tải bài viết thành công",
+      statusCode: 200,
+      data: post,
+    };
+  } catch (error) {
+    return {
+      return: false,
+      message: "Lỗi hệ thống",
+      statusCode: 500,
+      errorCode: "SERVER_ERROR",
+    };
+  }
+};
+
+export const createPost = (data: FormData) => http.post("/posts", data);

@@ -1,0 +1,62 @@
+import { getAvatarGradient } from "@/lib/avatar-utils";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+
+interface User {
+  id: string;
+  displayName?: string;
+  avatarUrl?: string | null;
+  isOnline?: boolean;
+}
+
+interface UserAvatarProps {
+  user: User;
+  isShowDotOnline?: boolean;
+  className?: string;
+  initialClassName?: string;
+  dotClassName?: string;
+}
+
+export function UserAvatar({
+  user,
+  isShowDotOnline,
+  className,
+  initialClassName,
+  dotClassName,
+}: UserAvatarProps) {
+  const initial = user.displayName?.charAt(0).toUpperCase() || "?";
+
+  return (
+    <div className={cn("relative inline-flex shrink-0", "h-9 w-9", className)}>
+      <div
+        className={cn(
+          "relative flex h-full w-full items-center justify-center overflow-hidden rounded-full text-sm font-bold text-white",
+          !user.avatarUrl && "bg-linear-to-br",
+          !user.avatarUrl && getAvatarGradient(user.id),
+        )}
+      >
+        {user.avatarUrl ? (
+          <Image
+            src={user.avatarUrl}
+            alt={`Avatar of ${user.displayName || "user"}`}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <span className={cn(initialClassName)}>{initial}</span>
+        )}
+      </div>
+
+      {isShowDotOnline && (
+        <span
+          className={cn(
+            "absolute right-0 bottom-0 z-10 block h-3 w-3 rounded-full border-2",
+            "border-background",
+            user.isOnline ? "bg-emerald-500" : "bg-muted-foreground",
+            dotClassName,
+          )}
+        />
+      )}
+    </div>
+  );
+}

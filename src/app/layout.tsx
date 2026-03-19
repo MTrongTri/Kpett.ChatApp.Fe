@@ -1,3 +1,7 @@
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 import { Toaster } from "sonner";
 import "./globals.css";
 import { StoreProvider } from "@/components/providers/store-provider";
@@ -24,13 +28,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}>
+      <body
+        className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}
+      >
         <StoreProvider>
           {children}
-              {/* Toast */}
-              <Toaster richColors position="top-center" />
-              {/* Modals */}
-              <ModalProvider />
+          {/* Toast */}
+          <Toaster richColors position="top-center" />
+          {/* Modals */}
+          <ModalProvider />
         </StoreProvider>
       </body>
     </html>

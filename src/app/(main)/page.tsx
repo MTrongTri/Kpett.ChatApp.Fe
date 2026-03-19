@@ -1,20 +1,12 @@
-import Feed from "./_components/feed";
-import LeftPanel from "./_components/left-panel";
-import RightPanel from "./_components/right-panel";
-import SpotlightStrip from "./_components/spotlight-strip";
-
+import Feed from "./components/posts/feed";
+import LeftPanel from "./components/left-panel/left-panel";
+import RightPanel from "./components/right-panel/right-panel";
+import SpotlightStrip from "./components/story/spotlight-strip";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background pt-[58px]">
-      <div
-        className="
-          grid
-          grid-cols-1
-          md:grid-cols-[300px_1fr]       
-          xl:grid-cols-[300px_1fr_300px]
-        "
-      >
+    <div className="bg-background min-h-screen pt-14.5">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_300px]">
         {/* ── LEFT PANEL (hidden on mobile) ── */}
         <div className="hidden md:block">
           <LeftPanel />

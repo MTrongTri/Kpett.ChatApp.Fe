@@ -1,4 +1,3 @@
-import { MOCK_USER_PROFILES } from "@/data/user";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
@@ -8,112 +7,32 @@ import {
   JSONContent,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { useEffect, useState } from "react";
 import tippy, { Instance as TippyInstance } from "tippy.js";
-import { ScrollArea } from "../ui/scroll-area";
-import { BaseAuthor } from "@/types/user";
+import { BaseAuthor, UserProfile } from "@/types/user";
 import { UserAvatar } from "../user/user-avatar";
+import MentionList from "./mention-list";
 
-//
-// =======================
-// Utils
-// =======================
-const getMentionItems = (query: string) => {
-  return MOCK_USER_PROFILES.filter(
-    (item) =>
-      item.displayName.toLowerCase().includes(query.toLowerCase()) ||
-      item.username.toLowerCase().includes(query.toLowerCase()),
-  ).slice(0, 5);
-};
-
-//
-// =======================
-// Mention List
-// =======================
-const MentionList = forwardRef((props: any, ref) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const selectItem = (index: number) => {
-    const item = props.items[index];
-    if (item) {
-      props.command({ id: item.id, label: item.displayName });
-    }
-  };
-
-  useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }: any) => {
-      if (event.key === "ArrowUp") {
-        setSelectedIndex(
-          (prev) => (prev + props.items.length - 1) % props.items.length,
-        );
-        return true;
-      }
-
-      if (event.key === "ArrowDown") {
-        setSelectedIndex((prev) => (prev + 1) % props.items.length);
-        return true;
-      }
-
-      if (event.key === "Enter") {
-        selectItem(selectedIndex);
-        return true;
-      }
-
-      return false;
-    },
-  }));
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [props.items]);
-
-  if (!props.items.length) return null;
-
-  return (
-    <ScrollArea
-      className="bg-background border-border pointer-events-auto z-50 h-48 w-64 rounded-md border shadow-md"
-      onWheel={(e) => e.stopPropagation()}
-    >
-      {props.items.map((item: any, index: number) => (
-        <button
-          key={item.id}
-          type="button"
-          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-            index === selectedIndex
-              ? "bg-gray-100 dark:bg-gray-800"
-              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-          }`}
-          onClick={() => selectItem(index)}
-          onMouseEnter={() => setSelectedIndex(index)}
-        >
-          <img
-            src={item.avatarUrl || "https://github.com/shadcn.png"}
-            alt=""
-            className="h-6 w-6 rounded-full object-cover"
-          />
-          <div className="flex flex-col">
-            <span className="leading-none font-semibold text-gray-900 dark:text-gray-100">
-              {item.displayName}
-            </span>
-            <span className="mt-1 text-xs text-gray-500">@{item.username}</span>
-          </div>
-        </button>
-      ))}
-    </ScrollArea>
-  );
-});
-MentionList.displayName = "MentionList";
-
-//
-// =======================
-// Main Component
-// =======================
 interface CommentInputProps {
   author: BaseAuthor;
+  fetchMentions: (query: string) => Promise<UserProfile[]>;
+  onSubmit: (content: string) => Promise<void> | void;
+  isLoading?: boolean;
+
+  replyToUser?: BaseAuthor;
+  onCancel?: () => void;
 }
 
-export const CommentInput = ({ author }: CommentInputProps) => {
+export const CommentInput = ({
+  author,
+  fetchMentions,
+  onSubmit,
+  isLoading,
+  replyToUser,
+  onCancel,
+}: CommentInputProps) => {
   const [hasContent, setHasContent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -133,7 +52,15 @@ export const CommentInput = ({ author }: CommentInputProps) => {
             "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-semibold px-1 rounded-sm mx-[1px]",
         },
         suggestion: {
-          items: ({ query }) => getMentionItems(query),
+          items: async ({ query }) => {
+            try {
+              const users = await fetchMentions(query);
+              return users;
+            } catch (error) {
+              console.error("Lỗi khi tải danh sách mention:", error);
+              return [];
+            }
+          },
 
           render: () => {
             let component: ReactRenderer;
@@ -160,12 +87,18 @@ export const CommentInput = ({ author }: CommentInputProps) => {
                     modifiers: [
                       {
                         name: "preventOverflow",
-                        options: {
-                          boundary: "viewport",
-                        },
+                        options: { boundary: "viewport" },
                       },
                     ],
                   },
+                });
+              },
+
+              onUpdate(props) {
+                component.updateProps(props);
+                if (!props.clientRect) return;
+                popup[0]?.setProps({
+                  getReferenceClientRect: props.clientRect as any,
                 });
               },
 
@@ -174,7 +107,6 @@ export const CommentInput = ({ author }: CommentInputProps) => {
                   popup?.[0]?.hide();
                   return true;
                 }
-
                 return (component?.ref as any)?.onKeyDown(props);
               },
 
@@ -197,15 +129,32 @@ export const CommentInput = ({ author }: CommentInputProps) => {
   });
 
   useEffect(() => {
+    if (editor && replyToUser && editor.isEmpty) {
+      editor
+        .chain()
+        .focus()
+        .insertContent([
+          {
+            type: "mention",
+            attrs: {
+              id: replyToUser.id,
+              label: replyToUser.username,
+            },
+          },
+          {
+            type: "text",
+            text: " ",
+          },
+        ])
+        .run();
+    }
+  }, [editor, replyToUser]);
+
+  useEffect(() => {
     if (!editor) return;
 
-    const update = () => {
-      setHasContent(!editor.isEmpty);
-    };
-
-    // chạy lần đầu
+    const update = () => setHasContent(!editor.isEmpty);
     update();
-
     editor.on("update", update);
 
     return () => {
@@ -215,15 +164,13 @@ export const CommentInput = ({ author }: CommentInputProps) => {
 
   const handleFocus = () => editor?.commands.focus();
 
-  const handleSubmit = () => {
+  const handlePublish = async () => {
     if (!editor || editor.isEmpty) return;
 
     const json = editor.getJSON();
-
     const content = json.content
       ?.map((node: JSONContent) => {
         if (node.type !== "paragraph") return "";
-
         return node.content
           ?.map((child: JSONContent) => {
             if (child.type === "text") return child.text || "";
@@ -235,13 +182,20 @@ export const CommentInput = ({ author }: CommentInputProps) => {
       .join("\n")
       .trim();
 
-    console.log("DỮ LIỆU GỬI LÊN API:", content);
-
-    editor.commands.clearContent();
+    try {
+      setIsSubmitting(true);
+      await onSubmit(content || "");
+      editor.commands.clearContent();
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  const isButtonDisabled = !editor || !hasContent || isLoading || isSubmitting;
+
   return (
-    <div className="border-border/50 bg-background z-10 shrink-0 border-t pt-6">
+    <div className="bg-background z-10 shrink-0">
       <div className="flex items-center gap-3">
         <UserAvatar user={author} />
 
@@ -251,13 +205,22 @@ export const CommentInput = ({ author }: CommentInputProps) => {
           </div>
 
           <button
-            onClick={handleSubmit}
-            disabled={!editor || !hasContent}
+            onClick={handlePublish}
+            disabled={isButtonDisabled}
             className="text-primary hover:text-primary/80 mb-0.5 cursor-pointer text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Đăng
+            {isSubmitting ? "Đang gửi..." : "Đăng"}
           </button>
         </div>
+
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="text-muted-foreground hover:text-foreground text-[12px] font-medium transition-colors"
+          >
+            Hủy
+          </button>
+        )}
       </div>
     </div>
   );

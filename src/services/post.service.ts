@@ -14,8 +14,6 @@ export const getPostsByUsername = async (
     // Giả lập delay
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    console.log("fetch");
-
     // Logic lọc dữ liệu (như đã làm ở bước trước)
     let allFiltered = MOCK_POST_THUMBNAILS.filter((post) => {
       if (tab === "posts") return post.author.username === username;

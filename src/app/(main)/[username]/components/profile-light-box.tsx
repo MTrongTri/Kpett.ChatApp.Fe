@@ -7,11 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserAvatar } from "@/components/user/user-avatar";
 import { MOCK_COMMENT } from "@/data/comment";
+import { useDebounceCallback } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { getPostById } from "@/services/post.service";
+import { getUserMentions } from "@/services/user.service";
 import {
   BadgeCheck,
   Bookmark,
@@ -44,14 +45,33 @@ export default function ProfileLightbox({
 }: ProfileLightboxProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [comment, setComment] = useState("");
-
-  // Bỏ useState của prevEl và nextEl đi cho code sạch hơn
 
   const { data, isLoading, isValidating, error } = useSWR(
     postId ? `post_detail_${postId}` : null,
     () => getPostById(postId!),
   );
+
+  const fetchMentions = async (query: string) => {
+    try {
+      const response = await getUserMentions(query);
+      if (response.return && response.data) {
+        return response.data;
+      }
+      return [];
+    } catch (error) {
+      console.error("Lỗi tải mention:", error);
+      return [];
+    }
+  };
+
+  const debouncedFetchMentions = useDebounceCallback(fetchMentions, 300);
+
+  const handleAddComment = async (content: string) => {
+    await new Promise((resolve) => {
+      console.log(content);
+      setTimeout(resolve, 800);
+    });
+  };
 
   if (!postId) return null;
 
@@ -79,7 +99,7 @@ export default function ProfileLightbox({
           </DialogTitle>
 
           {/* Author row */}
-          <div className="border-border flex shrink-0 items-center gap-2.5 border-b py-3">
+          <div className="border-border flex shrink-0 items-center gap-2.5 border-b px-4 py-3">
             <UserAvatar user={post.author} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
@@ -99,7 +119,7 @@ export default function ProfileLightbox({
 
         {/* ── INFO PANEL ── */}
         {/* Caption + Comments */}
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4">
           {/* Caption */}
           <div>
             <p className="text-foreground/65 text-[13.5px] leading-relaxed">
@@ -238,7 +258,13 @@ export default function ProfileLightbox({
         </div>
 
         {/* Comment input */}
-        <CommentInput author={post.author} />
+        <div className="border-border/50 border-t pt-6">
+          <CommentInput
+            author={post.author}
+            fetchMentions={debouncedFetchMentions}
+            onSubmit={handleAddComment}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

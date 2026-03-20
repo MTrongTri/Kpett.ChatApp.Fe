@@ -1,81 +1,127 @@
 "use client";
 
-import { MOCK_POSTS } from "@/data/post";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+import PostLightbox from "@/components/posts/post-light-box/post-light-box";
+import { usePostLightBox } from "@/hooks/use-post-light-box";
 import PostCard from "./post-card";
-
-type SortOption = "for-you" | "latest" | "popular";
-
-// ── FEED HEADER (home-only → same file) ─────────────────────────────
-interface FeedHeaderProps {
-  postCount: number;
-  sort: SortOption;
-  onSortChange: (sort: SortOption) => void;
-}
-
-function FeedHeader({ postCount, sort, onSortChange }: FeedHeaderProps) {
-  const sorts: { key: SortOption; label: string }[] = [
-    { key: "for-you", label: "For You" },
-    { key: "latest", label: "Mới nhất" },
-    { key: "popular", label: "Phổ biến" },
-  ];
-
-  return (
-    <div className="mb-4 flex items-center justify-end">
-      <div className="flex gap-2">
-        {sorts.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => onSortChange(s.key)}
-            className={cn(
-              "text-[10px] font-semibold tracking-[0.08em] uppercase",
-              "rounded-md border px-2.5 py-1.5 transition-all duration-150",
-              sort === s.key
-                ? "text-primary border-primary/50 bg-primary/8"
-                : "text-foreground/40 border-border hover:text-foreground/70 hover:border-foreground/30",
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+import { useHomeFeed } from "@/hooks/use-home-feed";
+import { PostCardSkeleton } from "./post-card-skeleton";
+import { useInView } from "react-intersection-observer";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { MediaLightbox } from "@/components/posts/media-lightbox";
 
 // ── MAIN EXPORT ──────────────────────────────────────────────────────
 export default function Feed() {
-  const [sort, setSort] = useState<SortOption>("for-you");
+  const {
+    posts,
+    loadMore,
+    isLoadingInitialData,
+    hasMore: hasMoreFeed,
+    isLoadingMore: isFeedLoadingMore,
+  } = useHomeFeed();
 
-  const sorted = [...MOCK_POSTS].sort((a, b) => {
-    if (sort === "latest") return 0;
-    if (sort === "popular") return b.metrics.likeCount - a.metrics.likeCount;
-    return 0;
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: "400px",
   });
+
+  useEffect(() => {
+    if (inView && hasMoreFeed && !isFeedLoadingMore) {
+      loadMore();
+    }
+  }, [inView, hasMoreFeed, isFeedLoadingMore, loadMore]);
+
+  const {
+    isOpen,
+    autoScrollTarget,
+    isPostLoading,
+    isCommentsLoading,
+    post,
+    comments,
+    isLoadingMore,
+    hasMore,
+    loadMoreComments,
+    openModal,
+    closeModal,
+  } = usePostLightBox();
+
+  const {
+    isOpen: isOpenMediaLightBox,
+    media,
+    currentIndex,
+    openLightbox: openMediaLightBox,
+    handleOpenChange,
+  } = useMediaLightbox();
 
   return (
     <section className="">
-      <FeedHeader postCount={248} sort={sort} onSortChange={setSort} />
-
       <div className="space-y-4">
-        {sorted.map((post, i) => (
-          <div
-            key={post.id}
-            className="animate-in fade-in slide-in-from-bottom-3 duration-300"
-            style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
-          >
-            <PostCard post={post} />
-          </div>
-        ))}
+        {isLoadingInitialData ? (
+          <>
+            <PostCardSkeleton />
+            <PostCardSkeleton />
+            <PostCardSkeleton />
+          </>
+        ) : (
+          posts.map((post, i) => (
+            <div
+              key={post.id}
+              className="animate-in fade-in slide-in-from-bottom-3 duration-300"
+              style={{
+                animationDelay: `${i * 60}ms`,
+                animationFillMode: "both",
+              }}
+            >
+              <PostCard
+                post={post}
+                onOpenPostLightBox={openModal}
+                openMediaLightBox={openMediaLightBox}
+              />
+            </div>
+          ))
+        )}
       </div>
 
       {/* Load more */}
-      <div className="mt-6 flex justify-center">
-        <button className="text-foreground/30 hover:text-primary border-border hover:border-primary/50 rounded-lg border px-5 py-2.5 text-[11px] tracking-widest uppercase transition-all duration-150">
-          Tải thêm bài viết
-        </button>
-      </div>
+      {hasMoreFeed && (
+        <>
+          <div>{isFeedLoadingMore && <PostCardSkeleton />}</div>
+          <div
+            ref={loadMoreRef}
+            className="flex w-full items-center justify-center py-6"
+          >
+            {!isFeedLoadingMore && (
+              <span className="text-muted-foreground/50 text-xs">
+                Cuộn để xem thêm
+              </span>
+            )}
+          </div>
+        </>
+      )}
+
+      {isOpen && (
+        <PostLightbox
+          isOpen={isOpen}
+          onClose={closeModal}
+          post={post}
+          comments={comments}
+          autoScrollTarget={autoScrollTarget}
+          isPostLoading={isPostLoading}
+          isCommentsLoading={isCommentsLoading}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          onLoadMore={loadMoreComments}
+        />
+      )}
+
+      <MediaLightbox
+        isOpen={isOpenMediaLightBox}
+        onOpenChange={handleOpenChange}
+        media={media}
+        initialIndex={currentIndex}
+        className="top-0 right-0 bottom-0 left-0 flex h-screen max-w-none! translate-x-0 translate-y-0"
+      />
     </section>
   );
 }

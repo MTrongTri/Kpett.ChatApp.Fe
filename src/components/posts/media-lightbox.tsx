@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import Image from "next/image";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Media } from "@/types/media";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 interface MediaLightboxProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ export function MediaLightbox({
         <DialogTitle className="sr-only">Xem phương tiện chi tiết</DialogTitle>
 
         {/* Nút đóng */}
-        <DialogClose className="absolute top-4 right-4 z-60 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20">
+        <DialogClose className="absolute top-4 right-4 z-60 cursor-pointer rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20">
           <X className="h-6 w-6" />
         </DialogClose>
 

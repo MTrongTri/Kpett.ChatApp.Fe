@@ -12,7 +12,6 @@ import { ApiResponse, PaginatedData } from "@/types/api";
 import { PostThumbnail } from "@/types/post";
 
 // Components
-import ProfileLightbox from "./profile-light-box";
 import ProfilePosts from "./profile-posts";
 import ProfilePostsSkeleton from "./profile-post-skeleton";
 

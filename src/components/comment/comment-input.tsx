@@ -195,7 +195,7 @@ export const CommentInput = ({
   const isButtonDisabled = !editor || !hasContent || isLoading || isSubmitting;
 
   return (
-    <div className="bg-background z-10 shrink-0">
+    <div className="z-10 shrink-0 bg-transparent">
       <div className="flex items-center gap-3">
         <UserAvatar user={author} />
 
@@ -216,7 +216,7 @@ export const CommentInput = ({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground text-[12px] font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground cursor-pointer text-[12px] font-medium transition-colors"
           >
             Hủy
           </button>

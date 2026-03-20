@@ -4,8 +4,6 @@ import "swiper/css/pagination";
 
 import { Toaster } from "sonner";
 import "./globals.css";
-import { StoreProvider } from "@/components/providers/store-provider";
-import { ModalProvider } from "@/components/modals/modal-provider";
 import { IBM_Plex_Mono, Roboto } from "next/font/google";
 
 const roboto = Roboto({
@@ -31,13 +29,12 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}
       >
-        <StoreProvider>
-          {children}
-          {/* Toast */}
-          <Toaster richColors position="top-center" />
-          {/* Modals */}
-          <ModalProvider />
-        </StoreProvider>
+        {/* <StoreProvider> */}
+        {children}
+        {/* Toast */}
+        <Toaster richColors position="top-center" />
+        {/* Modals */}
+        {/* </StoreProvider> */}
       </body>
     </html>
   );

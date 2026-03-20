@@ -1,8 +1,18 @@
-import { ModalComponents } from "@/components/modals/modal-registry";
+import { Comment } from "./comment";
+import { Post } from "./post";
 
-export interface BaseModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export type ModalPayloadMap = {
+  search_sidebar: Record<string, never>;
+  create_post: { communityId?: string };
+  notifications: Record<string, never>;
+  post_light_box: { post: Post; comments: Comment[] };
+};
 
-export type ModalType = keyof typeof ModalComponents | null;
+export type ModalType = keyof ModalPayloadMap | null;
+
+export type ModalPayload = {
+  [K in keyof ModalPayloadMap]: {
+    type: K;
+    data?: ModalPayloadMap[K];
+  };
+}[keyof ModalPayloadMap];

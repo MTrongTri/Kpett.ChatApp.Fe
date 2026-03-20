@@ -7,18 +7,18 @@ import { useState } from "react";
 
 interface ProfilePostItemProps {
   post: PostThumbnail;
-  setSelectedPostId: (postId: string) => void;
+  onClick: (postId: string) => void;
 }
 
 export default function ProfilePostItem({
   post,
-  setSelectedPostId,
+  onClick,
 }: ProfilePostItemProps) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <div
-      onClick={() => setSelectedPostId(post.id)}
+      onClick={() => onClick(post.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(

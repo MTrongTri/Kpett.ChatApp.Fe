@@ -12,6 +12,7 @@ import type { Post } from "@/types/post";
 import {
   BadgeCheck,
   Bookmark,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   EyeOff,
@@ -20,8 +21,6 @@ import {
   Link2,
   MessageCircle,
   MoreHorizontal,
-  Repeat2,
-  Share2,
   UserMinus,
 } from "lucide-react";
 import Image from "next/image";
@@ -30,32 +29,36 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import { MediaLightbox } from "@/components/posts/media-lightbox";
-import { formatRelativeTime } from "@/lib/format-date-utils";
 import { UserAvatar } from "@/components/user/user-avatar";
+import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import Link from "next/link";
+import { Media } from "@/types/media";
 
 // ── POST CARD ────────────────────────────────────────────────────────
 interface PostCardProps {
   post: Post;
+  onOpenPostLightBox: (
+    postId: string,
+    initPost: Post,
+    targetSroll: string,
+  ) => void;
+  openMediaLightBox: (media: Media[], currentIndex: number) => void;
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({
+  post,
+  onOpenPostLightBox,
+  openMediaLightBox,
+}: PostCardProps) {
   const [liked, setLiked] = useState(post.viewerContext.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.metrics.likeCount);
 
   const [saved, setSaved] = useState(post.viewerContext.isSaved ?? false);
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-
   const [prevEl, setPrevEl] = useState<HTMLButtonElement | null>(null);
   const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
-
-  const openLightbox = (index: number) => {
-    setCurrentMediaIndex(index);
-    setLightboxOpen(true);
-  };
 
   const handleLike = () => {
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
@@ -80,7 +83,7 @@ export default function PostCard({ post }: PostCardProps) {
               <Link href={post.author.username}>{post.author.username}</Link>
             </span>
             {post.author.isVerified && (
-              <BadgeCheck size={14} className="text-primary shrink-0" />
+              <CheckCircle2 size={14} className="text-primary shrink-0" />
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2">
@@ -143,7 +146,7 @@ export default function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* ── IMAGE ── */}
-      {post.media && (
+      {post.media && post.media.length > 0 && (
         <div className="mx-4 mb-3">
           <div className="border-border group relative h-100 w-full overflow-hidden rounded-xl border">
             <Swiper
@@ -174,7 +177,8 @@ export default function PostCard({ post }: PostCardProps) {
                         fill
                         className="object-cover"
                         onClick={() =>
-                          item.type === "image" && openLightbox(index)
+                          item.type === "image" &&
+                          openMediaLightBox(post.media, index)
                         }
                       />
                     ) : (
@@ -220,7 +224,7 @@ export default function PostCard({ post }: PostCardProps) {
           size="sm"
           onClick={handleLike}
           className={cn(
-            "font-roboto h-8 gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold",
+            "font-roboto h-8 cursor-pointer gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold",
             "transition-all duration-150",
             liked
               ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/15 hover:text-rose-400"
@@ -243,7 +247,8 @@ export default function PostCard({ post }: PostCardProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="font-roboto text-foreground/50 hover:text-foreground hover:bg-foreground/8 h-8 gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold"
+          className="font-roboto text-foreground/50 hover:text-foreground hover:bg-foreground/8 h-8 cursor-pointer gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold"
+          onClick={() => onOpenPostLightBox(post.id, post, "comment-list-area")}
         >
           <MessageCircle size={14} />
           <span>{post.metrics.commentCount}</span>
@@ -266,25 +271,7 @@ export default function PostCard({ post }: PostCardProps) {
         >
           <Bookmark size={14} fill={saved ? "currentColor" : "none"} />
         </Button>
-
-        {/* Share */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-foreground/40 hover:text-primary hover:bg-primary/10 h-8 w-8 rounded-lg"
-        >
-          <Share2 size={14} />
-        </Button>
       </div>
-
-      {/* --- Lightbox Backdrop --- */}
-      <MediaLightbox
-        isOpen={lightboxOpen}
-        onOpenChange={setLightboxOpen}
-        media={post.media}
-        initialIndex={currentMediaIndex}
-        className="top-0 right-0 bottom-0 left-0 flex h-screen max-w-none! translate-x-0 translate-y-0"
-      />
     </article>
   );
 }

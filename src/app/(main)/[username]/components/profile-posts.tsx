@@ -1,16 +1,29 @@
 "use client";
 
 import { PostThumbnail } from "@/types/post";
-import { useState } from "react";
-import ProfileLightbox from "./profile-light-box";
 import ProfilePostItem from "./profile-post-item";
+import { usePostLightBox } from "@/hooks/use-post-light-box";
+import PostLightbox from "@/components/posts/post-light-box/post-light-box";
 
 interface ProfilePostsProps {
   posts: PostThumbnail[];
 }
 
 export default function ProfilePosts({ posts }: ProfilePostsProps) {
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  // Trích xuất toàn bộ state và actions từ custom hook
+  const {
+    isOpen,
+    isPostLoading,
+    isCommentsLoading,
+    post,
+    comments,
+    autoScrollTarget,
+    isLoadingMore,
+    hasMore,
+    loadMoreComments,
+    openModal,
+    closeModal,
+  } = usePostLightBox();
 
   if (posts.length === 0) {
     return (
@@ -26,19 +39,30 @@ export default function ProfilePosts({ posts }: ProfilePostsProps) {
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
-        {posts.map((post) => (
+        {posts.map((thumbnail) => (
           <ProfilePostItem
-            key={post.id}
-            post={post}
-            setSelectedPostId={setSelectedPostId}
+            key={thumbnail.id}
+            post={thumbnail}
+            onClick={() => openModal(thumbnail.id)}
           />
         ))}
       </div>
 
-      <ProfileLightbox
-        postId={selectedPostId}
-        onClose={() => setSelectedPostId(null)}
-      />
+      {/* Chỉ render Lightbox khi isOpen = true để tối ưu hiệu suất */}
+      {isOpen && (
+        <PostLightbox
+          isOpen={isOpen}
+          onClose={closeModal}
+          post={post}
+          comments={comments}
+          autoScrollTarget={autoScrollTarget}
+          isPostLoading={isPostLoading}
+          isCommentsLoading={isCommentsLoading}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          onLoadMore={loadMoreComments}
+        />
+      )}
     </>
   );
 }

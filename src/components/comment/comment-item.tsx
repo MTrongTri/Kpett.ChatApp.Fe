@@ -18,7 +18,6 @@ interface CommentItemProps {
 
 export const CommentItem = ({ comment, postId }: CommentItemProps) => {
   const [isReplying, setIsReplying] = useState(false);
-
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const replyCount = comment.metrics.replyCount;
@@ -54,8 +53,9 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
 
   return (
     <div className="flex w-full gap-2.5">
+      {/* ── AVATAR VÀ ĐƯỜNG NỐI DỌC ── */}
       <div className="flex flex-col items-center">
-        <Link href={comment.author.username}>
+        <Link href={`/${comment.author.username}`}>
           <UserAvatar user={comment.author} />
         </Link>
         {isExpanded && replies.length > 0 && (
@@ -63,28 +63,30 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
         )}
       </div>
 
+      {/* ── NỘI DUNG COMMENT ── */}
       <div className="flex-1">
         <div className="flex flex-wrap items-baseline gap-1.5">
           <span className="text-card-foreground text-[12.5px] font-semibold">
-            <Link href={comment.author.username}>
+            <Link href={`/${comment.author.username}`}>
               {comment.author.username}
             </Link>
           </span>
           <span className="text-foreground/60 text-[12.5px]">
-            {
-              <CommentText
-                content={comment.content}
-                mentions={comment.mentions}
-              />
-            }
+            <CommentText
+              content={comment.content}
+              mentions={comment.mentions}
+            />
           </span>
         </div>
 
+        {/* Info & Actions bar */}
         <div className="text-foreground/30 mt-1 flex items-center gap-3 text-[11px]">
           <span>{formatRelativeTime(comment.createdAt)}</span>
 
           <button
-            className={`hover:text-foreground/60 cursor-pointer font-semibold transition-colors ${comment.viewerContext?.isLiked ? "text-blue-500" : ""}`}
+            className={`hover:text-foreground/60 cursor-pointer font-semibold transition-colors ${
+              comment.viewerContext?.isLiked ? "text-blue-500" : ""
+            }`}
           >
             Thích{" "}
             {comment.metrics.likeCount > 0 && `(${comment.metrics.likeCount})`}
@@ -100,54 +102,76 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
           )}
         </div>
 
-        {/* Danh sách replies */}
+        {/* ── DANH SÁCH REPLIES ── */}
         {isExpanded && replies.length > 0 && (
           <div className="mt-3 space-y-3">
             {replies.map((reply) => (
               <CommentItem key={reply.id} comment={reply} postId={postId} />
             ))}
+          </div>
+        )}
 
-            {/* Nút "Xem thêm" — chỉ hiện khi còn trang */}
-            {hasMore && (
+        {hasReplies && (
+          <div className="mt-2">
+            {/* TH1: Chưa mở (Collapsed) */}
+            {!isExpanded && (
               <button
-                onClick={loadMore}
-                disabled={isLoadingMore}
-                className="text-foreground/50 hover:text-foreground/80 mt-1 flex items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50"
+                onClick={() => setIsExpanded(true)}
+                className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors"
               >
                 <div className="bg-foreground/20 h-px w-6" />
-                {isLoadingMore ? "Đang tải..." : "Xem thêm câu trả lời"}
+                Xem {replyCount} câu trả lời
+              </button>
+            )}
+
+            {/* TH2: Bấm mở lần đầu -> Đang chờ API (Hiển thị Đang tải) */}
+            {isExpanded && isRepliesCommentLoading && (
+              <button
+                disabled
+                className="text-foreground/50 flex items-center gap-2 text-[11px] font-semibold opacity-50"
+              >
+                <div className="bg-foreground/20 h-px w-6" />
+                Đang tải...
+              </button>
+            )}
+
+            {/* TH3: Đã tải xong lần đầu và VẪN CÒN data (Hiện Xem thêm + Ẩn bớt) */}
+            {isExpanded && !isRepliesCommentLoading && hasMore && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                  className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50"
+                >
+                  <div className="bg-foreground/20 h-px w-6" />
+                  {isLoadingMore ? "Đang tải..." : "Xem thêm câu trả lời"}
+                </button>
+                <span className="text-foreground/30 text-[10px]">•</span>
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="text-foreground/50 hover:text-foreground/80 cursor-pointer text-[11px] font-semibold transition-colors"
+                >
+                  Ẩn bớt
+                </button>
+              </div>
+            )}
+
+            {/* TH4: Đã tải xong và ĐÃ HẾT data (Chỉ hiện Ẩn bớt) */}
+            {isExpanded && !isRepliesCommentLoading && !hasMore && (
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors"
+              >
+                <div className="bg-foreground/20 h-px w-6" />
+                Ẩn bớt câu trả lời
               </button>
             )}
           </div>
         )}
 
-        {/* Nút toggle expand / collapse */}
-        {hasReplies && !isExpanded && (
-          <button
-            onClick={() => setIsExpanded(true)}
-            disabled={isRepliesCommentLoading}
-            className="text-foreground/50 hover:text-foreground/80 mt-2 flex items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50"
-          >
-            <div className="bg-foreground/20 h-px w-6" />
-            {isRepliesCommentLoading
-              ? "Đang tải"
-              : `Xem thêm ${replyCount} câu trả lời`}
-          </button>
-        )}
-
-        {isExpanded && !hasMore && (
-          <button
-            onClick={() => setIsExpanded(false)}
-            disabled={isRepliesCommentLoading}
-            className="text-foreground/50 hover:text-foreground/80 mt-2 flex items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50"
-          >
-            <div className="bg-foreground/20 h-px w-6" />
-            Ẩn bớt câu trả lời
-          </button>
-        )}
-
+        {/* ── KHUNG NHẬP TRẢ LỜI ── */}
         {isReplying && (
-          <div className="mt-2">
+          <div className="mt-3">
             <CommentInput
               author={comment.author}
               fetchMentions={debouncedFetchMentions}

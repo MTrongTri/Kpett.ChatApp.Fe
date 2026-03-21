@@ -1,10 +1,12 @@
 "use client";
 
+import { MOCK_CURENT_USER } from "@/data/user";
 import { useDebounceCallback } from "@/hooks/use-debounce";
 import { useReplies } from "@/hooks/use-replies";
 import { formatRelativeTime } from "@/lib/format-date-utils";
+import { addComment } from "@/services/comment.service";
 import { getUserMentions } from "@/services/user.service";
-import { Comment } from "@/types/comment";
+import { Comment, MentionComment } from "@/types/comment";
 import Link from "next/link";
 import { useState } from "react";
 import { UserAvatar } from "../user/user-avatar";
@@ -14,11 +16,23 @@ import { CommentText } from "./comment-text";
 interface CommentItemProps {
   comment: Comment;
   postId: string;
+  level?: number;
+  threadParentId?: string;
+  onReplySuccess?: (newReply: Comment) => void;
 }
 
-export const CommentItem = ({ comment, postId }: CommentItemProps) => {
+export const CommentItem = ({
+  comment,
+  postId,
+  level = 1,
+  threadParentId,
+  onReplySuccess,
+}: CommentItemProps) => {
+  const MAX_LEVEL = 3;
+
   const [isReplying, setIsReplying] = useState(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [newLocalReplies, setNewLocalReplies] = useState<Comment[]>([]);
 
   const replyCount = comment.metrics.replyCount;
   const hasReplies = replyCount > 0;
@@ -31,9 +45,32 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
     loadMore,
   } = useReplies(comment.id, isExpanded);
 
+  const submitParentId =
+    level >= MAX_LEVEL && threadParentId ? threadParentId : comment.id;
+
   const handleReplySubmit = async (content: string) => {
-    console.log(`Gửi reply cho comment ${comment.id}:`, content);
-    setIsReplying(false);
+    const mentions: MentionComment[] = [];
+
+    const response = await addComment(
+      postId,
+      content,
+      MOCK_CURENT_USER,
+      submitParentId,
+      mentions,
+    );
+
+    if (response.return && response.data) {
+      const newReply = response.data;
+      setIsReplying(false);
+
+      if (comment.id === submitParentId) {
+        setNewLocalReplies((prev) => [newReply, ...prev]);
+      } else if (onReplySuccess) {
+        onReplySuccess(newReply);
+      }
+    } else {
+      console.error("Lỗi khi thêm bình luận:", response.message);
+    }
   };
 
   const fetchMentions = async (query: string) => {
@@ -51,6 +88,14 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
 
   const debouncedFetchMentions = useDebounceCallback(fetchMentions, 300);
 
+  const handleChildReply = (newReply: Comment) => {
+    if (comment.id === submitParentId) {
+      setNewLocalReplies((prev) => [newReply, ...prev]);
+    } else if (onReplySuccess) {
+      onReplySuccess(newReply);
+    }
+  };
+
   return (
     <div className="flex w-full gap-2.5">
       {/* ── AVATAR VÀ ĐƯỜNG NỐI DỌC ── */}
@@ -58,7 +103,7 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
         <Link href={`/${comment.author.username}`}>
           <UserAvatar user={comment.author} />
         </Link>
-        {isExpanded && replies.length > 0 && (
+        {isExpanded && replies.length > 0 && level < MAX_LEVEL && (
           <div className="bg-border mt-2 mb-1 w-0.5 flex-1 rounded-full opacity-50" />
         )}
       </div>
@@ -88,7 +133,7 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
               comment.viewerContext?.isLiked ? "text-blue-500" : ""
             }`}
           >
-            Thích{" "}
+            Thích
             {comment.metrics.likeCount > 0 && `(${comment.metrics.likeCount})`}
           </button>
 
@@ -103,13 +148,59 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
         </div>
 
         {/* ── DANH SÁCH REPLIES ── */}
-        {isExpanded && replies.length > 0 && (
-          <div className="mt-3 space-y-3">
-            {replies.map((reply) => (
-              <CommentItem key={reply.id} comment={reply} postId={postId} />
-            ))}
-          </div>
-        )}
+        {/* Lọc loại bỏ những bình luận Local đã được SWR tải về để tránh trùng lặp */}
+        {(() => {
+          // 1. Tạo danh sách các ID của comment Local (vừa mới thêm)
+          const localReplyIds = new Set(newLocalReplies.map((r) => r.id));
+
+          console.log(replies);
+
+          // 2. Lọc bỏ các comment từ Server (SWR) nếu nó đã có mặt trong Local
+          const visibleSwrReplies = replies.filter(
+            (r) => !localReplyIds.has(r.id),
+          );
+
+          const nextLevel = level >= MAX_LEVEL ? MAX_LEVEL : level + 1;
+          const nextThreadParentId = level === 2 ? comment.id : threadParentId;
+
+          return (
+            <>
+              {/* 1. HIỂN THỊ LOCAL REPLIES (Luôn nằm trên cùng như bạn muốn ban đầu) */}
+              {newLocalReplies.length > 0 && (
+                <div className="mt-3 space-y-3">
+                  {newLocalReplies.map((reply) => (
+                    <CommentItem
+                      key={reply.id}
+                      comment={reply}
+                      postId={postId}
+                      level={nextLevel}
+                      threadParentId={nextThreadParentId}
+                      onReplySuccess={handleChildReply}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* 2. DANH SÁCH TỪ SERVER (Đã được lọc sạch những comment trùng với Local) */}
+              {isExpanded && visibleSwrReplies.length > 0 && (
+                <div
+                  className={`${newLocalReplies.length > 0 ? "mt-3" : "mt-3"} space-y-3`}
+                >
+                  {visibleSwrReplies.map((reply) => (
+                    <CommentItem
+                      key={reply.id}
+                      comment={reply}
+                      postId={postId}
+                      level={nextLevel}
+                      threadParentId={nextThreadParentId}
+                      onReplySuccess={handleChildReply}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {hasReplies && (
           <div className="mt-2">
@@ -173,7 +264,7 @@ export const CommentItem = ({ comment, postId }: CommentItemProps) => {
         {isReplying && (
           <div className="mt-3">
             <CommentInput
-              author={comment.author}
+              author={MOCK_CURENT_USER}
               fetchMentions={debouncedFetchMentions}
               replyToUser={comment.author}
               onCancel={() => setIsReplying(false)}

@@ -1,4 +1,12 @@
-import { UserProfile } from "@/types/user";
+import { BaseAuthor, UserProfile } from "@/types/user";
+
+export const MOCK_CURENT_USER: BaseAuthor = {
+  id: "user_me",
+  username: "tri.dev",
+  avatarUrl: null,
+  displayName: "Trọng Trí",
+  isVerified: false,
+};
 
 export const MOCK_USER_PROFILES: UserProfile[] = [
   {

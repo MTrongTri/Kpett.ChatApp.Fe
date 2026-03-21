@@ -156,7 +156,7 @@ export const MOCK_COMMENT: Comment[] = [
     mentions: [
       { userId: "user_2", username: "hoa.boutique", displayName: "Hoa Lê" },
     ],
-    metrics: { likeCount: 8, replyCount: 0 },
+    metrics: { likeCount: 8, replyCount: 2 },
     viewerContext: defaultViewer,
     isEdited: false,
     isDeleted: false,
@@ -166,7 +166,23 @@ export const MOCK_COMMENT: Comment[] = [
   {
     id: "c_99",
     postId: "p_u5_5",
-    parentId: "c_7",
+    parentId: "c_8",
+    author: users.thanh,
+    content: "ok em!",
+    mentions: [
+      { userId: "user_2", username: "hoa.boutique", displayName: "Hoa Lê" },
+    ],
+    metrics: { likeCount: 8, replyCount: 0 },
+    viewerContext: defaultViewer,
+    isEdited: false,
+    isDeleted: false,
+    createdAt: "2026-03-18T12:10:00.000Z",
+    updatedAt: "2026-03-18T12:10:00.000Z",
+  },
+  {
+    id: "c_100",
+    postId: "p_u5_5",
+    parentId: "c_8",
     author: users.thanh,
     content: "ok em!",
     mentions: [

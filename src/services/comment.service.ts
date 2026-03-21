@@ -1,8 +1,76 @@
 import { MOCK_COMMENT } from "@/data/comment";
 import { ApiResponse, PaginatedData } from "@/types/api";
-import { Comment } from "@/types/comment";
+import { Comment, MentionComment } from "@/types/comment";
+import { BaseAuthor } from "@/types/user";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const addComment = async (
+  postId: string,
+  content: string,
+  author: BaseAuthor,
+  parentId: string | null = null,
+  mentions: MentionComment[] = [],
+): Promise<ApiResponse<Comment>> => {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Tạo ID và Timestamp mới
+    const newCommentId = `comment_new_${Date.now()}`;
+    const now = new Date().toISOString();
+
+    // Khởi tạo Object Comment mới
+    const newComment: Comment = {
+      id: newCommentId,
+      postId: postId,
+      parentId: parentId,
+      content: content,
+      author: author,
+      mentions: mentions,
+      isEdited: false,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
+      metrics: {
+        likeCount: 0,
+        replyCount: 0,
+      },
+      viewerContext: {
+        isLiked: false,
+        canReply: true,
+        canDelete: true,
+        canEdit: false,
+      },
+    };
+
+    // THÊM VÀO DATABASE GIẢ (MOCK_COMMENT)
+    MOCK_COMMENT.push(newComment);
+
+    // CẬP NHẬT REPLY COUNT CHO COMMENT CHA (RẤT QUAN TRỌNG)
+    if (parentId) {
+      const parentComment = MOCK_COMMENT.find((c) => c.id === parentId);
+      if (parentComment) {
+        // Tăng số lượng reply lên 1 để UI hiện nút "Xem thêm câu trả lời"
+        parentComment.metrics.replyCount += 1;
+      }
+    }
+
+    // 6. Trả về kết quả thành công
+    return {
+      return: true,
+      message: "Đã thêm bình luận thành công",
+      statusCode: 201,
+      data: newComment,
+    };
+  } catch (error) {
+    return {
+      return: false,
+      message: "Lỗi hệ thống khi thêm bình luận",
+      statusCode: 500,
+      errorCode: "SERVER_ERROR",
+    };
+  }
+};
 
 export const getCommentsByPostId = async (
   postId: string,

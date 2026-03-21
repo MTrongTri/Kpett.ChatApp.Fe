@@ -25,6 +25,7 @@ import { time } from "console";
 import { CommentItemSkeleton } from "@/components/comment/comment-item-skeleton";
 import { MediaLightbox } from "../media-lightbox";
 import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { MOCK_CURENT_USER } from "@/data/user";
 
 interface PostLightboxProps {
   isOpen: boolean;
@@ -140,12 +141,18 @@ export default function PostLightbox({
                 )}
               </div>
 
+              {hasMore && isLoadingMore && (
+                <div className="mt-3 space-y-3">
+                  <CommentItemSkeleton />
+                  <CommentItemSkeleton />
+                  <CommentItemSkeleton />
+                </div>
+              )}
+
               {/* Thẻ theo dõi cuộn (Sentinel) để Trigger tải thêm */}
               {hasMore && (
                 <div ref={loadMoreRef} className="flex justify-center py-4">
-                  {isLoadingMore ? (
-                    <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-                  ) : (
+                  {!isLoadingMore && (
                     <span className="text-muted-foreground text-xs">
                       Cuộn để xem thêm
                     </span>
@@ -163,7 +170,7 @@ export default function PostLightbox({
 
             <div className="border-border/50 border-t px-4 pt-4 pb-4">
               <CommentInput
-                author={post.author}
+                author={MOCK_CURENT_USER}
                 fetchMentions={debouncedFetchMentions}
                 onSubmit={handleAddComment}
               />

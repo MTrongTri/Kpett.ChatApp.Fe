@@ -20,7 +20,7 @@ const getRepliesKey =
   };
 
 export const useReplies = (commentId: string, enabled: boolean) => {
-  const { data, size, setSize, isLoading, isValidating, error } =
+  const { data, size, setSize, mutate, isLoading, isValidating, error } =
     useSWRInfinite(
       getRepliesKey(commentId, enabled),
       ([, id, cursor]) => getRepliesByCommentId(id, cursor, REPLIES_LIMIT),
@@ -44,5 +44,6 @@ export const useReplies = (commentId: string, enabled: boolean) => {
     isLoadingMore: isValidating && size > 1,
     error,
     loadMore,
+    mutate,
   };
 };

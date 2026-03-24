@@ -15,7 +15,6 @@ import authReducer from "./features/authSlice";
 const authPersistConfig = {
   key: "auth",
   storage: cookieStorage,
-  blacklist: ["token"],
 };
 
 const rootReducer = combineReducers({

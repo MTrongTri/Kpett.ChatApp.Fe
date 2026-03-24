@@ -65,7 +65,6 @@ export default function FormLogin() {
       dispatch(
         setCredentials({
           user: dataRes.user,
-          token: dataRes.token,
           isLogedIn: true,
           isProfileCompleted: dataRes.user.isProfileCompleted,
         }),

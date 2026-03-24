@@ -5,7 +5,7 @@ const cookieStorage = {
     return Promise.resolve(Cookies.get(key) ?? null);
   },
   setItem: (key: string, value: string) => {
-    Cookies.set(key, value, { expires: 7 });
+    Cookies.set(key, value, { expires: 365 });
     return Promise.resolve();
   },
   removeItem: (key: string) => {
@@ -22,7 +22,7 @@ export const tokenStorage = {
       sameSite: "strict",
     });
     Cookies.set("refresh_token", refreshToken, {
-      expires: 7,
+      expires: 365,
       secure: true,
       sameSite: "strict",
     });

@@ -1,6 +1,8 @@
 import { MOCK_USER_PROFILES } from "@/data/user";
 import { ApiResponse } from "@/types/api";
+import { CheckUsernameResponse } from "@/types/response/user/check-username-response";
 import { UserProfile } from "@/types/user";
+import http from "./http";
 
 export const getUserMentions = async (
   displayName: string,
@@ -19,9 +21,17 @@ export const getUserMentions = async (
   }
 
   return {
-    return: true,
+    isSuccess: true,
     message: "Tải bài viết thành công",
     statusCode: 200,
     data: data,
   };
+};
+
+export const checkUsername = async (
+  username: string,
+): Promise<ApiResponse<CheckUsernameResponse>> => {
+  return http.get("users/check-username", {
+    params: { username },
+  });
 };

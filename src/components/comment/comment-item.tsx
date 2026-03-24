@@ -59,7 +59,7 @@ export const CommentItem = ({
       mentions,
     );
 
-    if (response.return && response.data) {
+    if (response.isSuccess && response.data) {
       const newReply = response.data;
       setIsReplying(false);
 
@@ -76,7 +76,7 @@ export const CommentItem = ({
   const fetchMentions = async (query: string) => {
     try {
       const response = await getUserMentions(query);
-      if (response.return && response.data) {
+      if (response.isSuccess && response.data) {
         return response.data;
       }
       return [];

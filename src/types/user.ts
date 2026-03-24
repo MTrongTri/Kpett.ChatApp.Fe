@@ -1,10 +1,13 @@
-export interface BaseAuthor {
+export interface BaseUser {
   id: string;
+  email?: string;
   username: string;
   displayName: string;
   avatarUrl: string | null;
-  isVerified: boolean;
+  isVerified?: boolean;
 }
+
+export interface BaseAuthor extends BaseUser {}
 
 export interface SocialLink {
   platform: string;

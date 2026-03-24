@@ -5,7 +5,7 @@ export interface CommentAuthor {
   username: string;
   displayName: string;
   avatarUrl: string | null;
-  isVerified: boolean;
+  isVerified?: boolean;
 }
 
 export interface CommentMetrics {

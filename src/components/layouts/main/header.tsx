@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState } from "react";
 import Logo from "./logo";
@@ -15,19 +15,7 @@ export default function Header() {
   const [msgCount] = useState(10);
 
   return (
-    <header
-      className="
-        fixed top-0 left-0 right-0 z-50
-        h-[58px]
-        bg-white/80 dark:bg-zinc-950/90 
-        backdrop-blur-xl
-        border-b border-zinc-200 dark:border-zinc-800
-        flex items-center
-        px-5 md:px-7
-        gap-0
-        transition-colors duration-300 /* Thêm hiệu ứng chuyển màu mượt mà */
-      "
-    >
+    <header className="/* Thêm hiệu ứng chuyển màu mượt mà */ fixed top-0 right-0 left-0 z-50 flex h-14.5 items-center gap-0 border-b border-zinc-200 bg-white/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7 dark:border-zinc-800 dark:bg-zinc-950/90">
       {/* Logo */}
       <Logo />
 
@@ -38,7 +26,7 @@ export default function Header() {
       <SearchBar />
 
       {/* Right action group */}
-      <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto md:ml-0">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
         <NavIconBtn
           icon={<Bell size={15} />}
           tooltip="Thông báo"

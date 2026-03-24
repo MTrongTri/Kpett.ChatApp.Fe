@@ -2,7 +2,7 @@ import FormLogin from "@/components/auth/form-login";
 
 function LoginPage() {
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-zinc-50 p-4">
+    <div className="bg-background relative flex min-h-screen w-full items-center justify-center p-4">
       <FormLogin />
     </div>
   );

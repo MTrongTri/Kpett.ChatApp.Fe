@@ -4,6 +4,7 @@ import Image from "next/image";
 
 interface User {
   id: string;
+  username?: string;
   displayName?: string;
   avatarUrl?: string | null;
   isOnline?: boolean;
@@ -24,7 +25,9 @@ export function UserAvatar({
   initialClassName,
   dotClassName,
 }: UserAvatarProps) {
-  const initial = user.displayName?.charAt(0).toUpperCase() || "?";
+  const charFirst =
+    user.displayName?.charAt(0) || user.username?.charAt(0) || "?";
+  const initial = charFirst.toUpperCase();
 
   return (
     <div className={cn("relative inline-flex shrink-0", "h-9 w-9", className)}>

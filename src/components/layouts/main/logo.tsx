@@ -4,18 +4,10 @@ function Logo() {
   return (
     <Link
       href="/"
-      className="
-        font-serif italic font-black text-[26px] tracking-tighter leading-none
-        text-primary select-none transition-opacity
-        flex-shrink-0 mr-8
-      "
+      className="text-primary flex shrink-0 items-center justify-center font-serif text-[26px] leading-none font-black tracking-tighter italic transition-opacity select-none"
     >
       K
-      <span className="
-        not-italic font-light 
-        text-zinc-900 dark:text-zinc-100 
-        transition-colors duration-300
-      ">
+      <span className="font-light text-zinc-900 not-italic transition-colors duration-300 dark:text-zinc-100">
         PET
       </span>
     </Link>

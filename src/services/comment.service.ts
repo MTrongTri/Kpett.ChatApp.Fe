@@ -1,14 +1,14 @@
 import { MOCK_COMMENT } from "@/data/comment";
 import { ApiResponse, PaginatedData } from "@/types/api";
 import { Comment, MentionComment } from "@/types/comment";
-import { BaseAuthor } from "@/types/user";
+import { BaseAuthor, BaseUser } from "@/types/user";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const addComment = async (
   postId: string,
   content: string,
-  author: BaseAuthor,
+  author: BaseUser,
   parentId: string | null = null,
   mentions: MentionComment[] = [],
 ): Promise<ApiResponse<Comment>> => {
@@ -57,14 +57,14 @@ export const addComment = async (
 
     // 6. Trả về kết quả thành công
     return {
-      return: true,
+      isSuccess: true,
       message: "Đã thêm bình luận thành công",
       statusCode: 201,
       data: newComment,
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống khi thêm bình luận",
       statusCode: 500,
       errorCode: "SERVER_ERROR",
@@ -106,7 +106,7 @@ export const getCommentsByPostId = async (
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
-      return: true,
+      isSuccess: true,
       message: "Tải bình luận thành công",
       statusCode: 200,
       data: {
@@ -121,7 +121,7 @@ export const getCommentsByPostId = async (
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống khi tải bình luận",
       statusCode: 500,
       errorCode: "SERVER_ERROR",
@@ -164,7 +164,7 @@ export const getRepliesByCommentId = async (
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
-      return: true,
+      isSuccess: true,
       message: "Tải câu trả lời thành công",
       statusCode: 200,
       data: {
@@ -179,7 +179,7 @@ export const getRepliesByCommentId = async (
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống khi tải câu trả lời",
       statusCode: 500,
       errorCode: "SERVER_ERROR",

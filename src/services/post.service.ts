@@ -27,7 +27,7 @@ export const getFeedHome = async (
       } else {
         // Xử lý ngoại lệ: Nếu cursor không tồn tại (bài viết đã bị xóa)
         return {
-          return: true,
+          isSuccess: true,
           message: "Cursor không hợp lệ",
           statusCode: 200,
           data: {
@@ -52,7 +52,7 @@ export const getFeedHome = async (
       hasMore && items.length > 0 ? items[items.length - 1].id : null;
 
     return {
-      return: true,
+      isSuccess: true,
       message: "Tải bảng tin thành công",
       statusCode: 200,
       data: {
@@ -67,7 +67,7 @@ export const getFeedHome = async (
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống khi tải bảng tin",
       statusCode: 500,
       errorCode: "SERVER_ERROR",
@@ -108,7 +108,7 @@ export const getPostsByUsername = async (
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
-      return: true,
+      isSuccess: true,
       message: "Tải bài viết thành công",
       statusCode: 200,
       data: {
@@ -123,7 +123,7 @@ export const getPostsByUsername = async (
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống",
       statusCode: 500,
       errorCode: "SERVER_ERROR",
@@ -141,14 +141,14 @@ export const getPostById = async (
     const post = MOCK_POSTS.find((p) => p.id === postId);
 
     return {
-      return: true,
+      isSuccess: true,
       message: "Tải bài viết thành công",
       statusCode: 200,
       data: post,
     };
   } catch (error) {
     return {
-      return: false,
+      isSuccess: false,
       message: "Lỗi hệ thống",
       statusCode: 500,
       errorCode: "SERVER_ERROR",

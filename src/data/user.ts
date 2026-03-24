@@ -24,8 +24,17 @@ export const MOCK_USER_PROFILES: UserProfile[] = [
     isVerified: true,
     isOnline: true,
     lastActiveAt: new Date().toISOString(),
-    socialMedia: { website: "https://github.com", youtube: null, x: null },
-    stats: { posts: 5, friends: 120, followers: 3500, following: 80 },
+    socialMedia: {
+      website: "https://github.com",
+      youtube: null,
+      x: null,
+    },
+    stats: {
+      posts: 5,
+      friends: 120,
+      followers: 3500,
+      following: 80,
+    },
     viewerContext: {
       isOwner: true,
       isFriend: false,

@@ -1,17 +1,27 @@
+import { UserLoginResponse } from "./response/user/user-login-response";
+
+// Token
+export interface Token {
+  accessToken: string;
+  refreshToken: string;
+}
+
+// Login
 export interface LoginRequest {
-  usernameOrEmail: string;
+  email: string;
   password: string;
   deviceToken?: string;
   deviceType?: string;
 }
 
 export interface LoginResponse {
-  displayName: string | null;
-  avatarUrl: string | null;
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
-  issuedAt: string; 
-  expiresAt: string;
+  user: UserLoginResponse;
+  token: Token;
+}
+
+// Register
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
 }

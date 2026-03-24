@@ -21,26 +21,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authService from "@/services/auth.service";
 import Logo from "../layouts/main/logo";
-import Link from "next/link";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/features/authSlice";
 import { useRouter } from "next/navigation";
-import { tokenStorage } from "@/lib/cookie-storage-utils";
+import Link from "next/link";
 
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Vui lòng không để trống email")
-    .email("Email không hợp lệ"),
-  password: z.string().min(1, "Mật khẩu không được để trống"),
-});
+const usernameRegex = /^[a-zA-Z0-9._-]+$/;
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+const registerSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, "Email không được để trống")
+      .email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    confirmPassword: z.string().min(1, "Vui lòng nhập lại mật khẩu"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu không khớp",
+    path: ["confirmPassword"],
+  });
 
-export default function FormLogin() {
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+export default function FormRegister() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const dispatch = useDispatch();
   const router = useRouter();
 
   const {
@@ -48,50 +53,27 @@ export default function FormLogin() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (dataLogin: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     try {
-      const loginRes = await authService.login(dataLogin);
-      const dataRes = loginRes.data;
+      const registerRes = await authService.register(data);
+      toast.success("Đăng ký thành công!");
 
-      if (!dataRes || !dataRes.token || !dataRes.user) {
-        toast.error("Dữ liệu phản hồi từ máy chủ không hợp lệ!");
-        return;
-      }
-
-      dispatch(
-        setCredentials({
-          user: dataRes.user,
-          token: dataRes.token,
-          isLogedIn: true,
-          isProfileCompleted: dataRes.user.isProfileCompleted,
-        }),
-      );
-
-      tokenStorage.save(dataRes.token.accessToken, dataRes.token.refreshToken);
-
-      if (dataRes.user.isProfileCompleted) {
-        toast.success("Đăng nhập thành công!");
-        router.push("/");
-      } else {
-        router.push("/account-setup");
-      }
+      router.push("/login");
     } catch (err: any) {
       const errorCode = err?.errorCode;
 
-      if (errorCode === "AUTH.UNAUTHORIZED") {
+      if (errorCode === "USER.ALREADY_EXISTS_BY_EMAIL") {
         setError("email", {
-          message: "Tài khoản hoặc mật khẩu không chính xác",
+          message: "Email này đã được sử dụng",
         });
-        setError("password", {
-          message: "Tài khoản hoặc mật khẩu không chính xác",
-        });
-      } else {
-        toast.error("Đã có lỗi xảy ra, vui lòng thử lại!");
+        return;
       }
+
+      toast.error("Đã có lỗi xảy ra, vui lòng thử lại");
     }
   };
 
@@ -102,17 +84,17 @@ export default function FormLogin() {
       transition={{ duration: 0.4 }}
       className="z-10 w-full max-w-md"
     >
+      {/* 2. Cập nhật Card hỗ trợ Dark Mode */}
       <Card className="border-zinc-200 bg-white/80 shadow-2xl shadow-zinc-200/50 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/50">
         <CardHeader className="space-y-2 pt-8 text-center">
-          {/* Mock Logo hỗ trợ Dark mode */}
-          <div className="mx-auto flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <Logo />
           </div>
-          <CardTitle className="text-2xl font-black tracking-tighter text-zinc-950 dark:text-zinc-50">
-            Đăng nhập
+          <CardTitle className="text-center text-2xl font-black tracking-tighter text-zinc-950 dark:text-zinc-50">
+            Đăng ký
           </CardTitle>
           <CardDescription className="font-medium text-zinc-500 dark:text-zinc-400">
-            Nhập thông tin để tiếp tục trải nghiệm
+            Nhập thông tin để tạo tài khoản mới và trải nghiệm
           </CardDescription>
         </CardHeader>
 
@@ -124,7 +106,7 @@ export default function FormLogin() {
                 htmlFor="email"
                 className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
               >
-                Tài khoản
+                Email
               </Label>
               <Input
                 id="email"
@@ -144,21 +126,12 @@ export default function FormLogin() {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="password"
-                  title="Mật khẩu"
-                  className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
-                >
-                  Mật khẩu
-                </Label>
-                <a
-                  href="#"
-                  className="text-[10px] font-bold text-zinc-400 transition-colors hover:text-zinc-950 dark:text-zinc-500 dark:hover:text-zinc-300"
-                >
-                  Quên mật khẩu?
-                </a>
-              </div>
+              <Label
+                htmlFor="password"
+                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+              >
+                Mật khẩu
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -184,6 +157,45 @@ export default function FormLogin() {
               )}
             </div>
 
+            {/* Confirm Password Field */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+              >
+                Nhập lại mật khẩu
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  {...register("confirmPassword")}
+                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
+                    errors.confirmPassword
+                      ? "border-red-500 dark:border-red-500"
+                      : ""
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-zinc-50"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
             <Button
               type="submit"
               disabled={isSubmitting}
@@ -192,7 +204,7 @@ export default function FormLogin() {
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "ĐĂNG NHẬP"
+                "ĐĂNG KÝ"
               )}
             </Button>
           </form>
@@ -200,12 +212,12 @@ export default function FormLogin() {
 
         <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-8">
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            Chưa có tài khoản?{" "}
+            Đã có tài khoản?{" "}
             <Link
-              href="/register"
+              href="/login"
               className="cursor-pointer font-black text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50"
             >
-              Đăng ký ngay
+              Đăng nhập ngay
             </Link>
           </p>
         </CardFooter>

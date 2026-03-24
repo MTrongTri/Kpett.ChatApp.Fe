@@ -18,7 +18,6 @@ export const MOCK_POSTS: Post[] = [
   {
     id: "p_u1_1",
     author: MOCK_USER_PROFILES[0],
-    title: "Khởi tạo dự án mới!",
     content:
       "Chính thức bắt tay vào Kpett.ChatApp. Sẽ dùng Next.js cho frontend để SSR mượt mà.",
     hashtags: ["nextjs", "frontend", "coding"],

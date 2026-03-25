@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 // Services & Types
 import { getPostsByUsername } from "@/services/post.service";
 import { UserProfile } from "@/types/user";
-import { ApiResponse, PaginatedData } from "@/types/api";
 import { PostThumbnail } from "@/types/post";
 
 // Components
@@ -23,6 +22,7 @@ import {
   TriangleAlert,
   Loader2,
 } from "lucide-react";
+import { ApiResponse, PaginatedData } from "@/types/common/api";
 
 export type ProfileTab = "posts" | "reels" | "saved";
 

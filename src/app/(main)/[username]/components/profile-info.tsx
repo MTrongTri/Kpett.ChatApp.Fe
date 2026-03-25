@@ -33,11 +33,11 @@ import { useState } from "react";
 // ── STAT BUTTON ───────────────────────────────────────────────────────
 function StatButton({ value, label }: { value: number; label: string }) {
   return (
-    <button className="hover:bg-foreground/5 group flex cursor-pointer flex-col items-center gap-1 rounded-xl border-none bg-transparent px-4 py-2 transition-colors md:px-5">
-      <span className="text-foreground group-hover:text-primary text-[22px] leading-none font-bold transition-colors">
+    <button className="group hover:bg-background/80 flex w-full cursor-pointer flex-col items-center gap-1 rounded-2xl border-none bg-transparent px-2 py-3 transition-all md:px-4">
+      <span className="text-foreground group-hover:text-primary text-xl font-bold tracking-tight transition-colors md:text-[22px]">
         {formatCompactNumber(value)}
       </span>
-      <span className="text-foreground/40 text-[9px] tracking-[0.12em]">
+      <span className="text-foreground/50 text-[10px] font-medium tracking-wider uppercase md:text-[11px]">
         {label}
       </span>
     </button>
@@ -53,73 +53,79 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
   const [following, setFollowing] = useState(profile.viewerContext.isFriend);
 
   return (
-    <div className="px-5 md:px-7">
+    <div className="mx-auto max-w-4xl px-5 md:px-7">
       {/* Name & role */}
-      <div className="mb-3">
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          <h1 className="text-foreground text-[24px] leading-tight font-bold">
+      <div className="mb-4 space-y-1.5">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <h1 className="text-foreground text-2xl font-extrabold tracking-tight md:text-[28px]">
             {profile.displayName}
           </h1>
 
           {profile.isVerified && (
-            <span className="bg-primary text-primary-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
+            <span className="bg-primary text-primary-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold shadow-sm">
               <Check size={12} className="shrink-0" />
             </span>
           )}
         </div>
 
-        <p className="text-foreground/40 mt-1.5 flex justify-center text-[12px]">
-          @{profile.username} · {profile.role}
+        <p className="text-foreground/50 flex justify-center text-sm font-medium">
+          @{profile.username} {profile.location && <>· {profile.cocupation}</>}
         </p>
       </div>
 
       {/* Meta row */}
-      <div className="mb-3.5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-        <span className="text-foreground/45 flex items-center gap-1.5 text-[12px]">
-          <MapPin size={12} className="shrink-0" />
-          {profile.location}
+      <div className="mb-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
+        {profile.location && (
+          <span className="text-foreground/60 flex items-center gap-1.5 text-[13px] font-medium">
+            <MapPin size={14} className="text-foreground/40 shrink-0" />
+            {profile.location}
+          </span>
+        )}
+        <span className="text-foreground/60 flex items-center gap-1.5 text-[13px] font-medium">
+          <Calendar size={14} className="text-foreground/40 shrink-0" />
+          Tham gia{" "}
+          {formatRelativeTime(profile.createdAt, {
+            style: "absolute",
+            showTime: false,
+          })}
         </span>
-        <span className="text-foreground/45 flex items-center gap-1.5 text-[12px]">
-          <Calendar size={12} className="shrink-0" />
-          Tham gia {formatRelativeTime(profile.joinedAt, { showTime: false })}
-        </span>
-        {profile.socialMedia.website && (
+        {profile?.socialMedia?.website && (
           <a
             href="#"
-            className="text-primary/80 hover:text-primary flex items-center gap-1.5 text-[12px] transition-colors"
+            className="text-primary hover:text-primary/80 flex items-center gap-1.5 text-[13px] font-medium transition-colors"
           >
-            <Link2 size={12} className="shrink-0" />
+            <Link2 size={14} className="shrink-0" />
             {profile.socialMedia.website}
           </a>
         )}
       </div>
 
       {profile.biography && (
-        <div className="mb-3.5 flex justify-center">
-          <p className="text-foreground/45 text-center text-[12px] whitespace-pre-wrap">
+        <div className="mb-6 flex justify-center px-4">
+          <p className="text-foreground/70 max-w-2xl text-center text-[14px] leading-relaxed whitespace-pre-wrap">
             {profile.biography}
           </p>
         </div>
       )}
 
       {/* ── ACTION BUTTONS ── */}
-      <div className="flex items-center justify-center gap-2 pb-1">
+      <div className="flex items-center justify-center gap-3 pb-2">
         {profile.viewerContext.isOwner ? (
           <>
             <Button
               variant="outline"
               size="sm"
-              className="text-foreground border-border hover:border-primary/60 hover:text-primary h-9 cursor-pointer gap-1.5 text-[11px] tracking-wider uppercase"
+              className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
             >
-              <Pencil size={12} />
+              <Pencil size={14} />
               Chỉnh sửa
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-foreground border-border hover:border-primary/60 hover:text-primary h-9 cursor-pointer gap-1.5 text-[11px] tracking-wider uppercase"
+              className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
             >
-              <Share2 size={12} />
+              <Share2 size={14} />
               Chia sẻ
             </Button>
           </>
@@ -130,21 +136,20 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
               size="sm"
               onClick={() => setFollowing((p) => !p)}
               className={cn(
-                "h-9 gap-1.5 px-4 text-[11px] tracking-wider uppercase",
-                "transition-all duration-150",
+                "h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200 hover:scale-105",
                 following
-                  ? "border-border text-foreground/60 hover:border-destructive hover:text-destructive border bg-transparent"
-                  : "bg-primary/15 border-primary text-primary hover:bg-primary/25 border",
+                  ? "border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive border"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90",
               )}
             >
               {following ? (
                 <>
-                  <UserMinus size={13} />
+                  <UserMinus size={14} />
                   Hủy kết bạn
                 </>
               ) : (
                 <>
-                  <UserPlus size={13} />
+                  <UserPlus size={14} />
                   Thêm bạn bè
                 </>
               )}
@@ -154,9 +159,9 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             <Button
               variant="outline"
               size="sm"
-              className="border-border hover:border-primary/60 hover:text-primary h-9 gap-1.5 px-3 text-[11px] tracking-wider uppercase"
+              className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
             >
-              <MessageSquare size={13} />
+              <MessageSquare size={14} />
               Nhắn tin
             </Button>
 
@@ -166,30 +171,34 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-border hover:border-foreground/30 h-9 w-9 rounded-lg"
+                  className="border-border hover:bg-muted h-10 w-10 rounded-full transition-all"
                 >
-                  <MoreHorizontal size={15} />
+                  <MoreHorizontal size={16} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="bg-card border-border text-card-foreground w-48 rounded-xl"
+                className="bg-card border-border text-card-foreground w-48 rounded-2xl p-1 shadow-lg"
               >
-                <DropdownMenuItem className="hover:text-primary focus:text-primary cursor-pointer gap-2 text-sm">
-                  <Copy size={13} /> Sao chép liên kết
+                <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
+                  <Copy size={14} className="text-foreground/60" /> Sao chép
+                  liên kết
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:text-primary focus:text-primary cursor-pointer gap-2 text-sm">
-                  <Share2 size={13} /> Chia sẻ trang cá nhân
+                <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
+                  <Share2 size={14} className="text-foreground/60" /> Chia sẻ
+                  trang cá nhân
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2 text-sm">
-                  <BellOff size={13} /> Tắt thông báo
+                <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
+                  <BellOff size={14} className="text-foreground/60" /> Tắt thông
+                  báo
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem className="cursor-pointer gap-2 text-sm">
-                  <UserMinus size={13} /> Chặn người dùng
+                <DropdownMenuSeparator className="bg-border my-1" />
+                <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
+                  <UserMinus size={14} className="text-foreground/60" /> Chặn
+                  người dùng
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer gap-2 text-sm">
-                  <Flag size={13} /> Báo cáo
+                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
+                  <Flag size={14} /> Báo cáo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -197,24 +206,21 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         )}
       </div>
 
-      {/* Stats row */}
-      <div className="-mx-2 my-5 flex items-center justify-center">
+      {/* Stats row - Styled as a floating card */}
+      <div className="bg-muted/40 border-border/50 mx-auto my-7 flex max-w-[90%] items-center justify-between rounded-3xl border p-2 shadow-sm backdrop-blur-sm md:max-w-[70%]">
         {[
           { value: profile.stats.posts, label: "Bài viết" },
           { value: profile.stats.friends, label: "Bạn bè" },
           { value: profile.stats.followers, label: "Theo dõi" },
           { value: profile.stats.following, label: "Đang theo dõi" },
-        ].map((s, i, arr) => (
-          <div key={s.label} className="flex items-center">
+        ].map((s) => (
+          <div key={s.label} className="flex-1">
             <StatButton value={s.value} label={s.label} />
-            {i < arr.length - 1 && (
-              <div className="bg-border h-8 w-px shrink-0" />
-            )}
           </div>
         ))}
       </div>
 
-      <Separator className="bg-border" />
+      <Separator className="bg-border opacity-70" />
     </div>
   );
 }

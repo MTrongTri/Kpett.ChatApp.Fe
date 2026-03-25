@@ -11,8 +11,8 @@ export const MOCK_CURENT_USER: BaseAuthor = {
 export const MOCK_USER_PROFILES: UserProfile[] = [
   {
     id: "user_1",
-    username: "dev.tuan",
-    displayName: "Tuấn Dev",
+    username: "du.gay",
+    displayName: "Quang Du",
     role: "Fullstack Developer",
     biography: "Code vì đam mê. Đang hoàn thiện Kpett.ChatApp 🚀",
     location: "TP. Hồ Chí Minh, Việt Nam",

@@ -2,7 +2,7 @@
 import useSWRInfinite from "swr/infinite";
 import { getRepliesByCommentId } from "@/services/comment.service";
 
-const REPLIES_LIMIT = 1;
+const REPLIES_LIMIT = 12;
 
 const getRepliesKey =
   (commentId: string, enabled: boolean) =>

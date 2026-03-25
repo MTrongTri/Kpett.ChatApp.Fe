@@ -8,7 +8,7 @@ import useSWRInfinite from "swr/infinite";
 import { getPostById } from "@/services/post.service";
 import { getCommentsByPostId } from "@/services/comment.service";
 
-const COMMENTS_LIMIT = 1;
+const COMMENTS_LIMIT = 12;
 
 export function usePostLightBox() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);

@@ -88,7 +88,7 @@ export default function SpotlightStrip() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="border-border bg-card mb-4 rounded-xl border px-4 py-4">
+    <div className="border-border bg-card mb-4 hidden rounded-xl border px-4 py-4">
       {/* Scrollable strip */}
       <div
         ref={scrollRef}

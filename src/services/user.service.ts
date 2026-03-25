@@ -1,12 +1,18 @@
 import { MOCK_USER_PROFILES } from "@/data/user";
 import { ApiResponse } from "@/types/common/api";
 import {
-  BaseUser,
   CheckUsernameResponse,
   UserLoginResponse,
   UserProfile,
+  UserStatsResponse,
 } from "@/types/user";
 import http from "./http";
+
+export const getProfileUser = async (
+  username: string,
+): Promise<ApiResponse<UserProfile>> => {
+  return http.get(`users/profile/${username}`);
+};
 
 export const getUserMentions = async (
   displayName: string,
@@ -59,6 +65,6 @@ export const accountSetup = async ({
   });
 };
 
-export const getMyStats = async () => {
+export const getMyStats = async (): Promise<ApiResponse<UserStatsResponse>> => {
   return http.get("users/me/stats");
 };

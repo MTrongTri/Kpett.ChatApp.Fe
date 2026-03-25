@@ -44,9 +44,9 @@ export interface UserProfile {
   username: string;
   displayName: string;
   biography: string;
-  role: string;
+  cocupation: string;
   location: string;
-  joinedAt: string;
+  createdAt: string;
   avatarUrl: string | null;
   coverUrl: string | null;
 

@@ -26,6 +26,7 @@ import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/authSlice";
 import { useRouter } from "next/navigation";
 import { tokenStorage } from "@/lib/cookie-storage-utils";
+import Cookies from "js-cookie";
 
 const loginSchema = z.object({
   email: z
@@ -72,6 +73,13 @@ export default function FormLogin() {
 
       tokenStorage.save(dataRes.token.accessToken, dataRes.token.refreshToken);
 
+      Cookies.set("isLoggedIn", "true", { expires: 365 });
+      Cookies.set(
+        "isProfileCompleted",
+        String(dataRes.user.isProfileCompleted),
+        { expires: 365 },
+      );
+
       if (dataRes.user.isProfileCompleted) {
         toast.success("Đăng nhập thành công!");
         router.push("/");
@@ -85,6 +93,7 @@ export default function FormLogin() {
         setError("email", {
           message: "Tài khoản hoặc mật khẩu không chính xác",
         });
+
         setError("password", {
           message: "Tài khoản hoặc mật khẩu không chính xác",
         });

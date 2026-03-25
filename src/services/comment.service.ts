@@ -1,5 +1,5 @@
 import { MOCK_COMMENT } from "@/data/comment";
-import { ApiResponse, PaginatedData } from "@/types/api";
+import { ApiResponse, PaginatedData } from "@/types/common/api";
 import { Comment, MentionComment } from "@/types/comment";
 import { BaseAuthor, BaseUser } from "@/types/user";
 

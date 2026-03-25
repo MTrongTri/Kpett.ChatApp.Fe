@@ -2,7 +2,7 @@ import { Post, PostThumbnail } from "@/types/post";
 import http from "./http";
 import { MOCK_POST_THUMBNAILS, MOCK_POSTS } from "@/data/post";
 import { ProfileTab } from "@/app/(main)/[username]/components/profile-tabs";
-import { ApiResponse, PaginatedData } from "@/types/api";
+import { ApiResponse, PaginatedData } from "@/types/common/api";
 
 export const getFeedHome = async (
   cursor: string | null = null,

@@ -5,6 +5,7 @@ export interface BaseUser {
   displayName: string;
   avatarUrl: string | null;
   isVerified?: boolean;
+  isProfileCompleted?: boolean;
 }
 
 export interface BaseAuthor extends BaseUser {}

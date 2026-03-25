@@ -7,33 +7,27 @@ const SETUP_ROUTE = "/account-setup";
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_ROUTES.includes(pathname)) return NextResponse.next();
+  const isLoggedIn = request.cookies.get("isLoggedIn")?.value === "true";
+  const isProfileCompleted =
+    request.cookies.get("isProfileCompleted")?.value === "true";
 
-  try {
-    const persistedAuth = request.cookies.get("persist%3Aauth")?.value;
-
-    if (!persistedAuth) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    const auth = JSON.parse(persistedAuth);
-    const isLoggedIn = auth.isLoggedIn === true || auth.isLoggedIn === "true";
-    const isProfileCompleted =
-      auth.isProfileCompleted === true || auth.isProfileCompleted === "true";
-
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    if (!isProfileCompleted && pathname !== SETUP_ROUTE) {
-      return NextResponse.redirect(new URL(SETUP_ROUTE, request.url));
-    }
-
-    if (isProfileCompleted && pathname === SETUP_ROUTE) {
+  if (PUBLIC_ROUTES.includes(pathname)) {
+    if (isLoggedIn) {
       return NextResponse.redirect(new URL("/", request.url));
     }
-  } catch (e) {
+    return NextResponse.next();
+  }
+
+  if (!isLoggedIn) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (!isProfileCompleted && pathname !== SETUP_ROUTE) {
+    return NextResponse.redirect(new URL(SETUP_ROUTE, request.url));
+  }
+
+  if (isProfileCompleted && pathname === SETUP_ROUTE) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

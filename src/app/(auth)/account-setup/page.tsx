@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/authSlice";
+import Cookies from "js-cookie";
 
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
@@ -55,6 +56,11 @@ export default function SocialAccountSetup() {
         toast.error("Đã có lỗi xảy ra");
         return;
       }
+
+      Cookies.set("isLoggedIn", "true", { expires: 365 });
+      Cookies.set("isProfileCompleted", String(data.isProfileCompleted), {
+        expires: 365,
+      });
 
       dispatch(
         setCredentials({

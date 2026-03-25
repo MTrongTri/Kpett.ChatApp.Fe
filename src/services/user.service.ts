@@ -1,5 +1,5 @@
 import { MOCK_USER_PROFILES } from "@/data/user";
-import { ApiResponse } from "@/types/api";
+import { ApiResponse } from "@/types/common/api";
 import { CheckUsernameResponse } from "@/types/response/user/check-username-response";
 import { BaseUser, UserProfile } from "@/types/user";
 import http from "./http";

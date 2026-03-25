@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/authSlice";
 import Cookies from "js-cookie";
+import { setAuthSession } from "@/lib/cookie-storage-utils";
 
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
@@ -57,10 +58,7 @@ export default function SocialAccountSetup() {
         return;
       }
 
-      Cookies.set("isLoggedIn", "true", { expires: 365 });
-      Cookies.set("isProfileCompleted", String(data.isProfileCompleted), {
-        expires: 365,
-      });
+      setAuthSession({ isProfileCompleted: data.isProfileCompleted });
 
       dispatch(
         setCredentials({

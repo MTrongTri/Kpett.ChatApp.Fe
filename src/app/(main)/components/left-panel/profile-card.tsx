@@ -1,47 +1,40 @@
 import { UserAvatar } from "@/components/user/user-avatar";
 import { formatCompactNumber } from "@/lib/format-number-utils";
-
-interface CurrentUser {
-  id: string;
-  username: string;
-  displayName: string;
-  isOnline: boolean;
-  role: string;
-  posts: number;
-  followers: number;
-  following: number;
-}
-
-const CURRENT_USER: CurrentUser = {
-  id: "1",
-  username: "tuan.dev",
-  displayName: "Tuấn Nguyễn",
-  isOnline: true,
-  role: "Backend Dev",
-  posts: 248,
-  followers: 4200,
-  following: 891,
-};
+import { getMyStats } from "@/services/user.service";
+import { BaseUser } from "@/types/user";
+import useSWR from "swr";
+import { ProfileCardSkeleton } from "./profile-card-skeleton";
 
 export default function ProfileCard() {
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useSWR(["/user/me/stats"], () => getMyStats());
+
+  if (isLoading) {
+    return <ProfileCardSkeleton />;
+  }
+
+  if (error || !response?.data) {
+    return null;
+  }
+
+  const userStats = response.data;
+
   return (
     <div className="border-border bg-card mb-1 rounded-xl border p-4">
       {/* Top row */}
       <div className="mb-4 flex items-center gap-3">
         <div>
-          <UserAvatar
-            user={CURRENT_USER}
-            isShowDotOnline={true}
-            className="h-12 w-12"
-          />
+          <UserAvatar user={userStats} className="h-12 w-12" />
         </div>
         <div>
           <p className="text-card-foreground text-sm leading-tight font-semibold">
-            {CURRENT_USER.username}
+            {userStats.displayName}
           </p>
           <p className="text-foreground/40 mt-0.5 text-[11px]">
-            @{CURRENT_USER.displayName.toLowerCase().replace(" ", "")} ·{" "}
-            {CURRENT_USER.role}
+            @{userStats.username.toLowerCase().replace(" ", "")}
           </p>
         </div>
       </div>
@@ -49,9 +42,9 @@ export default function ProfileCard() {
       {/* Stats */}
       <div className="border-border grid grid-cols-3 gap-1 border-t pt-3">
         {[
-          { n: CURRENT_USER.posts, l: "Bài viết" },
-          { n: CURRENT_USER.followers, l: "Theo dõi" },
-          { n: CURRENT_USER.following, l: "Đang theo dõi" },
+          { n: userStats.totalPosts, l: "Bài viết" },
+          { n: userStats.followers, l: "Theo dõi" },
+          { n: userStats.following, l: "Đang theo dõi" },
         ].map((s) => (
           <div key={s.l} className="text-center">
             <p className="text-card-foreground text-[18px] leading-tight font-bold">

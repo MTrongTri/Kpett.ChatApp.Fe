@@ -9,9 +9,10 @@ import {
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useState } from "react";
 import tippy, { Instance as TippyInstance } from "tippy.js";
-import { BaseAuthor, UserProfile } from "@/types/user";
+import { BaseAuthor, BaseUser, UserProfile } from "@/types/user";
 import { UserAvatar } from "../user/user-avatar";
 import MentionList from "./mention-list";
+import { CommentAuthor } from "@/types/comment";
 
 interface CommentInputProps {
   author: BaseAuthor;
@@ -19,7 +20,7 @@ interface CommentInputProps {
   onSubmit: (content: string) => Promise<void> | void;
   isLoading?: boolean;
 
-  replyToUser?: BaseAuthor;
+  replyToUser?: CommentAuthor;
   onCancel?: () => void;
 }
 

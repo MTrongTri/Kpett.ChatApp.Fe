@@ -1,11 +1,10 @@
 export interface BaseUser {
   id: string;
-  email?: string;
+  email: string;
   username: string;
   displayName: string;
   avatarUrl: string | null;
-  isVerified?: boolean;
-  isProfileCompleted?: boolean;
+  isVerified: boolean;
 }
 
 export interface BaseAuthor extends BaseUser {}
@@ -59,4 +58,19 @@ export interface UserProfile {
   stats: UserStats;
 
   viewerContext: ProfileViewerContext;
+}
+
+// Response
+export interface CheckUsernameResponse {
+  isAvailable: boolean;
+}
+
+export interface UserLoginResponse extends BaseUser {
+  isProfileCompleted: boolean;
+}
+
+export interface UserStatsResponse extends BaseUser {
+  totalPosts: number;
+  followers: number;
+  following: number;
 }

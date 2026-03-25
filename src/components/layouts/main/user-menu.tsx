@@ -47,8 +47,8 @@ export default function UserMenu() {
               {user.username}
             </p>
             <p className="mt-1.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-              {user.displayName} ·{" "}
-              <span className="text-primary/80">Backend</span>
+              {user.displayName}
+              {/* <span className="text-primary/80">Backend</span> */}
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
-import { ApiResponse } from "@/types/api";
 import { LoginRequest, LoginResponse } from "@/types/auth";
 import http from "./http";
+import { ApiResponse } from "@/types/common/api";
 
 export const login = (
   loginRequest: LoginRequest,

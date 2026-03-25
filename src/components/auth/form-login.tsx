@@ -25,7 +25,7 @@ import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/authSlice";
 import { useRouter } from "next/navigation";
-import { tokenStorage } from "@/lib/cookie-storage-utils";
+import { setAuthSession, tokenStorage } from "@/lib/cookie-storage-utils";
 import Cookies from "js-cookie";
 
 const loginSchema = z.object({
@@ -63,24 +63,21 @@ export default function FormLogin() {
         return;
       }
 
+      const { user, token } = dataRes;
+
       dispatch(
         setCredentials({
-          user: dataRes.user,
+          user: user,
           isLogedIn: true,
-          isProfileCompleted: dataRes.user.isProfileCompleted,
+          isProfileCompleted: user.isProfileCompleted,
         }),
       );
 
-      tokenStorage.save(dataRes.token.accessToken, dataRes.token.refreshToken);
+      tokenStorage.save(token.accessToken, token.refreshToken);
 
-      Cookies.set("isLoggedIn", "true", { expires: 365 });
-      Cookies.set(
-        "isProfileCompleted",
-        String(dataRes.user.isProfileCompleted),
-        { expires: 365 },
-      );
+      setAuthSession({ isProfileCompleted: user.isProfileCompleted });
 
-      if (dataRes.user.isProfileCompleted) {
+      if (user.isProfileCompleted) {
         toast.success("Đăng nhập thành công!");
         router.push("/");
       } else {

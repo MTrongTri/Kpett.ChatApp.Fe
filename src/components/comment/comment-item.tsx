@@ -12,6 +12,8 @@ import { useState } from "react";
 import { UserAvatar } from "../user/user-avatar";
 import { CommentInput } from "./comment-input";
 import { CommentText } from "./comment-text";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface CommentItemProps {
   comment: Comment;
@@ -45,6 +47,8 @@ export const CommentItem = ({
     loadMore,
   } = useReplies(comment.id, isExpanded);
 
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   const submitParentId =
     level >= MAX_LEVEL && threadParentId ? threadParentId : comment.id;
 
@@ -54,7 +58,7 @@ export const CommentItem = ({
     const response = await addComment(
       postId,
       content,
-      MOCK_CURENT_USER,
+      currentUser!,
       submitParentId,
       mentions,
     );
@@ -264,7 +268,7 @@ export const CommentItem = ({
         {isReplying && (
           <div className="mt-3">
             <CommentInput
-              author={MOCK_CURENT_USER}
+              author={currentUser!}
               fetchMentions={debouncedFetchMentions}
               replyToUser={comment.author}
               onCancel={() => setIsReplying(false)}

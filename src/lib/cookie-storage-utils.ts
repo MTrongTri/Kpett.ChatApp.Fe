@@ -35,4 +35,20 @@ export const tokenStorage = {
   },
 };
 
+export const setAuthSession = ({
+  isProfileCompleted,
+}: {
+  isProfileCompleted: boolean;
+}) => {
+  Cookies.set("isLoggedIn", "true", { expires: 365 });
+  Cookies.set("isProfileCompleted", String(isProfileCompleted), {
+    expires: 365,
+  });
+};
+
+export const deleteAuthSession = () => {
+  Cookies.remove("isLoggedIn");
+  Cookies.remove("isProfileCompleted");
+};
+
 export default cookieStorage;

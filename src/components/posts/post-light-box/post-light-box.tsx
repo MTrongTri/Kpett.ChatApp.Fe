@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { CommentInput } from "@/components/comment/comment-input";
+import { CommentItemSkeleton } from "@/components/comment/comment-item-skeleton";
 import { CommentList } from "@/components/comment/comment-list";
 import {
   Dialog,
@@ -12,20 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { useDebounceCallback } from "@/hooks/use-debounce";
 import { getUserMentions } from "@/services/user.service";
-import { Post } from "@/types/post";
+import { RootState } from "@/store/store";
 import { Comment } from "@/types/comment";
+import { Post } from "@/types/post";
+import { X } from "lucide-react";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+import { useSelector } from "react-redux";
 import { PostActions } from "./post-actions";
 import { PostCaption } from "./post-caption";
 import { PostHeader } from "./post-header";
-import { PostMediaCarousel } from "./post-media-carousel";
-import { Loader2, X } from "lucide-react";
 import { PostLightboxSkeleton } from "./post-light-box-skeleton";
-import { useInView } from "react-intersection-observer";
-import { time } from "console";
-import { CommentItemSkeleton } from "@/components/comment/comment-item-skeleton";
-import { MediaLightbox } from "../media-lightbox";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
-import { MOCK_CURENT_USER } from "@/data/user";
+import { PostMediaCarousel } from "./post-media-carousel";
 
 interface PostLightboxProps {
   isOpen: boolean;
@@ -52,6 +50,8 @@ export default function PostLightbox({
   hasMore,
   onLoadMore,
 }: PostLightboxProps) {
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   // Tham chiếu (Ref) đến thẻ div cuối cùng để kích hoạt cuộn
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
@@ -81,7 +81,7 @@ export default function PostLightbox({
   const fetchMentions = async (query: string) => {
     try {
       const response = await getUserMentions(query);
-      if (response.return && response.data) return response.data;
+      if (response.isSuccess && response.data) return response.data;
       return [];
     } catch (error) {
       console.error("Lỗi tải mention:", error);
@@ -170,7 +170,7 @@ export default function PostLightbox({
 
             <div className="border-border/50 border-t px-4 pt-4 pb-4">
               <CommentInput
-                author={MOCK_CURENT_USER}
+                author={currentUser!}
                 fetchMentions={debouncedFetchMentions}
                 onSubmit={handleAddComment}
               />

@@ -1,4 +1,4 @@
-import { UserLoginResponse } from "./response/user/user-login-response";
+import { UserLoginResponse } from "./user";
 
 // Token
 export interface Token {

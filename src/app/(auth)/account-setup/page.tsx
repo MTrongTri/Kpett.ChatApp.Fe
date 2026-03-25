@@ -1,30 +1,33 @@
 "use client";
 
-import { AtSign, ChevronLeft, FileText, User } from "lucide-react";
+import { AtSign, ChevronLeft, FileText, User, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import UsernameInput from "./components/UsernameInput";
+import { accountSetup } from "@/services/user.service";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/store/features/authSlice";
 
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     displayName: "",
     username: "",
-    bio: "",
+    biography: "",
     interests: [] as string[],
   });
 
-  // State quản lý validation
   const [isUsernameValid, setIsUsernameValid] = useState(false);
   const [isUsernameChecking, setIsUsernameChecking] = useState(false);
-
-  // State kiểm tra xem user đã "chạm" vào field Tên hiển thị chưa
   const [isDisplayNameTouched, setIsDisplayNameTouched] = useState(false);
 
-  // Kiểm tra Tên hiển thị có hợp lệ không (không được rỗng hoặc chỉ có dấu cách)
   const isDisplayNameValid = formData.displayName.trim().length > 0;
 
-  // Hàm cập nhật giá trị chung
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -32,7 +35,6 @@ export default function SocialAccountSetup() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Hàm chọn/bỏ chọn sở thích
   const toggleInterest = (tag: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -40,6 +42,35 @@ export default function SocialAccountSetup() {
         ? prev.interests.filter((t) => t !== tag)
         : [...prev.interests, tag],
     }));
+  };
+
+  const handleCompleted = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data } = await accountSetup(formData);
+
+      if (!data) {
+        toast.error("Đã có lỗi xảy ra");
+        return;
+      }
+
+      dispatch(
+        setCredentials({
+          user: data,
+          isLogedIn: true,
+          isProfileCompleted: true,
+        }),
+      );
+      toast.success("Thiết lập tài khoản thành công!");
+      router.push("/");
+    } catch (error) {
+      toast.error("Đã có lỗi xảy ra khi lưu thông tin");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,7 +97,6 @@ export default function SocialAccountSetup() {
 
             <div className="space-y-6">
               <div className="space-y-4">
-                {/* --- DISPLAY NAME FIELD --- */}
                 <div className="space-y-1.5">
                   <label className="ml-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Tên hiển thị <span className="text-red-500">*</span>
@@ -91,10 +121,9 @@ export default function SocialAccountSetup() {
                         isDisplayNameTouched && !isDisplayNameValid
                           ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
-                      } `}
+                      }`}
                     />
                   </div>
-                  {/* Message báo lỗi */}
                   {isDisplayNameTouched && !isDisplayNameValid && (
                     <p className="animate-in fade-in slide-in-from-top-1 ml-1 text-xs font-medium text-red-500">
                       Tên hiển thị không được để trống
@@ -102,7 +131,6 @@ export default function SocialAccountSetup() {
                   )}
                 </div>
 
-                {/* --- USERNAME FIELD --- */}
                 <div className="space-y-1.5">
                   <UsernameInput
                     value={formData.username}
@@ -115,13 +143,12 @@ export default function SocialAccountSetup() {
                 </div>
               </div>
 
-              {/* --- NEXT BUTTON --- */}
               <button
                 onClick={() => setStep(2)}
                 disabled={
                   !isDisplayNameValid || !isUsernameValid || isUsernameChecking
                 }
-                className="w-full cursor-pointer rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all disabled:cursor-not-allowed disabled:bg-slate-900/50 dark:bg-orange-500 dark:disabled:bg-orange-500/50"
+                className="w-full cursor-pointer rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-slate-900/50 dark:bg-orange-500 dark:disabled:bg-orange-500/50"
               >
                 Tiếp tục
               </button>
@@ -129,7 +156,6 @@ export default function SocialAccountSetup() {
           </section>
         ) : (
           <section className="animate-in fade-in slide-in-from-right-4 duration-500">
-            {/* ... Phần code Bước 2 giữ nguyên ... */}
             <div className="mb-8 text-center">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Kể thêm về bạn
@@ -150,12 +176,12 @@ export default function SocialAccountSetup() {
                     size={18}
                   />
                   <textarea
-                    name="bio"
+                    name="biography" // Đã sửa từ "bio" thành "biography" để khớp với state
                     rows={3}
-                    value={formData.bio}
+                    value={formData.biography}
                     onChange={handleChange}
                     placeholder="Viết đôi chút về bạn"
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-transparent py-3.5 pr-4 pl-11 outline-none focus:border-orange-500 dark:border-slate-700 dark:text-white"
+                    className="w-full resize-none rounded-2xl border border-slate-200 bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700 dark:text-white"
                   ></textarea>
                 </div>
               </div>
@@ -164,7 +190,7 @@ export default function SocialAccountSetup() {
                 <label className="ml-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Bạn quan tâm đến điều gì?
                 </label>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {[
                     "Ăn uống",
                     "Động vật",
@@ -174,11 +200,12 @@ export default function SocialAccountSetup() {
                   ].map((tag) => (
                     <button
                       key={tag}
+                      type="button"
                       onClick={() => toggleInterest(tag)}
                       className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                         formData.interests.includes(tag)
-                          ? "border-orange-500 bg-orange-500 text-white"
-                          : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                          ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                          : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
                       }`}
                     >
                       {tag}
@@ -189,16 +216,26 @@ export default function SocialAccountSetup() {
 
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  disabled={isSubmitting}
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 transition-colors hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={() => console.log("Final Data:", formData)}
-                  className="flex-1 rounded-2xl bg-orange-500 py-4 font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
+                  onClick={handleCompleted}
+                  disabled={isSubmitting}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-orange-500 py-4 font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Hoàn tất thiết lập
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    "Hoàn tất thiết lập"
+                  )}
                 </button>
               </div>
             </div>

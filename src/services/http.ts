@@ -60,21 +60,6 @@ http.interceptors.response.use(
         // Lưu token mới vào cookie
         tokenStorage.save(data.data.accessToken, data.data.refreshToken);
 
-        // Gọi lại API lấy thông tin user mới nhất
-        // const { data: userData } = await axios.get(
-        //   `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
-        //   { headers: { Authorization: `Bearer ${data.accessToken}` } },
-        // );
-
-        // Dispatch lại → redux-persist reset cookie thêm 7 ngày
-        // store.dispatch(
-        //   setCredentials({
-        //     user: userData,
-        //     token: data,
-        //     isProfileCompleted: userData.isProfileCompleted,
-        //   }),
-        // );
-
         // Cho các request đang chờ tiếp tục với token mới
         pendingRequests.forEach((cb) => cb(data.accessToken));
         pendingRequests = [];

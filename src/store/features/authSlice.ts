@@ -1,9 +1,10 @@
 import { Token } from "@/types/auth";
 import { UserLoginResponse } from "@/types/response/user/user-login-response";
+import { BaseUser } from "@/types/user";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
-  user: UserLoginResponse | null;
+  user: BaseUser | null;
   isLoggedIn: boolean;
   isProfileCompleted: boolean;
 }
@@ -21,7 +22,7 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        user: UserLoginResponse;
+        user: BaseUser;
         isLogedIn: boolean;
         isProfileCompleted: boolean;
       }>,

@@ -77,7 +77,7 @@ export function MediaLightbox({
                 className="flex items-center justify-center p-4"
               >
                 <div className="relative flex h-full w-full items-center justify-center">
-                  {item.type === "image" ? (
+                  {item.type.toLocaleLowerCase() === "image" ? (
                     <div className="relative h-full w-full">
                       <Image
                         src={item.url}

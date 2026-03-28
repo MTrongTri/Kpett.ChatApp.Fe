@@ -65,14 +65,7 @@ export default function Feed() {
           </>
         ) : (
           posts.map((post, i) => (
-            <div
-              key={post.id}
-              className="animate-in fade-in slide-in-from-bottom-3 duration-300"
-              style={{
-                animationDelay: `${i * 60}ms`,
-                animationFillMode: "both",
-              }}
-            >
+            <div key={post.id} className="">
               <PostCard
                 post={post}
                 onOpenPostLightBox={openModal}
@@ -86,7 +79,9 @@ export default function Feed() {
       {/* Load more */}
       {hasMoreFeed && (
         <>
-          <div>{isFeedLoadingMore && <PostCardSkeleton />}</div>
+          <div className="mt-4">
+            {isFeedLoadingMore && <PostCardSkeleton />}
+          </div>
           <div
             ref={loadMoreRef}
             className="flex w-full items-center justify-center py-6"

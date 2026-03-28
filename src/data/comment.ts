@@ -47,7 +47,7 @@ export const MOCK_COMMENT: Comment[] = [
     postId: "p_u1_5",
     parentId: "c_1",
     author: users.tuan,
-    content: "Cảm ơn <@user_2>! Rủ thêm <@user_3> đi cùng luôn haha 👨‍👩‍👧‍👦.",
+    content: "Cảm ơn <@user_2>! Rủ thêm <@user_3> đi cùng luôn haha.",
     mentions: [
       { userId: "user_2", username: "hoa.boutique", displayName: "Hoa Lê" },
       { userId: "user_3", username: "kien.fitness", displayName: "Kiên Trần" },

@@ -5,7 +5,7 @@ import { useMemo, useCallback } from "react";
 import useSWRInfinite from "swr/infinite";
 import { getFeedHome } from "@/services/post.service";
 
-const FEED_LIMIT = 5;
+const FEED_LIMIT = 10;
 
 export function useHomeFeed() {
   const {

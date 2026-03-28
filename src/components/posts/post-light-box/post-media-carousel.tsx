@@ -40,7 +40,7 @@ export function PostMediaCarousel({ media, postId }: PostMediaCarouselProps) {
           {media.map((item, index) => (
             <SwiperSlide key={index}>
               <div className="relative h-full w-full bg-black/5">
-                {item.type === "image" ? (
+                {item.type.toLocaleLowerCase() === "image" ? (
                   <Image
                     src={item.url}
                     alt="Post media"

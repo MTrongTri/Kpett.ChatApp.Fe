@@ -35,6 +35,7 @@ import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import Link from "next/link";
 import { Media } from "@/types/media";
+import PostContent from "./post-content";
 
 // ── POST CARD ────────────────────────────────────────────────────────
 interface PostCardProps {
@@ -132,17 +133,7 @@ export default function PostCard({
           </h2>
         )}
 
-        <p className="text-foreground/65 text-[13.5px] leading-relaxed">
-          {post.content}
-          {post.hashtags.map((tag) => (
-            <span
-              key={tag}
-              className="text-primary/80 hover:text-primary cursor-pointer font-medium"
-            >
-              #{tag}
-            </span>
-          ))}
-        </p>
+        {<PostContent post={post} />}
       </div>
 
       {/* ── IMAGE ── */}
@@ -170,14 +161,14 @@ export default function PostCard({
               {post.media.map((item, index) => (
                 <SwiperSlide key={index}>
                   <div className="relative h-full w-full bg-black/5">
-                    {item.type === "image" ? (
+                    {item.type.toLocaleLowerCase() === "image" ? (
                       <Image
                         src={item.url}
                         alt=""
                         fill
                         className="object-cover"
                         onClick={() =>
-                          item.type === "image" &&
+                          item.type.toLocaleLowerCase() === "image" &&
                           openMediaLightBox(post.media, index)
                         }
                       />

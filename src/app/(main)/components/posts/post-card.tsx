@@ -10,7 +10,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { Post } from "@/types/post";
 import {
-  BadgeCheck,
   Bookmark,
   CheckCircle2,
   ChevronLeft,
@@ -21,20 +20,19 @@ import {
   Link2,
   MessageCircle,
   MoreHorizontal,
-  UserMinus,
+  Play,
+  UserMinus
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import { MediaLightbox } from "@/components/posts/media-lightbox";
 import { UserAvatar } from "@/components/user/user-avatar";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
-import Link from "next/link";
 import { Media } from "@/types/media";
+import Link from "next/link";
 import PostContent from "./post-content";
 
 // ── POST CARD ────────────────────────────────────────────────────────
@@ -133,10 +131,10 @@ export default function PostCard({
           </h2>
         )}
 
-        {<PostContent post={post} />}
+        {<PostContent content={post.content} tags={post.hashtags} />}
       </div>
 
-      {/* ── IMAGE ── */}
+      {/* ── IMAGE / MEDIA ── */}
       {post.media && post.media.length > 0 && (
         <div className="mx-4 mb-3">
           <div className="border-border group relative h-100 w-full overflow-hidden rounded-xl border">
@@ -166,18 +164,24 @@ export default function PostCard({
                         src={item.url}
                         alt=""
                         fill
-                        className="object-cover"
-                        onClick={() =>
-                          item.type.toLocaleLowerCase() === "image" &&
-                          openMediaLightBox(post.media, index)
-                        }
+                        className="object-cover cursor-pointer"
+                        onClick={() => openMediaLightBox(post.media, index)}
                       />
                     ) : (
-                      <video
-                        src={item.url}
-                        controls
-                        className="h-full w-full object-cover"
-                      />
+                      <div
+                        className="group/video relative h-full w-full cursor-pointer"
+                        onClick={() => openMediaLightBox(post.media, index)}
+                      >
+                        <video
+                          src={item.url}
+                          className="h-full w-full object-cover"
+                          preload="metadata"
+                        />
+                        {/* Overlay làm tối nhẹ và Nút Play */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
+                          <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
+                        </div>
+                      </div>
                     )}
                   </div>
                 </SwiperSlide>

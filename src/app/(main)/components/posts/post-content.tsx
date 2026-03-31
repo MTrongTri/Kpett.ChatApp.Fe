@@ -3,27 +3,27 @@ import { Post } from "@/types/post";
 import { useState } from "react";
 
 interface PostContentProps {
-  post: Post;
+  content: string;
+  tags?: string[]
 }
 
-export default function PostContent({ post }: PostContentProps) {
+export default function PostContent({ content, tags }: PostContentProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const MAX_LENGTH = 150;
 
-  const isLongContent = post.content?.length > MAX_LENGTH;
+  const isLongContent = content?.length > MAX_LENGTH;
 
   return (
     <div className="text-foreground/65 text-[13.5px] leading-relaxed">
       <div
-        className={`wrap-break-word whitespace-pre-wrap ${
-          !isExpanded && isLongContent ? "line-clamp-4" : ""
-        }`}
-        dangerouslySetInnerHTML={{ __html: post.content }}
+        className={`wrap-break-word whitespace-pre-wrap ${!isExpanded && isLongContent ? "line-clamp-4" : ""
+          }`}
+        dangerouslySetInnerHTML={{ __html: content }}
       />
 
       <div className="mt-1">
-        {post.hashtags?.map((tag) => (
+        {tags?.map((tag) => (
           <span
             key={tag}
             className="text-primary/80 hover:text-primary mr-2 inline-block cursor-pointer font-medium"

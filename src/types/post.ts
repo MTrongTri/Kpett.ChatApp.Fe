@@ -3,7 +3,7 @@ import { BaseAuthor } from "./user";
 
 export type PrivacyLevel = "public" | "friends" | "private";
 
-export interface PostAuthor extends BaseAuthor {}
+export interface PostAuthor extends BaseAuthor { }
 
 export interface PostMetrics {
   likeCount: number;
@@ -41,7 +41,7 @@ export interface Post {
 export interface PostThumbnail {
   id: string;
   author: PostAuthor;
-  thumbnailUrl: string;
+  mediaThumbnail: Media;
   type: MediaType;
 
   metrics: PostMetrics;
@@ -49,4 +49,11 @@ export interface PostThumbnail {
 
   createdAt: string;
   updatedAt?: string;
+}
+
+// Request
+export interface CreatePostRequest {
+  content?: string,
+  privacy: string,
+  media: Media[]
 }

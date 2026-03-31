@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, PlayCircle } from "lucide-react";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Media } from "@/types/media";
@@ -49,11 +49,20 @@ export function PostMediaCarousel({ media, postId }: PostMediaCarouselProps) {
                     onClick={() => openLightbox(media, index)}
                   />
                 ) : (
-                  <video
-                    src={item.url}
-                    controls
-                    className="h-full w-full object-cover"
-                  />
+                  <div
+                    className="group/video relative h-full w-full cursor-pointer"
+                    onClick={() => openLightbox(media, index)}
+                  >
+                    <video
+                      src={item.url}
+                      className="h-full w-full object-cover"
+                      preload="metadata"
+                    />
+                    {/* Overlay làm tối nhẹ và Nút Play */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
+                      <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
+                    </div>
+                  </div>
                 )}
               </div>
             </SwiperSlide>

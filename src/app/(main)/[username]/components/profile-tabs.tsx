@@ -6,7 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { cn } from "@/lib/utils";
 
 // Services & Types
-import { getPostsByUsername } from "@/services/post.service";
+import { getPostsByUserId } from "@/services/post.service";
 import { UserProfile } from "@/types/user";
 import { PostThumbnail } from "@/types/post";
 
@@ -24,14 +24,14 @@ import {
 } from "lucide-react";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
 
-export type ProfileTab = "posts" | "reels" | "saved";
+export type ProfileTab = "Post" | "Reel" | "Saved";
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 6;
 
 const TABS: { key: ProfileTab; label: string; icon: React.ReactNode }[] = [
-  { key: "posts", label: "Bài viết", icon: <LayoutGrid size={13} /> },
-  { key: "reels", label: "Reels", icon: <Clapperboard size={13} /> },
-  { key: "saved", label: "Đã lưu", icon: <Bookmark size={13} /> },
+  { key: "Post", label: "Bài viết", icon: <LayoutGrid size={13} /> },
+  { key: "Reel", label: "Reels", icon: <Clapperboard size={13} /> },
+  { key: "Saved", label: "Đã lưu", icon: <Bookmark size={13} /> },
 ];
 
 type PostInfiniteKey = [string, string, ProfileTab, string | null];
@@ -63,7 +63,7 @@ interface ProfileTabsProps {
 }
 
 export default function ProfileTabs({ author }: ProfileTabsProps) {
-  const [tab, setTab] = useState<ProfileTab>("posts");
+  const [tab, setTab] = useState<ProfileTab>("Post");
 
   const { ref, inView } = useInView({
     threshold: 0,
@@ -71,9 +71,9 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
 
   const { data, size, setSize, error, isLoading, isValidating, mutate } =
     useSWRInfinite(
-      (index, prev) => getKey(index, prev, author.username, tab),
+      (index, prev) => getKey(index, prev, author.id, tab),
       ([_, user, currentTab, cursor]: PostInfiniteKey) =>
-        getPostsByUsername(user, currentTab, cursor, PAGE_SIZE),
+        getPostsByUserId(user, currentTab, cursor, PAGE_SIZE),
       {
         revalidateOnFocus: true,
         shouldRetryOnError: false,
@@ -108,7 +108,7 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
       <div className="border-border mx-5 mt-4 flex justify-center border-b md:mx-7">
         {TABS.map((t) => {
           // Chỉ chủ sở hữu mới thấy tab "Đã lưu"
-          if (t.key === "saved" && !author.viewerContext.isOwner) return null;
+          if (t.key === "Saved" && !author.viewerContext.isOwner) return null;
 
           const active = tab === t.key;
           return (
@@ -126,7 +126,7 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
               {t.icon}
               <span className="hidden sm:inline">{t.label}</span>
               {active && (
-                <span className="bg-primary absolute right-0 bottom-[-1px] left-0 h-[2px] rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.4)]" />
+                <span className="bg-primary absolute right-0 -bottom-px left-0 h-0.5 rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.4)]" />
               )}
             </button>
           );
@@ -153,7 +153,7 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
         ) : allPosts.length === 0 ? (
           <div className="text-foreground/30 flex flex-col items-center py-32">
             <div className="bg-foreground/5 ring-foreground/10 mb-4 rounded-full p-6 ring-1 ring-inset">
-              {tab === "reels" ? (
+              {tab === "Reel" ? (
                 <Clapperboard size={32} />
               ) : (
                 <LayoutGrid size={32} />

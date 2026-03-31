@@ -1,8 +1,10 @@
 "use client";
 
-import { use } from "react"; // <-- Import 'use' from react
+// Thêm useEffect và useRef vào import
+import { use, useEffect, useRef } from "react";
 import { getProfileUser } from "@/services/user.service";
-import { notFound } from "next/navigation";
+// Thêm useSearchParams từ next/navigation
+import { notFound, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
@@ -13,23 +15,40 @@ interface ProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
-// 1. Remove 'async'
 export default function ProfilePage({ params }: ProfilePageProps) {
-  // 2. Unwrap the params promise using React's use() hook
   const { username } = use(params);
+
+  // 1. Khởi tạo hook đọc URL query params
+  const searchParams = useSearchParams();
+
+  // 2. Tạo ref để neo vị trí cần scroll tới
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading, error } = useSWR([`/users/profile`, username], () =>
     getProfileUser(username),
   );
 
-  // 3. Handle the loading state so it doesn't instantly 404
+  useEffect(() => {
+    if (!isLoading && data?.data) {
+      const scrollTo = searchParams.get("scroll-to");
+
+      if (scrollTo === "tabs" && tabsRef.current) {
+        setTimeout(() => {
+          tabsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+        }, 150);
+      }
+    }
+  }, [isLoading, data, searchParams]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen justify-center pt-14.5">Loading...</div>
     );
   }
 
-  // 4. Handle errors or missing data
   if (error || !data || !data.data) {
     notFound();
   }
@@ -49,7 +68,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             isOwner={userProfile.viewerContext.isOwner}
           />
           <ProfileInfo profile={userProfile} />
-          <ProfileTabs author={userProfile} />
+
+          <div ref={tabsRef} id="profile-tabs-section">
+            <ProfileTabs author={userProfile} />
+          </div>
         </div>
       </div>
     </div>

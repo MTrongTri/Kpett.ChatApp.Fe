@@ -1,29 +1,29 @@
 // hooks/use-replies.ts
 import useSWRInfinite from "swr/infinite";
-import { getRepliesByCommentId } from "@/services/comment.service";
+import { getCommentsByPostId, getRepliesByCommentId } from "@/services/comment.service";
 
 const REPLIES_LIMIT = 12;
 
 const getRepliesKey =
-  (commentId: string, enabled: boolean) =>
-  (pageIndex: number, previousPageData: any) => {
-    if (!enabled) return null;
-    if (previousPageData && !previousPageData.data?.pagination.hasMore)
-      return null;
+  (postId: string, commentId: string, enabled: boolean) =>
+    (pageIndex: number, previousPageData: any) => {
+      if (!enabled) return null;
+      if (previousPageData && !previousPageData.data?.pagination.hasMore)
+        return null;
 
-    const cursor =
-      pageIndex === 0
-        ? null
-        : (previousPageData?.data?.pagination.nextCursor ?? null);
+      const cursor =
+        pageIndex === 0
+          ? null
+          : (previousPageData?.data?.pagination.nextCursor ?? null);
 
-    return ["replies", commentId, cursor, REPLIES_LIMIT];
-  };
+      return ["replies", postId, commentId, cursor, REPLIES_LIMIT];
+    };
 
-export const useReplies = (commentId: string, enabled: boolean) => {
+export const useReplies = (postId: string, commentId: string, enabled: boolean) => {
   const { data, size, setSize, mutate, isLoading, isValidating, error } =
     useSWRInfinite(
-      getRepliesKey(commentId, enabled),
-      ([, id, cursor]) => getRepliesByCommentId(id, cursor, REPLIES_LIMIT),
+      getRepliesKey(postId, commentId, enabled),
+      ([, postId, parentId, cursor]) => getCommentsByPostId(postId, parentId, cursor, REPLIES_LIMIT),
       {
         revalidateFirstPage: false,
         revalidateOnFocus: false,

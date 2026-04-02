@@ -44,6 +44,7 @@ export default function Feed() {
     loadMoreComments,
     openModal,
     closeModal,
+    mutateComments
   } = usePostLightBox();
 
   const {
@@ -107,6 +108,7 @@ export default function Feed() {
           isLoadingMore={isLoadingMore}
           hasMore={hasMore}
           onLoadMore={loadMoreComments}
+          mutateComments={mutateComments}
         />
       )}
 

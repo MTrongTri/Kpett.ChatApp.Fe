@@ -1,132 +1,32 @@
 import { MOCK_COMMENT } from "@/data/comment";
+import { Comment } from "@/types/comment";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
-import { Comment, MentionComment } from "@/types/comment";
-import { BaseAuthor, BaseUser } from "@/types/user";
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import http from "./http";
 
 export const addComment = async (
   postId: string,
   content: string,
-  author: BaseUser,
-  parentId: string | null = null,
-  mentions: MentionComment[] = [],
+  parentCommentId: string | null = null,
 ): Promise<ApiResponse<Comment>> => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Tạo ID và Timestamp mới
-    const newCommentId = `comment_new_${Date.now()}`;
-    const now = new Date().toISOString();
-
-    // Khởi tạo Object Comment mới
-    const newComment: Comment = {
-      id: newCommentId,
-      postId: postId,
-      parentId: parentId,
-      content: content,
-      author: author,
-      mentions: mentions,
-      isEdited: false,
-      isDeleted: false,
-      createdAt: now,
-      updatedAt: now,
-      metrics: {
-        likeCount: 0,
-        replyCount: 0,
-      },
-      viewerContext: {
-        isLiked: false,
-        canReply: true,
-        canDelete: true,
-        canEdit: false,
-      },
-    };
-
-    // THÊM VÀO DATABASE GIẢ (MOCK_COMMENT)
-    MOCK_COMMENT.push(newComment);
-
-    // CẬP NHẬT REPLY COUNT CHO COMMENT CHA (RẤT QUAN TRỌNG)
-    if (parentId) {
-      const parentComment = MOCK_COMMENT.find((c) => c.id === parentId);
-      if (parentComment) {
-        // Tăng số lượng reply lên 1 để UI hiện nút "Xem thêm câu trả lời"
-        parentComment.metrics.replyCount += 1;
-      }
-    }
-
-    // 6. Trả về kết quả thành công
-    return {
-      isSuccess: true,
-      message: "Đã thêm bình luận thành công",
-      statusCode: 201,
-      data: newComment,
-    };
-  } catch (error) {
-    return {
-      isSuccess: false,
-      message: "Lỗi hệ thống khi thêm bình luận",
-      statusCode: 500,
-      errorCode: "SERVER_ERROR",
-    };
-  }
+  return http.post(`/posts/${postId}/comments`, {
+    content,
+    parentCommentId
+  })
 };
 
 export const getCommentsByPostId = async (
   postId: string,
+  parentCommentId: string | null,
   cursor: string | null = null,
-  limit: number = 5,
+  limit: number = 10,
 ): Promise<ApiResponse<PaginatedData<Comment>>> => {
-  try {
-    // Giả lập network delay (chờ 800ms)
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    console.log(`Fetching comments for post: ${postId}, cursor: ${cursor}`);
-
-    // 1. Lọc bình luận theo postId và chỉ lấy BÌNH LUẬN GỐC (parentId === null)
-    let allFiltered = MOCK_COMMENT.filter(
-      (comment) => comment.postId === postId && comment.parentId === null,
-    ).sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-
-    // 2. Xử lý Cursor logic
-    let startIndex = 0;
-    if (cursor) {
-      // Tìm vị trí của cursor hiện tại
-      const idx = allFiltered.findIndex((c) => c.id === cursor);
-      if (idx !== -1) {
-        startIndex = idx + 1;
-      }
+  return http.get(`/posts/${postId}/comments`, {
+    params: {
+      parentCommentId,
+      cursor,
+      limit
     }
-
-    const items = allFiltered.slice(startIndex, startIndex + limit);
-
-    const hasMore = startIndex + limit < allFiltered.length;
-    const nextCursor = hasMore ? items[items.length - 1].id : null;
-
-    return {
-      isSuccess: true,
-      message: "Tải bình luận thành công",
-      statusCode: 200,
-      data: {
-        items: items,
-        pagination: {
-          nextCursor,
-          hasMore,
-          limit,
-          totalCount: allFiltered.length,
-        },
-      },
-    };
-  } catch (error) {
-    return {
-      isSuccess: false,
-      message: "Lỗi hệ thống khi tải bình luận",
-      statusCode: 500,
-      errorCode: "SERVER_ERROR",
-    };
-  }
+  })
 };
 
 export const getRepliesByCommentId = async (

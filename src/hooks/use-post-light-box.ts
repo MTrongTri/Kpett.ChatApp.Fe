@@ -33,6 +33,7 @@ export function usePostLightBox() {
     error: commentsError,
     size,
     setSize,
+    mutate: mutateComments
   } = useSWRInfinite(
     // getKey: Quyết định key nào sẽ được fetch tiếp theo
     (pageIndex, previousPageData) => {
@@ -54,7 +55,7 @@ export function usePostLightBox() {
     },
     // fetcher: Lấy dữ liệu từ Key đã định nghĩa ở trên
     ([_, postId, cursor, limit]) => {
-      return getCommentsByPostId(postId, cursor, limit);
+      return getCommentsByPostId(postId, null, cursor, limit);
     },
     {
       revalidateFirstPage: false,
@@ -114,5 +115,6 @@ export function usePostLightBox() {
     loadMoreComments,
     openModal,
     closeModal,
+    mutateComments
   };
 }

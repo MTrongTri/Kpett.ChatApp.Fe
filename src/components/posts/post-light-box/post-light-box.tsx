@@ -31,6 +31,9 @@ import { PostActions } from "./post-actions";
 import { PostHeader } from "./post-header";
 import { PostLightboxSkeleton } from "./post-light-box-skeleton";
 import { PostMediaCarousel } from "./post-media-carousel";
+import { addComment } from "@/services/comment.service";
+import { toast } from "sonner";
+import { useSWRConfig } from "swr"; // 🚀 Import SWR Config để dùng globalMutate
 
 interface PostLightboxProps {
   isOpen: boolean;
@@ -43,6 +46,7 @@ interface PostLightboxProps {
   isLoadingMore: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
+  mutateComments: (data?: any, opts?: any) => Promise<any>;
 }
 
 export default function PostLightbox({
@@ -56,21 +60,22 @@ export default function PostLightbox({
   isLoadingMore,
   hasMore,
   onLoadMore,
+  mutateComments
 }: PostLightboxProps) {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
-  // State cho PostModal ---
+  // 🚀 Lấy globalMutate để cập nhật Cache toàn cục
+  const { mutate: globalMutate } = useSWRConfig();
+
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [postModalMode, setPostModalMode] = useState<"create" | "edit">("edit");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  // Tham chiếu (Ref) đến thẻ div cuối cùng để kích hoạt cuộn
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
     rootMargin: "100px",
   });
 
-  // Logic tự động gọi onLoadMore khi thẻ loadMoreRef xuất hiện trên màn hình
   useEffect(() => {
     if (inView && hasMore && !isLoadingMore) {
       onLoadMore();
@@ -104,12 +109,96 @@ export default function PostLightbox({
   const debouncedFetchMentions = useDebounceCallback(fetchMentions, 300);
 
   const handleAddComment = async (content: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    console.log("Thêm bình luận:", content);
-    // TODO: Gọi API thêm bình luận và mutate(update) lại cache của SWR
+    if (post != null) {
+      const res = await addComment(post.id, content, null);
+
+      if (res.isSuccess && res.data) {
+        const newComment = res.data;
+
+        // 🚀 1. GHI ĐÈ TRỰC TIẾP VÀO CACHE BẰNG HÀM MUTATE LOCAL (Cực kỳ an toàn)
+        mutateComments(
+          (currentData: any) => {
+            if (!currentData || currentData.length === 0) {
+              return [{
+                data: { items: [newComment], pagination: { hasMore: false, nextCursor: null } },
+                isSuccess: true
+              }];
+            }
+
+            const newPages = [...currentData];
+            const lastPageIndex = newPages.length - 1; // Thêm vào trang cuối
+
+            newPages[lastPageIndex] = {
+              ...newPages[lastPageIndex],
+              data: {
+                ...newPages[lastPageIndex].data,
+                // Chèn comment mới xuống cuối danh sách
+                items: [...(newPages[lastPageIndex].data?.items || []), newComment],
+              },
+            };
+            return newPages;
+          },
+          { revalidate: false }
+        );
+
+        // 2. TĂNG SỐ LƯỢNG COMMENT COUNT CHO BÀI VIẾT BÊN NGOÀI FEED
+        globalMutate(
+          (key: any) => Array.isArray(key), // Quét tất cả các key là Array
+          (currentData: any) => {
+            if (!currentData) return currentData;
+
+            // Xử lý nếu Feed đang dùng useSWRInfinite
+            if (Array.isArray(currentData)) {
+              return currentData.map((page: any) => {
+                if (!page?.data?.items || !Array.isArray(page.data.items)) return page;
+                return {
+                  ...page,
+                  data: {
+                    ...page.data,
+                    items: page.data.items.map((p: any) => {
+                      if (p.id === post.id && p.metrics) {
+                        return { ...p, metrics: { ...p.metrics, commentCount: p.metrics.commentCount + 1 } };
+                      }
+                      return p;
+                    })
+                  }
+                };
+              });
+            }
+
+            // Xử lý nếu là bài Post chi tiết (dùng useSWR)
+            if (currentData?.data?.id === post.id && currentData?.data?.metrics) {
+              return {
+                ...currentData,
+                data: {
+                  ...currentData.data,
+                  metrics: { ...currentData.data.metrics, commentCount: currentData.data.metrics.commentCount + 1 }
+                }
+              };
+            }
+            return currentData;
+          },
+          { revalidate: false }
+        );
+
+        toast.success("Thêm bình luận thành công");
+
+        // 3. Cuộn mượt mà xuống cuối để user thấy comment vừa thêm
+        setTimeout(() => {
+          const scrollContainer = document.querySelector('.overflow-y-auto');
+          if (scrollContainer) {
+            scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+          }
+        }, 150);
+
+      } else {
+        toast.error("Đã có lỗi xảy ra");
+      }
+    } else {
+      toast.error("Không tìm thấy bài viết");
+    }
   };
 
-  // Hàm xử lý khi click "Chỉnh sửa" ---
   const handleEditClick = () => {
     if (post) {
       setPostModalMode("edit");
@@ -118,7 +207,6 @@ export default function PostLightbox({
     }
   };
 
-  // Kiểm tra xem người dùng hiện tại có phải là tác giả của bài viết không
   const isAuthor = currentUser?.id === post?.author?.id;
 
   return (
@@ -155,7 +243,6 @@ export default function PostLightbox({
                       align="end"
                       className="bg-card border-border text-[12px] text-card-foreground/80 w-44 rounded-lg space-y-1"
                     >
-                      {/* --- 6. Nút Chỉnh sửa chỉ hiện khi là tác giả --- */}
                       {isAuthor && (
                         <DropdownMenuItem
                           className="hover:text-primary focus:text-primary cursor-pointer gap-2"
@@ -172,7 +259,6 @@ export default function PostLightbox({
                         <EyeOff size={13} /> Ẩn bài viết
                       </DropdownMenuItem>
 
-                      {/* Nút Bỏ theo dõi thường không hiện nếu đây là bài của chính mình */}
                       {!isAuthor && (
                         <DropdownMenuItem className="cursor-pointer gap-2">
                           <UserMinus size={13} /> Bỏ theo dõi
@@ -187,7 +273,6 @@ export default function PostLightbox({
                 </div>
               </DialogHeader>
 
-              {/* ... (Phần thân Dialog giữ nguyên như cũ) ... */}
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
                 <PostContent content={post.content} tags={post.hashtags} />
                 <PostMediaCarousel media={post.media} postId={post.id} />

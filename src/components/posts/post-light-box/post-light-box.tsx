@@ -64,7 +64,7 @@ export default function PostLightbox({
 }: PostLightboxProps) {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
-  // 🚀 Lấy globalMutate để cập nhật Cache toàn cục
+  // Lấy globalMutate để cập nhật Cache toàn cục
   const { mutate: globalMutate } = useSWRConfig();
 
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -115,7 +115,7 @@ export default function PostLightbox({
       if (res.isSuccess && res.data) {
         const newComment = res.data;
 
-        // 🚀 1. GHI ĐÈ TRỰC TIẾP VÀO CACHE BẰNG HÀM MUTATE LOCAL (Cực kỳ an toàn)
+        // 1. GHI ĐÈ TRỰC TIẾP VÀO CACHE BẰNG HÀM MUTATE LOCAL (Cực kỳ an toàn)
         mutateComments(
           (currentData: any) => {
             if (!currentData || currentData.length === 0) {

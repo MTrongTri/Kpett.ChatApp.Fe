@@ -7,7 +7,7 @@ export interface BaseUser {
   isVerified: boolean;
 }
 
-export interface BaseAuthor extends BaseUser {}
+export interface BaseAuthor extends BaseUser { }
 
 export interface SocialLink {
   platform: string;
@@ -23,7 +23,7 @@ export interface SocialProfile {
 }
 
 export interface UserStats {
-  posts: number;
+  totalPosts: number;
   friends: number;
   followers: number;
   following: number;
@@ -33,6 +33,7 @@ export interface ProfileViewerContext {
   isOwner: boolean;
   isFriend: boolean;
   isFollowing: boolean;
+  relationshipRequestId: string | null;
   hasSentFriendRequest: boolean;
   hasReceivedFriendRequest: boolean;
   isBlocked: boolean;

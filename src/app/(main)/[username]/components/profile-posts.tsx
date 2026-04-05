@@ -23,6 +23,7 @@ export default function ProfilePosts({ posts }: ProfilePostsProps) {
     loadMoreComments,
     openModal,
     closeModal,
+    mutateComments
   } = usePostLightBox();
 
   if (posts.length === 0) {
@@ -61,6 +62,7 @@ export default function ProfilePosts({ posts }: ProfilePostsProps) {
           isLoadingMore={isLoadingMore}
           hasMore={hasMore}
           onLoadMore={loadMoreComments}
+          mutateComments={mutateComments}
         />
       )}
     </>

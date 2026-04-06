@@ -27,6 +27,7 @@ import { setCredentials } from "@/store/features/authSlice";
 import { useRouter } from "next/navigation";
 import { setAuthSession, tokenStorage } from "@/lib/cookie-storage-utils";
 import Cookies from "js-cookie";
+import { useSignalR } from "../providers/signalr-provider";
 
 const loginSchema = z.object({
   email: z
@@ -43,6 +44,8 @@ export default function FormLogin() {
 
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const { connection, isConnected } = useSignalR()
 
   const {
     register,
@@ -76,6 +79,10 @@ export default function FormLogin() {
       tokenStorage.save(token.accessToken, token.refreshToken);
 
       setAuthSession({ isProfileCompleted: user.isProfileCompleted });
+
+      if (connection) {
+        connection.start()
+      }
 
       if (user.isProfileCompleted) {
         toast.success("Đăng nhập thành công!");
@@ -136,9 +143,8 @@ export default function FormLogin() {
                 type="email"
                 placeholder="name@example.com"
                 {...register("email")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
-                  errors.email ? "border-red-500 dark:border-red-500" : ""
-                }`}
+                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.email ? "border-red-500 dark:border-red-500" : ""
+                  }`}
               />
               {errors.email && (
                 <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
@@ -170,9 +176,8 @@ export default function FormLogin() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("password")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
-                    errors.password ? "border-red-500 dark:border-red-500" : ""
-                  }`}
+                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.password ? "border-red-500 dark:border-red-500" : ""
+                    }`}
                 />
                 <button
                   type="button"

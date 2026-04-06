@@ -6,16 +6,44 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../../ui/hover-card";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { UserAvatar } from "@/components/user/user-avatar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
+import { useSignalR } from "@/components/providers/signalr-provider";
+import { logout } from "@/services/auth.service";
+import { logout as reduxLogout } from "@/store/features/authSlice";
+import { deleteAuthSession, tokenStorage } from "@/lib/cookie-storage-utils";
 
 export default function UserMenu() {
   const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
+
+  const dispatch = useDispatch();
+
+  const { connection, isConnected } = useSignalR();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+
+      if (connection && isConnected) {
+        await connection.stop();
+        console.log("SignalR stopped explicitly");
+      }
+
+      dispatch(reduxLogout());
+
+      tokenStorage.clear();
+      deleteAuthSession();
+
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  }
 
   useEffect(() => {
     if (!user) {
@@ -44,10 +72,10 @@ export default function UserMenu() {
         <div className="border-b border-zinc-100 bg-zinc-50/50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/30">
           <div className="flex flex-col">
             <p className="text-sm leading-none font-bold text-zinc-900 dark:text-zinc-100">
-              {user.username}
+              {user.displayName}
             </p>
             <p className="mt-1.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-              {user.displayName}
+              {user.username}
               {/* <span className="text-primary/80">Backend</span> */}
             </p>
           </div>
@@ -68,7 +96,7 @@ export default function UserMenu() {
 
         {/* Logout Section */}
         <div className="border-t border-zinc-100 bg-zinc-50/30 p-1.5 dark:border-zinc-800 dark:bg-zinc-900/10">
-          <button className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[12px] font-semibold text-red-500 transition-all duration-200 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
+          <button onClick={handleLogout} className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[12px] font-semibold text-red-500 transition-all duration-200 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
             <LogOut size={14} />
             Đăng xuất
           </button>

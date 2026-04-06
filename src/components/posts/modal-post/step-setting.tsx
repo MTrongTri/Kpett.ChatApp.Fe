@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -11,17 +10,17 @@ import Image from "next/image";
 import { useState } from "react";
 
 // Swiper imports
+import PostContent from "@/app/(main)/components/posts/post-content";
+import { UserAvatar } from "@/components/user/user-avatar";
+import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { RootState } from "@/store/store";
 import { Media } from "@/types/media";
+import { useSelector } from "react-redux";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import PostContent from "@/app/(main)/components/posts/post-content";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
-import { UserAvatar } from "@/components/user/user-avatar";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
 import { MediaLightbox } from "../media-lightbox";
 
 

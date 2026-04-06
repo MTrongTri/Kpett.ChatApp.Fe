@@ -1,5 +1,3 @@
-import { Token } from "@/types/auth";
-import { UserLoginResponse } from "@/types/user-login-response";
 import { BaseUser } from "@/types/user";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 

@@ -1,6 +1,8 @@
 import { LoginRequest, LoginResponse } from "@/types/auth";
 import http from "./http";
 import { ApiResponse } from "@/types/common/api";
+import Cookies from "js-cookie";
+import { refresh } from "next/cache";
 
 export const login = (
   loginRequest: LoginRequest,
@@ -13,6 +15,12 @@ export const register = (
 ): Promise<ApiResponse> => {
   return http.post("auth/register", registerRequest);
 };
+
+export const logout = () => {
+  return http.post("auth/logout", {
+    refreshToken: Cookies.get('refresh_token')
+  })
+}
 
 const authService = {
   login,

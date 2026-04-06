@@ -1,7 +1,6 @@
 import { UserAvatar } from "@/components/user/user-avatar";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { getMyStats } from "@/services/user.service";
-import { BaseUser } from "@/types/user";
 import useSWR from "swr";
 import { ProfileCardSkeleton } from "./profile-card-skeleton";
 

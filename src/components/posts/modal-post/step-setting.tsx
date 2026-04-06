@@ -67,7 +67,7 @@ export default function StepSettings({
               <div className="flex items-start gap-2">
                 <UserAvatar user={user!} />
                 <div className="flex flex-col justify-between">
-                  <span className="text-foreground text-sm font-semibold">{user?.username}</span>
+                  <span className="text-foreground text-sm font-semibold">{user?.displayName}</span>
                   <span className="text-foreground/40 text-[11px]">Vừa xong</span>
                 </div>
               </div>

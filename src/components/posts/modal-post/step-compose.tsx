@@ -31,7 +31,7 @@ export default function StepCompose({ props }: StepComposeProps) {
       <div className="flex items-center gap-3">
         <UserAvatar user={user!} />
         <div>
-          <div className="text-foreground text-sm font-semibold">{user?.username}</div>
+          <div className="text-foreground text-sm font-semibold">{user?.displayName}</div>
           <div className="mt-1 flex gap-1.5">
             {[
               { id: "public", icon: Globe, label: "Công khai" },

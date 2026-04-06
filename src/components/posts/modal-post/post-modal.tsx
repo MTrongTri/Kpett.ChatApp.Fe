@@ -94,7 +94,6 @@ export default function PostModal({
         setDone(false);
       } else if (mode === "edit" && postData) {
         // Gán data vào state khi SWR tải xong
-
         const { data } = postData;
 
         setContent(data?.content || "");
@@ -209,16 +208,27 @@ export default function PostModal({
           {/* Trạng thái 3: Hiển thị Form khi load xong (hoặc là mode Create) */}
           {!isPageLoading && !fetchError && !done && (
             <>
-              {step === 0 && <StepCompose props={composeProps} />}
-              {step === 1 && <StepMedia media={media} setMedia={setMedia} onLoadingChange={setUploadMediaLoading} />}
-              {step === 2 && (
+              {/* Tối ưu render: Giữ các tab trong DOM bằng CSS toggle */}
+              <div className={step === 0 ? "block h-full" : "hidden"}>
+                <StepCompose props={composeProps} />
+              </div>
+
+              <div className={step === 1 ? "block h-full" : "hidden"}>
+                <StepMedia
+                  media={media}
+                  setMedia={setMedia}
+                  onLoadingChange={setUploadMediaLoading}
+                />
+              </div>
+
+              <div className={step === 2 ? "block h-full" : "hidden"}>
                 <StepSettings
                   content={content}
                   media={media}
                   allowComments={allowComments}
                   setAllowComments={setAllowComments}
                 />
-              )}
+              </div>
             </>
           )}
 

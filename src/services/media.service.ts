@@ -3,7 +3,8 @@ import http from "./http";
 
 export const uploadFileToCloudinary = async (
   file: File,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  signal?: AbortSignal
 ) => {
   const signatureRes = await http.get("/media/generate-signature", {
     params: { folder: "posts" },
@@ -29,6 +30,7 @@ export const uploadFileToCloudinary = async (
     headers: {
       "Content-Type": "multipart/form-data",
     },
+    signal,
     onUploadProgress: (progressEvent) => {
       if (progressEvent.total) {
         const percentCompleted = Math.round(

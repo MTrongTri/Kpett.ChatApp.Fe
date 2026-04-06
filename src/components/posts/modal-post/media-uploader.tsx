@@ -13,6 +13,7 @@ interface UploadingFile {
   id: string;
   file: File;
   progress: number;
+  abortController: AbortController; // Thêm controller để quản lý việc hủy
 }
 
 interface MediaUploaderProps {
@@ -69,7 +70,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       const validation = validateFile(file);
       if (!validation.isValid) {
         toast.error(`File ${file.name}: ${validation.error}`);
-        continue; // Bỏ qua file lỗi, duyệt tiếp file khác
+        continue;
       }
       validFiles.push(file);
     }
@@ -80,12 +81,9 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     }
 
     try {
-      // Nén ảnh ngầm trước khi đưa vào hàng đợi upload
-      // Tối ưu: Thêm try-catch trong map để nếu 1 file lỗi nén thì không chết toàn bộ
       const processedFiles = await Promise.all(
         validFiles.map(async (file) => {
           try {
-            // Giả sử hàm này trả về File. Nếu nén lỗi, trả về file gốc.
             return await compressImageClientSide(file);
           } catch (error) {
             console.error("Lỗi nén file:", file.name, error);
@@ -94,29 +92,36 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         })
       );
 
-      // Đưa processedFiles vào uploadQueue
+      // Khởi tạo hàng đợi với AbortController
       const newQueueItems: UploadingFile[] = processedFiles.map((file) => ({
         id: `${file.name}-${Date.now()}`,
         file,
         progress: 0,
+        abortController: new AbortController(),
       }));
 
       setUploadQueue((prev) => [...prev, ...newQueueItems]);
 
-      // Xử lý upload song song với Promise.allSettled
+      // Xử lý upload song song
       const uploadPromises = newQueueItems.map(async (queueItem) => {
         try {
-          const result = await uploadFileToCloudinary(queueItem.file, (percent) => {
-            // Cập nhật state progress riêng cho từng file
-            setUploadQueue((currentQueue) =>
-              currentQueue.map((item) =>
-                item.id === queueItem.id ? { ...item, progress: percent } : item
-              )
-            );
-          });
-          return { success: true, item: queueItem, result };
-        } catch (error) {
-          return { success: false, item: queueItem, error };
+          // Truyền signal vào hàm upload
+          const result = await uploadFileToCloudinary(
+            queueItem.file,
+            (percent) => {
+              setUploadQueue((currentQueue) =>
+                currentQueue.map((item) =>
+                  item.id === queueItem.id ? { ...item, progress: percent } : item
+                )
+              );
+            },
+            queueItem.abortController.signal
+          );
+          return { success: true, item: queueItem, result, canceled: false };
+        } catch (error: any) {
+          // Bắt trường hợp người dùng bấm hủy
+          const isCanceled = error?.name === 'AbortError' || error?.message?.includes('cancel');
+          return { success: false, item: queueItem, error, canceled: isCanceled };
         }
       });
 
@@ -132,7 +137,8 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           completedIds.push(res.value.item.id);
           if (res.value.success) {
             successfulUploads.push(res.value.result!);
-          } else {
+          } else if (!res.value.canceled) {
+            // Chỉ báo lỗi nếu không phải do người dùng chủ động hủy
             console.error("Lỗi upload file:", res.value.item.file.name, res.value.error);
             hasError = true;
           }
@@ -143,23 +149,32 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         toast.error("Một số file tải lên không thành công.");
       }
 
-      // Thêm các file thành công vào danh sách hiển thị
       if (successfulUploads.length > 0) {
         const updatedMedia = [...latestMediaRef.current, ...successfulUploads];
         onChange(updatedMedia);
         latestMediaRef.current = updatedMedia;
       }
 
-      // Dọn dẹp hàng đợi (Xóa các file đã xử lý xong)
+      // Dọn dẹp hàng đợi
       setUploadQueue((currentQueue) =>
         currentQueue.filter((item) => !completedIds.includes(item.id))
       );
     } catch (error) {
       toast.error("Đã có lỗi bất ngờ xảy ra khi xử lý file.");
     } finally {
-      // Đảm bảo luôn reset input để có thể chọn lại chính file đó nếu cần
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  // Hàm xử lý hủy upload đang diễn ra
+  const handleCancelUpload = (id: string) => {
+    setUploadQueue((prev) => {
+      const itemToCancel = prev.find((item) => item.id === id);
+      if (itemToCancel) {
+        itemToCancel.abortController.abort(); // Kích hoạt tín hiệu hủy
+      }
+      return prev.filter((item) => item.id !== id); // Xóa khỏi giao diện ngay lập tức
+    });
   };
 
   const handleRemove = async (itemToRemove: Media) => {
@@ -170,7 +185,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
 
       successfullyDeletedIdsRef.current.add(itemToRemove.publicId);
 
-      // Sử dụng latestMediaRef để filter nhằm đảm bảo lấy state mới nhất
       const newMedia = latestMediaRef.current.filter(
         (m) => !successfullyDeletedIdsRef.current.has(m.publicId)
       );
@@ -200,7 +214,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       </div>
 
       {media.length === 0 && !isUploading ? (
-        // --- TRẠNG THÁI TRỐNG ---
         <div
           onClick={() => fileInputRef.current?.click()}
           className="border-border hover:bg-secondary/50 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors"
@@ -216,9 +229,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           </p>
         </div>
       ) : (
-        // --- TRẠNG THÁI CÓ FILE HOẶC ĐANG UPLOAD ---
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-
           {/* Hiển thị các file ĐÃ UPLOAD XONG */}
           {media.map((item, index) => {
             const isDeletingItem = deletingIds.includes(item.publicId);
@@ -228,7 +239,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                 key={item.publicId}
                 className="border-border group relative flex aspect-square items-center justify-center rounded-xl overflow-hidden border bg-black/5"
               >
-                {/* Lớp phủ mờ đi khi đang xóa */}
                 {isDeletingItem && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -245,7 +255,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                       className="h-full w-full object-cover"
                       preload="metadata"
                     />
-                    {/* Overlay làm tối nhẹ và Nút Play */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                       <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                     </div>
@@ -254,7 +263,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                   <img src={item.url} alt="Uploaded" className="h-full w-full object-cover" onClick={() => openMediaLightBox(mediaLightbox, index)} />
                 )}
 
-                {/* Nút Xóa */}
                 <Button
                   variant="destructive"
                   size="icon"
@@ -276,21 +284,33 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           {uploadQueue.map((uploadItem) => (
             <div
               key={uploadItem.id}
-              className="border-border relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
+              className="border-border group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
             >
+              {/* Nút hủy (Hiện khi hover vào file đang tải) */}
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-1.5 right-1.5 z-20 h-6 w-6 rounded-full shadow-md opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancelUpload(uploadItem.id);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+
               <div className="z-10 flex flex-col items-center">
                 <span className="text-xs font-semibold text-foreground mb-1">
                   {uploadItem.progress}%
                 </span>
+                <span className="text-[10px] text-muted-foreground">Đang tải...</span>
               </div>
 
-              {/* Thanh tiến trình chạy ngang dưới đáy */}
               <div
                 className="absolute bottom-0 left-0 h-1.5 bg-primary transition-all duration-300 ease-out"
                 style={{ width: `${uploadItem.progress}%` }}
               />
 
-              {/* Nền mờ ảo bên dưới file chạy từ trên xuống để tạo cảm giác loading */}
               <div
                 className="absolute top-0 left-0 w-full bg-primary/10 transition-all duration-300"
                 style={{ height: `${100 - uploadItem.progress}%` }}
@@ -298,7 +318,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             </div>
           ))}
 
-          {/* 3. Nút thêm file phụ */}
+          {/* Nút thêm file phụ */}
           <div
             onClick={() => fileInputRef.current?.click()}
             className="border-border hover:bg-secondary/50 flex cursor-pointer aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors"

@@ -79,7 +79,7 @@ export default function PostCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-card-foreground decoration-primary cursor-pointer text-[13.5px] font-semibold">
-              <Link href={post.author.username}>{post.author.username}</Link>
+              <Link href={post.author.username}>{post.author.displayName}</Link>
             </span>
             {post.author.isVerified && (
               <CheckCircle2 size={14} className="text-primary shrink-0" />

@@ -2,6 +2,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+import { SignalRProvider } from "@/components/providers/signalr-provider";
 import { StoreProvider } from "@/components/providers/store-provider";
 import { IBM_Plex_Mono, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
@@ -30,12 +31,14 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}
       >
-        <StoreProvider>
-          {children}
-          {/* Toast */}
-          <Toaster richColors position="top-center" />
-          {/* Modals */}
-        </StoreProvider>
+        <SignalRProvider>
+          <StoreProvider>
+            {children}
+            {/* Toast */}
+            <Toaster richColors position="top-center" />
+            {/* Modals */}
+          </StoreProvider>
+        </SignalRProvider>
       </body>
     </html>
   );

@@ -29,7 +29,7 @@ export const CommentText = ({ content, mentions = [] }: CommentTextProps) => {
                 href={`/${mentionData.username}`}
                 className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400"
               >
-                {mentionData.username}
+                {mentionData.displayName}
               </Link>
             );
           } else {

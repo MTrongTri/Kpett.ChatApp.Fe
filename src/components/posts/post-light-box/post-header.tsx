@@ -2,11 +2,7 @@ import { UserAvatar } from "@/components/user/user-avatar";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { BaseAuthor } from "@/types/user";
 import {
-  BadgeCheck,
-  CheckCircle,
-  CheckCircle2,
-  CheckCircle2Icon,
-  LucideCheckCircle,
+  CheckCircle2
 } from "lucide-react";
 
 interface PostHeaderProps {
@@ -22,7 +18,7 @@ export function PostHeader({ author, postCreatedAt }: PostHeaderProps) {
         <div className="gap-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-card-foreground truncate text-[13px] font-semibold">
-              {author.username}
+              {author.displayName}
             </span>
             {author.isVerified && (
               <CheckCircle2 size={13} className="text-primary shrink-0" />

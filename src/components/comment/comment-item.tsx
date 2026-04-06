@@ -69,7 +69,7 @@ export const CommentItem = memo(({
         }
         const newPages = [...currentPages];
 
-        // 🚀 THAY ĐỔI Ở ĐÂY: Tìm trang (page) cuối cùng đang được tải để chèn vào cuối
+        // THAY ĐỔI Ở ĐÂY: Tìm trang (page) cuối cùng đang được tải để chèn vào cuối
         const lastPageIndex = newPages.length - 1;
 
         newPages[lastPageIndex] = {
@@ -96,7 +96,6 @@ export const CommentItem = memo(({
 
       setIsReplying(false);
 
-      // 🚀 THAY ĐỔI Ở ĐÂY: Lưu vào mảng tạm ở vị trí cuối cùng thay vì đầu tiên
       if (comment.id === submitParentId) {
         setTempReplies((prev) => [...prev, newReply]);
       }
@@ -183,7 +182,7 @@ export const CommentItem = memo(({
         <div className="flex flex-wrap items-baseline gap-1.5">
           <span className="text-card-foreground text-[12.5px] font-semibold">
             <Link href={`/${comment.author.username}`}>
-              {comment.author.username}
+              {comment.author.displayName}
             </Link>
           </span>
           <span className="text-foreground/60 text-[12.5px]">

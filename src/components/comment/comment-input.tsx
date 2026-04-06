@@ -139,7 +139,7 @@ export const CommentInput = ({
             type: "mention",
             attrs: {
               id: replyToUser.id,
-              label: replyToUser.username,
+              label: replyToUser.displayName,
             },
           },
           {

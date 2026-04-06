@@ -1,15 +1,14 @@
 "use client";
 
-// Thêm useEffect và useRef vào import
 import { use, useEffect, useRef } from "react";
 import { getProfileUser } from "@/services/user.service";
-// Thêm useSearchParams từ next/navigation
 import { notFound, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
 import ProfileInfo from "./components/profile-info";
 import ProfileTabs from "./components/profile-tabs";
+import ProfileSkeleton from "./components/profile-skeleton";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
@@ -17,11 +16,7 @@ interface ProfilePageProps {
 
 export default function ProfilePage({ params }: ProfilePageProps) {
   const { username } = use(params);
-
-  // 1. Khởi tạo hook đọc URL query params
   const searchParams = useSearchParams();
-
-  // 2. Tạo ref để neo vị trí cần scroll tới
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading, error } = useSWR([`/users/profile`, username], () =>
@@ -43,10 +38,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     }
   }, [isLoading, data, searchParams]);
 
+  // Cập nhật phần Loading tại đây
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen justify-center pt-14.5">Loading...</div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error || !data || !data.data) {

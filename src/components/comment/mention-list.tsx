@@ -14,7 +14,7 @@ const MentionList = forwardRef((props: any, ref) => {
   const selectItem = (index: number) => {
     const item = props.items[index];
     if (item) {
-      props.command({ id: item.id, label: item.username });
+      props.command({ id: item.id, label: item.displayName });
     }
   };
 
@@ -59,11 +59,10 @@ const MentionList = forwardRef((props: any, ref) => {
           <button
             key={item.id}
             type="button"
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-              index === selectedIndex
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${index === selectedIndex
                 ? "bg-gray-100 dark:bg-gray-800"
                 : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-            }`}
+              }`}
             onClick={() => selectItem(index)}
             onMouseEnter={() => setSelectedIndex(index)}
           >
@@ -74,10 +73,10 @@ const MentionList = forwardRef((props: any, ref) => {
             />
             <div className="flex flex-col">
               <span className="leading-none font-semibold text-gray-900 dark:text-gray-100">
-                {item.username}
+                {item.displayName}
               </span>
               <span className="mt-1 text-xs text-gray-500">
-                {item.displayName}
+                {item.username}
               </span>
             </div>
           </button>

@@ -49,7 +49,7 @@ export default function ProfileAvatarRow({
       <div className="relative">
         <UserAvatar
           user={profile}
-          isShowDotOnline={true}
+          isShowDotOnline={profile.viewerContext.isFriend && !profile.viewerContext.isBlocked}
           className="h-28 w-28 md:h-36 md:w-36"
           initialClassName="text-4xl md:text-5xl"
           dotClassName={cn(

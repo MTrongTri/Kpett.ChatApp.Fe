@@ -1,31 +1,52 @@
+"use client";
+
+import { CommentAuthor, MentionComment } from "@/types/comment";
+import { BaseAuthor, UserProfile } from "@/types/user";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
-  useEditor,
   EditorContent,
-  ReactRenderer,
   JSONContent,
+  ReactRenderer,
+  useEditor,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useState } from "react";
+import { useEffect, useImperativeHandle, useState } from "react";
 import tippy, { Instance as TippyInstance } from "tippy.js";
-import { BaseAuthor, BaseUser, UserProfile } from "@/types/user";
 import { UserAvatar } from "../user/user-avatar";
 import MentionList from "./mention-list";
-import { CommentAuthor } from "@/types/comment";
 
 interface CommentInputProps {
   author: BaseAuthor;
+  defaultValue?: string;
+  mentions?: MentionComment[];
   fetchMentions: (query: string) => Promise<UserProfile[]>;
   onSubmit: (content: string) => Promise<void> | void;
   isLoading?: boolean;
-
   replyToUser?: CommentAuthor;
   onCancel?: () => void;
 }
 
+const parseInitialContent = (text?: string, mentionsArray: MentionComment[] = []) => {
+  if (!text) return "";
+
+  let parsedText = text.replace(/<@([^>]+)>/g, (match, userId) => {
+    const user = mentionsArray.find((m) => m.userId === userId);
+    if (user) {
+      return `<span data-type="mention" data-id="${user.userId}" data-label="${user.displayName}">@${user.displayName}</span>`;
+    }
+    return match;
+  });
+
+  parsedText = parsedText.replace(/\n/g, '<br>');
+
+  return parsedText;
+};
+
 export const CommentInput = ({
   author,
+  defaultValue,
+  mentions = [],
   fetchMentions,
   onSubmit,
   isLoading,
@@ -35,8 +56,11 @@ export const CommentInput = ({
   const [hasContent, setHasContent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isEditing = !!defaultValue;
+
   const editor = useEditor({
     immediatelyRender: false,
+    autofocus: "end",
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -44,7 +68,7 @@ export const CommentInput = ({
         codeBlock: false,
       }),
       Placeholder.configure({
-        placeholder: "Thêm bình luận...",
+        placeholder: isEditing ? "Sửa bình luận..." : "Thêm bình luận...",
         emptyEditorClass: "is-editor-empty",
       }),
       Mention.configure({
@@ -120,7 +144,7 @@ export const CommentInput = ({
         },
       }),
     ],
-    content: "",
+    content: parseInitialContent(defaultValue, mentions),
     editorProps: {
       attributes: {
         class:
@@ -130,7 +154,7 @@ export const CommentInput = ({
   });
 
   useEffect(() => {
-    if (editor && replyToUser && editor.isEmpty) {
+    if (editor && replyToUser && editor.isEmpty && !isEditing) {
       editor
         .chain()
         .focus()
@@ -149,45 +173,54 @@ export const CommentInput = ({
         ])
         .run();
     }
-  }, [editor, replyToUser]);
+  }, [editor, replyToUser, isEditing]);
 
+  // Cập nhật trạng thái rỗng/có chữ của Editor
   useEffect(() => {
     if (!editor) return;
-
     const update = () => setHasContent(!editor.isEmpty);
     update();
     editor.on("update", update);
-
     return () => {
       editor.off("update", update);
     };
   }, [editor]);
 
-  const handleFocus = () => editor?.commands.focus();
+  const handleFocus = () => editor?.chain().focus('end').run();
 
   const handlePublish = async () => {
     if (!editor || editor.isEmpty) return;
 
     const json = editor.getJSON();
-    const content = json.content
-      ?.map((node: JSONContent) => {
-        if (node.type !== "paragraph") return "";
-        return node.content
-          ?.map((child: JSONContent) => {
-            if (child.type === "text") return child.text || "";
-            if (child.type === "mention") return `<@${child.attrs?.id}>`;
-            return "";
-          })
-          .join("");
-      })
-      .join("\n")
-      .trim();
+    let parsedContent = "";
+
+    // Lặp qua cây JSON của Tiptap một cách an toàn
+    json.content?.forEach((node: JSONContent) => {
+      if (node.type === "paragraph") {
+        node.content?.forEach((child: JSONContent) => {
+          if (child.type === "text") {
+            parsedContent += child.text || "";
+          } else if (child.type === "mention") {
+            parsedContent += `<@${child.attrs?.id}>`;
+          } else if (child.type === "hardBreak") {
+            parsedContent += "\n";
+          }
+        });
+        parsedContent += "\n";
+      }
+    });
+
+    const finalContent = parsedContent.trim();
 
     try {
       setIsSubmitting(true);
-      await onSubmit(content || "");
-      editor.commands.clearContent();
+      await onSubmit(finalContent);
+
+      if (!isEditing) {
+        editor.commands.clearContent();
+      }
     } catch (error) {
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -198,7 +231,9 @@ export const CommentInput = ({
   return (
     <div className="z-10 shrink-0 bg-transparent">
       <div className="flex items-center gap-3">
-        <UserAvatar user={author} />
+        {
+          !defaultValue && <UserAvatar user={author} />
+        }
 
         <div className="bg-background border-foreground/40 relative flex flex-1 items-end gap-4 rounded-xl border px-3 py-2">
           <div className="flex-1 cursor-text" onClick={handleFocus}>
@@ -210,7 +245,9 @@ export const CommentInput = ({
             disabled={isButtonDisabled}
             className="text-primary hover:text-primary/80 mb-0.5 cursor-pointer text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "Đang gửi..." : "Đăng"}
+            {isSubmitting
+              ? (isEditing ? "Đang lưu..." : "Đang gửi...")
+              : (isEditing ? "Lưu" : "Đăng")}
           </button>
         </div>
 

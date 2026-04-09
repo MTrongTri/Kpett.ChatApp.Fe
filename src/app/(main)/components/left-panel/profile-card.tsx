@@ -1,6 +1,7 @@
 import { UserAvatar } from "@/components/user/user-avatar";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { getMyStats } from "@/services/user.service";
+import Link from "next/link";
 import useSWR from "swr";
 import { ProfileCardSkeleton } from "./profile-card-skeleton";
 
@@ -24,19 +25,21 @@ export default function ProfileCard() {
   return (
     <div className="border-border bg-card mb-1 rounded-xl border p-4">
       {/* Top row */}
-      <div className="mb-4 flex items-center gap-3">
-        <div>
-          <UserAvatar user={userStats} className="h-12 w-12" />
+      <Link href={userStats.username}>
+        <div className="mb-4 flex items-center gap-3">
+          <div>
+            <UserAvatar user={userStats} className="h-12 w-12" />
+          </div>
+          <div>
+            <p className="text-card-foreground text-sm leading-tight font-semibold">
+              {userStats.displayName}
+            </p>
+            <p className="text-foreground/40 mt-0.5 text-[11px]">
+              @{userStats.username.toLowerCase().replace(" ", "")}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-card-foreground text-sm leading-tight font-semibold">
-            {userStats.displayName}
-          </p>
-          <p className="text-foreground/40 mt-0.5 text-[11px]">
-            @{userStats.username.toLowerCase().replace(" ", "")}
-          </p>
-        </div>
-      </div>
+      </Link>
 
       {/* Stats */}
       <div className="border-border grid grid-cols-3 gap-1 border-t pt-3">

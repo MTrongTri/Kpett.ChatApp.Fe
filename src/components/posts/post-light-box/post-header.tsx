@@ -12,7 +12,7 @@ interface PostHeaderProps {
 
 export function PostHeader({ author, postCreatedAt }: PostHeaderProps) {
   return (
-    <div className="border-border flex shrink-0 items-center gap-2.5 border-b py-3">
+    <div className="flex shrink-0 items-center gap-2.5 py-3">
       <UserAvatar user={author} />
       <div className="min-w-0 flex-1">
         <div className="gap-1.5">

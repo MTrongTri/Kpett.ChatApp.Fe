@@ -1,8 +1,7 @@
 import { ApiResponse, PaginatedData } from "@/types/common/api";
-import http from "./http";
 import { FriendRequestResponse } from "@/types/friend";
-import { number, string } from "zod";
-import { OnlineFriend } from "@/app/(main)/components/left-panel/online-friends";
+import { UserProfile } from "@/types/user";
+import http from "./http";
 
 export const friendRequest = (receiverId: string): Promise<ApiResponse<FriendRequestResponse>> => {
     return http.post("/relationships/friend-requests", {
@@ -35,7 +34,7 @@ export const unFriend = (targetUserId: string): Promise<ApiResponse> => {
 
 export const getFriendsWithFilter = (
     { search, cursor, limit }: { search: string, cursor: string | null, limit: number }):
-    Promise<ApiResponse<PaginatedData<OnlineFriend>>> => {
+    Promise<ApiResponse<PaginatedData<UserProfile>>> => {
     return http.get(`/relationships/friends`, {
         params: {
             search,

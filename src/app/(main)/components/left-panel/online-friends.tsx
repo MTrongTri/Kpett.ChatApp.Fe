@@ -1,45 +1,40 @@
 // components/online-friends.tsx
 "use client";
 
+import { useSignalR } from "@/components/providers/signalr-provider";
 import { UserAvatar } from "@/components/user/user-avatar";
+import { useTrackPresence } from "@/hooks/use-track-presence";
 import { cn } from "@/lib/utils";
 import { getFriendsWithFilter } from "@/services/friend.service";
+import { UserProfile } from "@/types/user";
+import Link from "next/link";
+import { useCallback, useMemo } from "react";
 import useSWR from "swr";
-import { useMemo, useEffect, useCallback } from "react";
-import { useSignalR } from "@/components/providers/signalr-provider";
-import { useTrackPresence } from "@/hooks/use-track-presence";
 
-export interface OnlineFriend {
-  id: string;
-  displayName: string;
-  username: string;
-  status: string;
-  isOnline: boolean;
-  avatarUrl: string | null;
-}
-
-const FriendItem = ({ friend }: { friend: OnlineFriend }) => (
-  <button
-    className="hover:bg-foreground/5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    aria-label={`Xem hồ sơ của ${friend.displayName || friend.username}`}
-  >
-    <div className="shrink-0">
-      <UserAvatar user={friend} isShowDotOnline={true} />
-    </div>
-    <div className="min-w-0 flex-1">
-      <p className="text-card-foreground truncate text-[12.5px] leading-tight font-medium">
-        {friend.displayName || friend.username}
-      </p>
-      <p
-        className={cn(
-          "mt-0.5 text-[10px] truncate",
-          friend.isOnline ? "text-emerald-500" : "text-foreground/40"
-        )}
-      >
-        {friend.status || (friend.isOnline ? "Đang hoạt động" : "Ngoại tuyến")}
-      </p>
-    </div>
-  </button>
+const FriendItem = ({ friend }: { friend: UserProfile }) => (
+  <Link href={friend.username}>
+    <button
+      className="hover:bg-foreground/5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={`Xem hồ sơ của ${friend.displayName || friend.username}`}
+    >
+      <div className="shrink-0">
+        <UserAvatar user={friend} isShowDotOnline={true} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-card-foreground truncate text-[12.5px] leading-tight font-medium">
+          {friend.displayName || friend.username}
+        </p>
+        <p
+          className={cn(
+            "mt-0.5 text-[10px] truncate",
+            friend.isOnline ? "text-emerald-500" : "text-foreground/40"
+          )}
+        >
+          {(friend.isOnline ? "Đang hoạt động" : "Ngoại tuyến")}
+        </p>
+      </div>
+    </button>
+  </Link>
 );
 
 const FriendSkeleton = () => (
@@ -64,7 +59,7 @@ export default function OnlineFriends() {
     }
   );
 
-  const onlineFriends: OnlineFriend[] = data?.data?.items || [];
+  const onlineFriends: UserProfile[] = data?.data?.items || [];
 
   const targetIds = useMemo(() => onlineFriends.map(f => f.id), [onlineFriends]);
 
@@ -76,7 +71,7 @@ export default function OnlineFriends() {
         ...currentData,
         data: {
           ...currentData.data,
-          items: currentData.data.items.map((friend: OnlineFriend) =>
+          items: currentData.data.items.map((friend: UserProfile) =>
             friend.id === statusData.userId
               ? { ...friend, isOnline: statusData.isOnline }
               : friend
@@ -117,7 +112,7 @@ export default function OnlineFriends() {
 
   return (
     <div className="space-y-0.5">
-      {onlineFriends.map((friend: OnlineFriend) => (
+      {onlineFriends.map((friend: UserProfile) => (
         <FriendItem key={friend.id} friend={friend} />
       ))}
     </div>

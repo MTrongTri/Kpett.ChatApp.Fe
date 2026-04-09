@@ -1,9 +1,9 @@
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { cn } from "@/lib/utils";
 import { PostThumbnail } from "@/types/post";
-import { Clapperboard, Heart, MessageCircle, Pin, AlignLeft, PlayCircle } from "lucide-react";
+import { AlignLeft, Clapperboard, Heart, MessageCircle, Pin } from "lucide-react";
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 
 // Cập nhật interface theo cấu trúc mới

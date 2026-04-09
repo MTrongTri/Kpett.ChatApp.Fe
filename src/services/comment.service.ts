@@ -2,6 +2,7 @@ import { MOCK_COMMENT } from "@/data/comment";
 import { Comment } from "@/types/comment";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
 import http from "./http";
+import { string } from "zod";
 
 export const addComment = async (
   postId: string,
@@ -12,6 +13,16 @@ export const addComment = async (
     content,
     parentCommentId
   })
+};
+
+export const updateComment = async (commentId: string, newContent: string): Promise<ApiResponse<Comment>> => {
+  return http.put(`/comments/posts/${commentId}`, {
+    content: newContent
+  })
+};
+
+export const deleteComment = async (commentId: string): Promise<ApiResponse<Comment>> => {
+  return http.delete(`/comments/posts/${commentId}`)
 };
 
 export const getCommentsByPostId = async (

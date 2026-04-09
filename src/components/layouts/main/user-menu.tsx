@@ -27,6 +27,7 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     try {
+
       await logout();
 
       if (connection && isConnected) {

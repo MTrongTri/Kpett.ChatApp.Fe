@@ -1,6 +1,6 @@
 // hooks/use-replies.ts
 import useSWRInfinite from "swr/infinite";
-import { getCommentsByPostId, getRepliesByCommentId } from "@/services/comment.service";
+import { getCommentsByPostId } from "@/services/comment.service";
 
 const REPLIES_LIMIT = 12;
 
@@ -19,7 +19,7 @@ const getRepliesKey =
       return ["replies", postId, commentId, cursor, REPLIES_LIMIT];
     };
 
-export const useReplies = (postId: string, commentId: string, enabled: boolean) => {
+export const useCommentReplies = (postId: string, commentId: string, enabled: boolean) => {
   const { data, size, setSize, mutate, isLoading, isValidating, error } =
     useSWRInfinite(
       getRepliesKey(postId, commentId, enabled),

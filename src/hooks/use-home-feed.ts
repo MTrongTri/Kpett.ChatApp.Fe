@@ -30,7 +30,7 @@ export function useHomeFeed() {
         : null;
 
       // Trả về mảng Key chuẩn (Không còn username nữa)
-      return ["home_feed", cursor, FEED_LIMIT];
+      return ["feed", cursor, FEED_LIMIT];
     },
 
     // 2. Hàm fetcher: Nhận mảng Key và gọi API

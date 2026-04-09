@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import useSWRInfinite from "swr/infinite";
+import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { cn } from "@/lib/utils";
 
 // Services & Types
-import { getPostsByUserId } from "@/services/post.service";
 import { UserProfile } from "@/types/user";
-import { PostThumbnail } from "@/types/post";
 
 // Components
 import ProfilePosts from "./profile-posts";
@@ -22,40 +19,15 @@ import {
   TriangleAlert,
   Loader2,
 } from "lucide-react";
-import { ApiResponse, PaginatedData } from "@/types/common/api";
 
-export type ProfileTab = "Post" | "Reel" | "Saved";
-
-const PAGE_SIZE = 6;
+// Hook
+import { useProfilePosts, ProfileTab } from "@/hooks/use-profile-posts";
 
 const TABS: { key: ProfileTab; label: string; icon: React.ReactNode }[] = [
   { key: "Post", label: "Bài viết", icon: <LayoutGrid size={13} /> },
   { key: "Reel", label: "Reels", icon: <Clapperboard size={13} /> },
   { key: "Saved", label: "Đã lưu", icon: <Bookmark size={13} /> },
 ];
-
-type PostInfiniteKey = [string, string, ProfileTab, string | null];
-
-const getKey = (
-  pageIndex: number,
-  previousPageData: ApiResponse<PaginatedData<PostThumbnail>> | null,
-  username: string,
-  tab: ProfileTab,
-): PostInfiniteKey | null => {
-  if (
-    previousPageData &&
-    (!previousPageData.data || !previousPageData.data.pagination.hasMore)
-  ) {
-    return null;
-  }
-
-  const cursor =
-    pageIndex === 0
-      ? null
-      : (previousPageData?.data?.pagination.nextCursor ?? null);
-
-  return ["profile-posts", username, tab, cursor];
-};
 
 // ── COMPONENT CHÍNH ────────────────────────────────────────────────
 interface ProfileTabsProps {
@@ -65,36 +37,25 @@ interface ProfileTabsProps {
 export default function ProfileTabs({ author }: ProfileTabsProps) {
   const [tab, setTab] = useState<ProfileTab>("Post");
 
+  const {
+    posts,
+    isInitialLoading,
+    isLoadingMore,
+    hasMore,
+    error,
+    loadMore,
+    mutate
+  } = useProfilePosts(author.id, tab);
+
   const { ref, inView } = useInView({
     threshold: 0,
   });
 
-  const { data, size, setSize, error, isLoading, isValidating, mutate } =
-    useSWRInfinite(
-      (index, prev) => getKey(index, prev, author.id, tab),
-      ([_, user, currentTab, cursor]: PostInfiniteKey) =>
-        getPostsByUserId(user, currentTab, cursor, PAGE_SIZE),
-      {
-        revalidateOnFocus: true,
-        shouldRetryOnError: false,
-        persistSize: false,
-      },
-    );
-
-  const allPosts = useMemo(() => {
-    return data ? data.flatMap((page) => page.data?.items || []) : [];
-  }, [data]);
-
-  const hasMore = data
-    ? data[data.length - 1]?.data?.pagination.hasMore
-    : false;
-  const isInitialLoading = isLoading && !data;
-
   useEffect(() => {
-    if (inView && hasMore && !isValidating) {
-      setSize(size + 1);
+    if (inView) {
+      loadMore();
     }
-  }, [inView, hasMore, isValidating, setSize, size]);
+  }, [inView, loadMore]);
 
   const handleTabChange = (newTab: ProfileTab) => {
     if (tab !== newTab) {
@@ -149,8 +110,8 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
             </button>
           </div>
         ) : isInitialLoading ? (
-          <ProfilePostsSkeleton count={PAGE_SIZE} />
-        ) : allPosts.length === 0 ? (
+          <ProfilePostsSkeleton count={6} />
+        ) : posts.length === 0 ? (
           <div className="text-foreground/30 flex flex-col items-center py-32">
             <div className="bg-foreground/5 ring-foreground/10 mb-4 rounded-full p-6 ring-1 ring-inset">
               {tab === "Reel" ? (
@@ -165,14 +126,14 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
           </div>
         ) : (
           <div className="space-y-8">
-            <ProfilePosts posts={allPosts} />
+            <ProfilePosts posts={posts} />
 
             {/* ── ĐIỂM KÍCH HOẠT LOAD MORE ── */}
             <div
               ref={ref}
               className="flex min-h-2.5 items-start justify-center"
             >
-              {hasMore && (
+              {hasMore && isLoadingMore && (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="text-primary/40 animate-spin" size={24} />
                   <span className="text-foreground/30 text-[9px] tracking-tighter uppercase">

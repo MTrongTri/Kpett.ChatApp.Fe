@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
+import { UserAvatar } from "../user/user-avatar";
 
 export interface MentionUser {
   id: string;
@@ -60,17 +61,13 @@ const MentionList = forwardRef((props: any, ref) => {
             key={item.id}
             type="button"
             className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${index === selectedIndex
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              ? "bg-gray-100 dark:bg-gray-800"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
               }`}
             onClick={() => selectItem(index)}
             onMouseEnter={() => setSelectedIndex(index)}
           >
-            <img
-              src={item.avatarUrl || "https://github.com/shadcn.png"}
-              alt=""
-              className="h-6 w-6 rounded-full object-cover"
-            />
+            <UserAvatar user={item} />
             <div className="flex flex-col">
               <span className="leading-none font-semibold text-gray-900 dark:text-gray-100">
                 {item.displayName}

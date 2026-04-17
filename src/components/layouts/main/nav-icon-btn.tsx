@@ -7,7 +7,7 @@ export default function NavIconBtn({
   tooltip,
   badgeCount,
   onClick,
-  className, // Thêm prop className để tùy biến bên ngoài nếu cần
+  className,
 }: {
   icon: React.ReactNode;
   tooltip: string;
@@ -35,7 +35,7 @@ export default function NavIconBtn({
             )}
           >
             {icon}
-            
+
             {/* Badge Notification */}
             {badgeCount !== undefined && badgeCount > 0 && (
               <span className="
@@ -53,7 +53,7 @@ export default function NavIconBtn({
             )}
           </Button>
         </TooltipTrigger>
-        
+
         <TooltipContent
           side="bottom"
           className="

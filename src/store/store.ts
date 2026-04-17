@@ -1,4 +1,3 @@
-import cookieStorage from "@/lib/cookie-storage-utils";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
   FLUSH,
@@ -10,27 +9,32 @@ import {
   REGISTER,
   REHYDRATE,
 } from "redux-persist";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import authReducer from "./features/authSlice";
+
+const createNoopStorage = () => ({
+  getItem: () => Promise.resolve(null),
+  setItem: () => Promise.resolve(),
+  removeItem: () => Promise.resolve(),
+});
+
+const storage =
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
 
 const authPersistConfig = {
   key: "auth",
-  storage: cookieStorage,
+  storage,
+  blacklist: ["accessToken"],
 };
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
 });
 
-const rootPersistConfig = {
-  key: "root",
-  storage: cookieStorage,
-  blacklist: ["auth"],
-};
-
-const persistedReducer = persistReducer(rootPersistConfig, rootReducer);
-
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

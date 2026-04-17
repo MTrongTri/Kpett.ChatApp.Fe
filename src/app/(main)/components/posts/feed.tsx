@@ -1,15 +1,14 @@
 "use client";
 
-import PostLightbox from "@/components/posts/post-light-box/post-light-box";
-import { usePostLightBox } from "@/hooks/use-post-light-box";
-import PostCard from "./post-card";
-import { useHomeFeed } from "@/hooks/use-home-feed";
-import { PostCardSkeleton } from "./post-card-skeleton";
-import { useInView } from "react-intersection-observer";
-import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
 import { MediaLightbox } from "@/components/posts/media-lightbox";
+import PostLightbox from "@/components/posts/post-light-box/post-light-box";
+import { useHomeFeed } from "@/hooks/post/use-home-feed";
+import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
+import { usePostLightBox } from "@/hooks/post/use-post-light-box";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+import PostCard from "./post-card";
+import { PostCardSkeleton } from "./post-card-skeleton";
 
 // ── MAIN EXPORT ──────────────────────────────────────────────────────
 export default function Feed() {

@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { friendRequest, friendRequestAccept, friendRequestCancel, friendRequestDecline, unFriend } from "@/services/friend.service";
+import { RootState } from "@/store/store";
 import { ProfileViewerContext, UserProfile } from "@/types/user";
 import {
   Ban,
@@ -32,7 +33,9 @@ import {
   UserPlus,
   X
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
 // ── STAT BUTTON ───────────────────────────────────────────────────────
@@ -55,13 +58,19 @@ interface ProfileInfoProps {
 }
 
 export default function ProfileInfo({ profile }: ProfileInfoProps) {
-  // Gộp toàn bộ viewerContext vào một object state duy nhất
   const [ctx, setCtx] = useState<ProfileViewerContext>(profile.viewerContext);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   // ── API HANDLERS ────────────────────────────────────────────────────
 
   const handleAddFriend = async () => {
+    if (!currentUser) {
+      toast.warning("Bạn cần đăng nhập để thực hiện gửi lời mời kết bạn");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -311,9 +320,13 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           <div className="flex flex-wrap items-center justify-center gap-3 pb-2">
             {ctx.isOwner ? (
               <>
-                <Button variant="outline" size="sm" className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all">
-                  <Pencil size={14} /> Chỉnh sửa
-                </Button>
+                <Link
+                  href={`/${profile.username}/general`}
+                  className="inline-flex items-center justify-center border border-border text-foreground hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                >
+                  <Pencil size={14} />
+                  <span>Chỉnh sửa</span>
+                </Link>
                 <Button variant="outline" size="sm" className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all">
                   <Share2 size={14} /> Chia sẻ
                 </Button>

@@ -5,11 +5,11 @@ import type { GeneralForm } from "@/types/edit-profile";
 import SectionCard from "./section-card";
 import FormField from "./form-field";
 import ColorPicker from "./color-picker";
-import { AVATAR_GRADIENTS, COVER_GRADIENTS } from "../_data/edit-profile-data";
+import { AVATAR_GRADIENTS, COVER_GRADIENTS } from "../data/edit-profile-data";
 import { FormInput, FormTextarea } from "./form-input";
 
 interface GeneralTabProps {
-  form:    GeneralForm;
+  form: GeneralForm;
   onChange: (patch: Partial<GeneralForm>) => void;
 }
 

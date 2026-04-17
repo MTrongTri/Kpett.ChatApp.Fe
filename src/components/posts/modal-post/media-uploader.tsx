@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
 import { uploadFileToCloudinary } from "@/services/media.service";
 import { deleteMedia } from "@/services/post.service";

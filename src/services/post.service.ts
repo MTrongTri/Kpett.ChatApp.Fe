@@ -1,7 +1,7 @@
-import { ProfileTab } from "@/app/(main)/[username]/components/profile-tabs";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
 import { CreatePostRequest, Post, PostThumbnail } from "@/types/post";
-import http from "./http";
+import { ProfileTab } from "@/hooks/post/use-profile-posts";
+import http from "@/lib/axios";
 
 export const getFeedHome = async (
   cursor: string | null = null,

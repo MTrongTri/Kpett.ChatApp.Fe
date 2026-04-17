@@ -1,56 +1,54 @@
 "use client";
 
-import { Bookmark, LogOut, Settings, TrendingUp, User } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useSignalR } from "@/components/providers/signalr-provider";
+import { UserAvatar } from "@/components/user/user-avatar";
+import authService from "@/services/auth.service";
+import { RootState } from "@/store/store";
+import { Bookmark, LogOut, Settings, User } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { useSWRConfig } from "swr";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "../../ui/hover-card";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store/store";
-import { UserAvatar } from "@/components/user/user-avatar";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import Link from "next/link";
-import { useSignalR } from "@/components/providers/signalr-provider";
-import { logout } from "@/services/auth.service";
-import { logout as reduxLogout } from "@/store/features/authSlice";
-import { deleteAuthSession, tokenStorage } from "@/lib/cookie-storage-utils";
 
 export default function UserMenu() {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, accessToken } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
 
-  const dispatch = useDispatch();
+  const { logout } = useAuth();
 
   const { connection, isConnected } = useSignalR();
 
+  const { mutate } = useSWRConfig();
+
   const handleLogout = async () => {
     try {
+      await authService.logout(accessToken!);
 
-      await logout();
+      logout();
 
       if (connection && isConnected) {
         await connection.stop();
-        console.log("SignalR stopped explicitly");
       }
 
-      dispatch(reduxLogout());
-
-      tokenStorage.clear();
-      deleteAuthSession();
+      mutate(
+        () => true,
+        undefined,
+        { revalidate: false }
+      );
 
       router.push("/login");
+      router.refresh();
+
     } catch (error) {
       console.error("Logout failed:", error);
     }
   }
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-    }
-  }, [user, router]);
 
   if (!user) {
     return null;

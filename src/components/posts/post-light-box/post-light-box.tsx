@@ -26,7 +26,8 @@ import { PostLightboxMenu } from "./post-lightbox-menu";
 import { PostMediaCarousel } from "./post-media-carousel";
 
 import { usePostActions } from "@/hooks/post/use-post-actions";
-import { useCreateComment } from "@/hooks/use-create-comment";
+import { useCreateComment } from "@/hooks/comment/use-create-comment";
+import Link from "next/link";
 
 interface PostLightboxProps {
   isOpen: boolean;
@@ -181,13 +182,43 @@ export default function PostLightbox({
                 )}
               </div>
 
-              <div className="border-border/50 border-t px-4 pt-4 pb-4">
-                <CommentInput
-                  author={currentUser!}
-                  fetchMentions={debouncedFetchMentions}
-                  onSubmit={handleAddComment}
-                />
-              </div>
+              {
+                currentUser ? (
+                  <div className="border-border/50 border-t px-4 pt-4 pb-4">
+                    <CommentInput
+                      author={currentUser!}
+                      fetchMentions={debouncedFetchMentions}
+                      onSubmit={handleAddComment}
+                    />
+                  </div>
+                ) :
+                  (
+                    <div className="border-border/50 border-t px-4 py-4">
+                      <div className="bg-primary/5 border-primary/15 flex flex-col items-center justify-between gap-3 rounded-xl border p-3 sm:flex-row sm:px-4">
+                        <div className="flex items-center gap-3 text-center sm:text-left">
+                          <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-foreground text-sm font-semibold">Tham gia cuộc trò chuyện</p>
+                            <p className="text-muted-foreground text-xs">Chia sẻ góc nhìn của bạn với mọi người.</p>
+                          </div>
+                        </div>
+
+                        <Link
+                          href="/login"
+                          className="bg-primary text-primary-foreground hover:opacity-90 flex w-full items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold transition-opacity sm:w-auto"
+                        >
+                          Đăng nhập ngay
+                        </Link>
+                      </div>
+                    </div>
+                  )
+              }
+
+
             </>
           )}
         </DialogContent>

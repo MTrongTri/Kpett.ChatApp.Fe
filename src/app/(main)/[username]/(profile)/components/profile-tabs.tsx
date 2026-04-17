@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 // Hook
-import { useProfilePosts, ProfileTab } from "@/hooks/use-profile-posts";
+import { useProfilePosts, ProfileTab } from "@/hooks/post/use-profile-posts";
 
 const TABS: { key: ProfileTab; label: string; icon: React.ReactNode }[] = [
   { key: "Post", label: "Bài viết", icon: <LayoutGrid size={13} /> },

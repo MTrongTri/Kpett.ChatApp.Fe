@@ -1,7 +1,7 @@
+import http from "@/lib/axios";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
 import { FriendRequestResponse } from "@/types/friend";
 import { UserProfile } from "@/types/user";
-import http from "./http";
 
 export const friendRequest = (receiverId: string): Promise<ApiResponse<FriendRequestResponse>> => {
     return http.post("/relationships/friend-requests", {

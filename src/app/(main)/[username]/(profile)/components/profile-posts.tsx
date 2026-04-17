@@ -2,7 +2,7 @@
 
 import { PostThumbnail } from "@/types/post";
 import ProfilePostItem from "./profile-post-item";
-import { usePostLightBox } from "@/hooks/use-post-light-box";
+import { usePostLightBox } from "@/hooks/post/use-post-light-box";
 import PostLightbox from "@/components/posts/post-light-box/post-light-box";
 
 interface ProfilePostsProps {

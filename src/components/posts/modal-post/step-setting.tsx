@@ -11,7 +11,7 @@ import { useState } from "react";
 
 import PostContent from "@/app/(main)/components/posts/post-content";
 import { UserAvatar } from "@/components/user/user-avatar";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
 import { RootState } from "@/store/store";
 import { Media } from "@/types/media";
 import { useSelector } from "react-redux";

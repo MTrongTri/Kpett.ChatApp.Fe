@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import type { PrivacyForm } from "@/types/edit-profile";
 import SectionCard from "./section-card";
-import { PRIVACY_OPTIONS, PRIVACY_TOGGLES } from "../_data/edit-profile-data";
+import { PRIVACY_OPTIONS, PRIVACY_TOGGLES } from "../data/edit-profile-data";
 import FormToggle from "./form-toggle";
 
 interface PrivacyTabProps {
-  privacy:  PrivacyForm;
+  privacy: PrivacyForm;
   onChange: (patch: Partial<PrivacyForm>) => void;
 }
 

@@ -2,12 +2,12 @@
 
 import { X } from "lucide-react";
 import type { LinksForm } from "@/types/edit-profile";
-import { LINK_PLATFORMS } from "../_data/edit-profile-data";
+import { LINK_PLATFORMS } from "../data/edit-profile-data";
 import SectionCard from "./section-card";
 import { FormInput } from "./form-input";
 
 interface LinksTabProps {
-  links:    LinksForm;
+  links: LinksForm;
   onChange: (patch: LinksForm) => void;
 }
 

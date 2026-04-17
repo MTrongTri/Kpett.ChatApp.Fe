@@ -25,9 +25,9 @@ import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/authSlice";
 import { useRouter } from "next/navigation";
-import { setAuthSession, tokenStorage } from "@/lib/cookie-storage-utils";
-import Cookies from "js-cookie";
 import { useSignalR } from "../providers/signalr-provider";
+import { sessionStorage } from "@/lib/cookie-storage-utils";
+import { useAuth } from "../providers/auth-provider";
 
 const loginSchema = z.object({
   email: z
@@ -42,10 +42,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
 
-  const dispatch = useDispatch();
   const router = useRouter();
 
-  const { connection, isConnected } = useSignalR()
+  const { login } = useAuth();
 
   const {
     register,
@@ -56,53 +55,37 @@ export default function FormLogin() {
     resolver: zodResolver(loginSchema),
   });
 
+  // app/(auth)/login/page.tsx
   const onSubmit = async (dataLogin: LoginFormValues) => {
     try {
       const loginRes = await authService.login(dataLogin);
       const dataRes = loginRes.data;
 
-      if (!dataRes || !dataRes.token || !dataRes.user) {
-        toast.error("Dữ liệu phản hồi từ máy chủ không hợp lệ!");
+      if (!dataRes?.user || !dataRes?.token) {
+        toast.error('Dữ liệu phản hồi từ máy chủ không hợp lệ!');
         return;
       }
 
       const { user, token } = dataRes;
 
-      dispatch(
-        setCredentials({
-          user: user,
-          isLogedIn: true,
-          isProfileCompleted: user.isProfileCompleted,
-        }),
-      );
-
-      tokenStorage.save(token.accessToken, token.refreshToken);
-
-      setAuthSession({ isProfileCompleted: user.isProfileCompleted });
-
-      if (connection) {
-        connection.start()
-      }
+      login(token.accessToken, user, user.isProfileCompleted);
 
       if (user.isProfileCompleted) {
-        toast.success("Đăng nhập thành công!");
-        router.push("/");
+        toast.success('Đăng nhập thành công!');
+        router.push('/');
       } else {
-        router.push("/account-setup");
+        router.push('/account-setup');
       }
     } catch (err: any) {
       const errorCode = err?.errorCode;
 
-      if (errorCode === "AUTH.UNAUTHORIZED") {
-        setError("email", {
-          message: "Tài khoản hoặc mật khẩu không chính xác",
-        });
+      console.log(err)
 
-        setError("password", {
-          message: "Tài khoản hoặc mật khẩu không chính xác",
-        });
+      if (errorCode === 'AUTH.UNAUTHORIZED') {
+        setError('email', { message: 'Tài khoản hoặc mật khẩu không chính xác' });
+        setError('password', { message: 'Tài khoản hoặc mật khẩu không chính xác' });
       } else {
-        toast.error("Đã có lỗi xảy ra, vui lòng thử lại!");
+        toast.error('Đã có lỗi xảy ra, vui lòng thử lại!');
       }
     }
   };

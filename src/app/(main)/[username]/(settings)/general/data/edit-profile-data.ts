@@ -10,11 +10,11 @@ import { Bell, Camera, Globe, Link, Lock, Phone, Shield, User, X } from "lucide-
 import { SiGithub, SiLinkerd, SiX, SiYoutube } from '@icons-pack/react-simple-icons';
 // ── TABS ──────────────────────────────────────────────────────────────
 export const EDIT_TABS: TabConfig[] = [
-  { key: "general", label: "Thông tin",        icon: User },
-  { key: "account", label: "Tài khoản",        icon: Lock },
-  { key: "links",   label: "Liên kết",         icon: Link },
-  { key: "privacy", label: "Quyền riêng tư",   icon: Shield },
-  { key: "notify",  label: "Thông báo",        icon: Bell },
+  { key: "general", label: "Thông tin", icon: User },
+  { key: "account", label: "Tài khoản", icon: Lock },
+  { key: "links", label: "Liên kết", icon: Link },
+  { key: "privacy", label: "Quyền riêng tư", icon: Shield },
+  { key: "notify", label: "Thông báo", icon: Bell },
 ];
 
 // ── GRADIENT PALETTES ─────────────────────────────────────────────────
@@ -42,89 +42,89 @@ export const AVATAR_GRADIENTS: string[] = [
 
 // ── SOCIAL LINKS ──────────────────────────────────────────────────────
 export const LINK_PLATFORMS: LinkPlatform[] = [
-  { key: "github",   icon: SiGithub, label: "GitHub",    placeholder: "github.com/username"         },
-  { key: "twitter",  icon: SiX, label: "Twitter/X", placeholder: "x.com/username"              },
-  { key: "website",  icon: Globe, label: "Website",   placeholder: "yoursite.com"                },
-  { key: "youtube",  icon: SiYoutube, label: "YouTube",   placeholder: "youtube.com/@channel"        },
+  { key: "github", icon: SiGithub, label: "GitHub", placeholder: "github.com/username" },
+  { key: "twitter", icon: SiX, label: "Twitter/X", placeholder: "x.com/username" },
+  { key: "website", icon: Globe, label: "Website", placeholder: "yoursite.com" },
+  { key: "youtube", icon: SiYoutube, label: "YouTube", placeholder: "youtube.com/@channel" },
 ];
 
 // ── PRIVACY ───────────────────────────────────────────────────────────
 export const PRIVACY_OPTIONS: PrivacyOption[] = [
   {
-    key:   "public",
+    key: "public",
     label: "Công khai",
-    desc:  "Tất cả mọi người đều có thể xem trang cá nhân của bạn",
+    desc: "Tất cả mọi người đều có thể xem trang cá nhân của bạn",
   },
   {
-    key:   "private",
+    key: "private",
     label: "Riêng tư",
-    desc:  "Chỉ người theo dõi được chấp thuận mới thấy bài viết",
+    desc: "Chỉ người theo dõi được chấp thuận mới thấy bài viết",
   },
 ];
 
 export const PRIVACY_TOGGLES: NotifySetting[] = [
-  { key: "showActivity", label: "Hiện trạng thái hoạt động",  desc: "Người khác có thể thấy bạn đang online"       },
-  { key: "allowMention", label: "Cho phép nhắc tên",          desc: "Ai cũng có thể tag bạn trong bài viết"        },
-  { key: "showLikes",    label: "Hiển thị lượt thích",        desc: "Số lượt thích công khai trên tất cả bài viết" },
-  { key: "allowShare",   label: "Cho phép chia sẻ bài viết",  desc: "Người khác có thể chia sẻ bài của bạn"        },
+  { key: "showActivity", label: "Hiện trạng thái hoạt động", desc: "Người khác có thể thấy bạn đang online" },
+  { key: "allowMention", label: "Cho phép nhắc tên", desc: "Ai cũng có thể tag bạn trong bài viết" },
+  { key: "showLikes", label: "Hiển thị lượt thích", desc: "Số lượt thích công khai trên tất cả bài viết" },
+  { key: "allowShare", label: "Cho phép chia sẻ bài viết", desc: "Người khác có thể chia sẻ bài của bạn" },
 ];
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────
 export const NOTIFY_CHANNELS: NotifyChannel[] = [
-  { key: "push",  label: "Thông báo đẩy", icon: Phone },
+  { key: "push", label: "Thông báo đẩy", icon: Phone },
   // { key: "email", label: "Qua email",          icon: Camera },
 ];
 
 export const NOTIFY_SETTINGS: NotifySetting[] = [
-  { key: "likes",    label: "Lượt thích",    desc: "Khi ai đó thích bài viết của bạn"      },
-  { key: "comments", label: "Bình luận",     desc: "Khi ai đó bình luận vào bài viết"      },
-  { key: "follows",  label: "Theo dõi mới",  desc: "Khi có người mới theo dõi bạn"         },
-  { key: "mentions", label: "Nhắc đến",      desc: "Khi ai đó tag bạn trong bài viết"      },
-  { key: "messages", label: "Tin nhắn",      desc: "Khi nhận được tin nhắn mới"            },
+  { key: "likes", label: "Lượt thích", desc: "Khi ai đó thích bài viết của bạn" },
+  { key: "comments", label: "Bình luận", desc: "Khi ai đó bình luận vào bài viết" },
+  { key: "follows", label: "Theo dõi mới", desc: "Khi có người mới theo dõi bạn" },
+  { key: "mentions", label: "Nhắc đến", desc: "Khi ai đó tag bạn trong bài viết" },
+  { key: "messages", label: "Tin nhắn", desc: "Khi nhận được tin nhắn mới" },
 ];
 
 // ── DEFAULT STATE ─────────────────────────────────────────────────────
 export const DEFAULT_EDIT_STATE: EditProfileState = {
   general: {
-    displayName:    "Hùng Nguyễn",
-    username:       "hung.travel",
-    role:           "Travel Photographer · Content Creator",
-    bio:            "📷 Nhiếp ảnh du lịch & đường phố\nKhám phá vẻ đẹp Việt Nam qua từng khung hình.\nSài Gòn 🌆 → Đà Lạt 🌿 → khắp nơi trên đất nước này.",
-    location:       "TP. Hồ Chí Minh, Việt Nam",
-    website:        "hungtravel.vn",
-    birthday:       "1998-07-15",
+    displayName: "Hùng Nguyễn",
+    username: "hung.travel",
+    role: "Travel Photographer · Content Creator",
+    bio: "📷 Nhiếp ảnh du lịch & đường phố\nKhám phá vẻ đẹp Việt Nam qua từng khung hình.\nSài Gòn 🌆 → Đà Lạt 🌿 → khắp nơi trên đất nước này.",
+    location: "TP. Hồ Chí Minh, Việt Nam",
+    website: "hungtravel.vn",
+    birthday: "1998-07-15",
     avatarGradient: "from-emerald-400 to-teal-500",
-    avatarInitial:  "H",
-    coverGradient:  "from-emerald-950 via-teal-900 to-cyan-950",
+    avatarInitial: "H",
+    coverGradient: "from-emerald-950 via-teal-900 to-cyan-950",
   },
   account: {
-    email:       "hung@hungtravel.vn",
-    phone:       "+84 912 345 678",
+    email: "hung@hungtravel.vn",
+    phone: "+84 912 345 678",
     currentPass: "",
-    newPass:     "",
+    newPass: "",
     confirmPass: "",
   },
   links: {
-    github:  "github.com/hung-travel",
+    github: "github.com/hung-travel",
     twitter: "x.com/hungtravel_vn",
     website: "hungtravel.vn",
     youtube: "",
     linkedin: "",
   },
   privacy: {
-    account:      "public",
+    account: "public",
     showActivity: true,
     allowMention: true,
-    showLikes:    true,
-    allowShare:   true,
+    showLikes: true,
+    allowShare: true,
   },
   notify: {
-    push_likes:    true,
+    push_likes: true,
     push_comments: true,
-    push_follows:  true,
+    push_follows: true,
     push_mentions: false,
     push_messages: true,
-    email_likes:   false,
+    email_likes: false,
     email_comments: false,
     email_follows: true,
     email_mentions: false,

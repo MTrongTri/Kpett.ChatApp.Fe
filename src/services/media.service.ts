@@ -1,5 +1,5 @@
+import http from "@/lib/axios";
 import axios from "axios";
-import http from "./http";
 
 export const uploadFileToCloudinary = async (
   file: File,

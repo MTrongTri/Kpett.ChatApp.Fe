@@ -7,6 +7,7 @@ import { StoreProvider } from "@/components/providers/store-provider";
 import { IBM_Plex_Mono, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { AuthProvider } from "@/components/providers/auth-provider";
 
 const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
@@ -31,14 +32,17 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}
       >
-        <SignalRProvider>
-          <StoreProvider>
-            {children}
-            {/* Toast */}
-            <Toaster richColors position="top-center" />
-            {/* Modals */}
-          </StoreProvider>
-        </SignalRProvider>
+        <StoreProvider>
+          <AuthProvider>
+            <SignalRProvider>
+              {children}
+              {/* Toast */}
+              <Toaster richColors position="top-center" />
+              {/* Modals */}
+            </SignalRProvider>
+
+          </AuthProvider>
+        </StoreProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import { MOCK_COMMENT } from "@/data/comment";
+import http from "@/lib/axios";
 import { Comment } from "@/types/comment";
 import { ApiResponse, PaginatedData } from "@/types/common/api";
-import http from "./http";
 import { string } from "zod";
 
 export const addComment = async (

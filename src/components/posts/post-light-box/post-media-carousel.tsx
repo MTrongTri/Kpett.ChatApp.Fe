@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Play, PlayCircle } from "lucide-react";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Media } from "@/types/media";
-import { useMediaLightbox } from "@/hooks/use-media-lightbox";
+import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
 import { MediaLightbox } from "../media-lightbox";
 
 interface PostMediaCarouselProps {

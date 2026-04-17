@@ -1,13 +1,13 @@
 "use client";
 
 import type { NotifyForm } from "@/types/edit-profile";
-import { NOTIFY_CHANNELS, NOTIFY_SETTINGS } from "../_data/edit-profile-data";
+import { NOTIFY_CHANNELS, NOTIFY_SETTINGS } from "../data/edit-profile-data";
 import SectionCard from "./section-card";
 import FormToggle from "./form-toggle";
 import { Separator } from "@/components/ui/separator";
 
 interface NotifyTabProps {
-  notify:   NotifyForm;
+  notify: NotifyForm;
   onChange: (patch: NotifyForm) => void;
 }
 
@@ -20,7 +20,7 @@ export default function NotifyTab({ notify, onChange }: NotifyTabProps) {
           title={`${channel.label}`}
         >
           {NOTIFY_SETTINGS.map((setting, i) => {
-            const key     = `${channel.key}_${setting.key}`;
+            const key = `${channel.key}_${setting.key}`;
             const checked = notify[key] ?? false;
 
             return (

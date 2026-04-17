@@ -6,9 +6,11 @@ import { UserAvatar } from "@/components/user/user-avatar";
 import { useTrackPresence } from "@/hooks/use-track-presence";
 import { cn } from "@/lib/utils";
 import { getFriendsWithFilter } from "@/services/friend.service";
+import { RootState } from "@/store/store";
 import { UserProfile } from "@/types/user";
 import Link from "next/link";
 import { useCallback, useMemo } from "react";
+import { useSelector } from "react-redux";
 import useSWR from "swr";
 
 const FriendItem = ({ friend }: { friend: UserProfile }) => (
@@ -51,8 +53,10 @@ export default function OnlineFriends() {
   const filterParams = useMemo(() => ({ search: "", cursor: null, limit: 10 }), []);
   const { connection, isConnected } = useSignalR();
 
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   const { data, isLoading, error, mutate } = useSWR(
-    ["online-friends", filterParams],
+    currentUser ? ["online-friends", filterParams] : null,
     ([, params]) => getFriendsWithFilter(params),
     {
       revalidateOnFocus: false,
@@ -94,9 +98,13 @@ export default function OnlineFriends() {
     );
   }
 
+  if (!currentUser) {
+    return null;
+  }
+
   if (error || !data || !data.data?.items) {
     return (
-      <div className="px-2 py-4 text-center text-xs text-destructive">
+      <div className="px-2 py-4 text-xs text-destructive">
         Không thể tải danh sách. Vui lòng thử lại.
       </div>
     );
@@ -104,7 +112,7 @@ export default function OnlineFriends() {
 
   if (onlineFriends.length === 0) {
     return (
-      <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+      <div className="px-2 py-4 text-xs text-muted-foreground">
         Không có bạn bè nào đang trực tuyến.
       </div>
     );
@@ -112,6 +120,10 @@ export default function OnlineFriends() {
 
   return (
     <div className="space-y-0.5">
+      <div className="text-foreground mt-5 mb-2.5 px-2.5 text-sm font-semibold first:mt-0">
+        Bạn bè online
+      </div>
+
       {onlineFriends.map((friend: UserProfile) => (
         <FriendItem key={friend.id} friend={friend} />
       ))}

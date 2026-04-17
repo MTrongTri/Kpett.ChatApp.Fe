@@ -15,13 +15,29 @@ import { Input } from "../../ui/input";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NAV_TABS } from "./nav-tab";
-import Logo from "./logo"; // Import Logo đã tạo
+import Logo from "./logo";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import PostModal from "@/components/posts/modal-post/post-modal";
 
 export default function MobileMenu() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false); // State quản lý đóng mở
+  const [open, setOpen] = useState(false);
 
-  // Tự động đóng menu khi URL thay đổi
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  const handleOpenCreate = () => {
+    setMode("create");
+    setSelectedPostId(null)
+    setIsOpen(true);
+  };
+
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -54,7 +70,7 @@ export default function MobileMenu() {
 
         {/* Header của Menu: Sử dụng lại component Logo */}
         <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
-           <Logo />
+          <Logo />
         </div>
 
         {/* Ô tìm kiếm linh hoạt màu sắc */}
@@ -92,7 +108,7 @@ export default function MobileMenu() {
               >
                 {/* Clone icon để tùy chỉnh size nếu cần */}
                 <span className={cn(active ? "text-primary" : "text-zinc-400")}>
-                   {tab.icon}
+                  {tab.icon}
                 </span>
                 {tab.label}
               </Link>
@@ -100,18 +116,33 @@ export default function MobileMenu() {
           })}
         </nav>
 
-        {/* Nút Tạo mới ở dưới cùng (Footer của Menu) */}
+
         <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
-          <Button
-            className="
-              w-full bg-primary text-primary-foreground 
-              text-[12px] font-bold tracking-widest uppercase h-12 rounded-xl
-              hover:opacity-90 transition-opacity gap-2
-            "
-          >
-            <Plus size={16} strokeWidth={3} />
-            Tạo bài mới
-          </Button>
+          {currentUser ? (
+            <Button
+              onClick={handleOpenCreate}
+              className="
+        w-full bg-primary text-primary-foreground 
+        text-[12px] font-bold tracking-widest uppercase h-12 rounded-xl
+        hover:opacity-90 transition-opacity gap-2
+      "
+            >
+              <Plus size={16} strokeWidth={3} />
+              Tạo bài mới
+              <PostModal open={isOpen} onOpenChange={setIsOpen} mode={mode} postId={selectedPostId} />
+            </Button>
+          ) : (
+            <Link
+              href="/login"
+              className="
+        flex items-center justify-center w-full bg-primary text-primary-foreground 
+        text-[12px] font-bold tracking-widest uppercase h-12 rounded-xl
+        hover:opacity-90 transition-opacity gap-2
+      "
+            >
+              Đăng nhập
+            </Link>
+          )}
         </div>
       </SheetContent>
     </Sheet>

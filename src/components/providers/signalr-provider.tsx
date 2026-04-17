@@ -1,8 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
+import axios from "axios";
+import { setAccessToken, logout } from "@/store/features/authSlice";
+import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
 import Cookies from "js-cookie";
+import { useAuth } from "./auth-provider";
 
 interface SignalRContextType {
     connection: signalR.HubConnection | null;
@@ -15,62 +20,58 @@ const SignalRContext = createContext<SignalRContextType>({
 });
 
 export const SignalRProvider = ({ children }: { children: React.ReactNode }) => {
+    const { accessToken, isAuthenticated } = useAuth();
+
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
+
     useEffect(() => {
-        const token = Cookies.get("access_token");
+        if (Cookies.get("isLoggedIn") === "false" || !isAuthenticated) return;
 
-        if (!token) {
-            return;
-        }
-
-        // 2. Khởi tạo cấu hình kết nối
-        const hubUrl = `${process.env.NEXT_PUBLIC_API_URL_SIGNALR || "https://localhost:7068"}/chat-Hub`;
+        let isStopped = false;
+        const hubUrl = `${process.env.NEXT_PUBLIC_API_URL}/chat-Hub`;
 
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {
-                accessTokenFactory: () => {
-                    const currentToken = Cookies.get("access_token");
-                    return currentToken || "";
+                accessTokenFactory: async () => {
+                    return accessToken ?? "";
                 },
-                withCredentials: true
+                withCredentials: true,
             })
             .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
             .build();
 
-        setConnection(newConnection);
+        newConnection.onreconnecting(() => setIsConnected(false));
+        newConnection.onreconnected(() => setIsConnected(true));
+        newConnection.onclose(() => setIsConnected(false));
 
-        // Khởi động kết nối
-        const startConnection = async () => {
+        const start = async () => {
             try {
                 await newConnection.start();
-                setIsConnected(true);
-                console.log("SignalR connection successful!");
-
-                // --- ĐĂNG KÝ LẮNG NGHE CÁC SỰ KIỆN TỪ BACKEND ---
-
-                // newConnection.on("UserOnlineStatusChanged", (data: { userId: string, isOnline: boolean }) => {
-                //     console.log(`User ${data.userId} is now ${data.isOnline ? "Online" : "Offline"}`);
-                // });
-
+                if (!isStopped) {
+                    setIsConnected(true);
+                    setConnection(newConnection);
+                    console.log("SignalR: Connected successfully!");
+                } else {
+                    await newConnection.stop();
+                }
             } catch (err) {
-                console.error("SignalR connection failed", err);
+                if (!isStopped) {
+                    console.error("SignalR: Start failed", err);
+                }
             }
         };
 
-        startConnection();
+        start();
 
-        // Cleanup: Ngắt kết nối khi Component unmount (user đóng tab/đăng xuất)
         return () => {
-            if (newConnection) {
-                newConnection.stop().then(() => {
-                    console.log("Disconnect SignalR.");
-                    setIsConnected(false);
-                });
-            }
+            isStopped = true;
+            newConnection.stop();
+            setConnection(null);
+            setIsConnected(false);
         };
-    }, []);
+    }, [isAuthenticated]);
 
     return (
         <SignalRContext.Provider value={{ connection, isConnected }}>
@@ -79,7 +80,4 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
     );
 };
 
-// Hook để gọi ở các Component khác
-export const useSignalR = () => {
-    return useContext(SignalRContext);
-};
+export const useSignalR = () => useContext(SignalRContext);

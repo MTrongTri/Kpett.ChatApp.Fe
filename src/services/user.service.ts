@@ -1,4 +1,5 @@
 import { MOCK_USER_PROFILES } from "@/data/user";
+import http from "@/lib/axios";
 import { ApiResponse } from "@/types/common/api";
 import {
   CheckUsernameResponse,
@@ -6,7 +7,6 @@ import {
   UserProfile,
   UserStatsResponse,
 } from "@/types/user";
-import http from "./http";
 
 export const getProfileUser = async (
   username: string,

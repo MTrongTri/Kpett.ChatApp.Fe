@@ -1,6 +1,6 @@
 "use client";
 
-import { useCommentReplies } from "@/hooks/use-comment-replies";
+import { useCommentReplies } from "@/hooks/comment/use-comment-replies";
 import { useDebounceCallback } from "@/hooks/use-debounce";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { RootState } from "@/store/store";
@@ -26,9 +26,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Hooks
-import { useCreateCommentReply } from "@/hooks/use-create-comment-reply";
-import { useManageComment } from "@/hooks/use-manage-comment";
+import { useCreateCommentReply } from "@/hooks/comment/use-create-comment-reply";
+import { useManageComment } from "@/hooks/comment/use-manage-comment";
 import { getFriendsWithFilter } from "@/services/friend.service";
+import { toast } from "sonner";
 
 interface CommentItemProps {
   comment: Comment;
@@ -203,7 +204,13 @@ export const CommentItem = memo(({
               </button>
 
               {currentComment.viewerContext?.canReply && (
-                <button className="hover:text-foreground/80 cursor-pointer font-semibold transition-colors" onClick={() => setIsReplying(true)}>
+                <button className="hover:text-foreground/80 cursor-pointer font-semibold transition-colors" onClick={() => {
+                  if (!currentUser) {
+                    toast.warning("Bạn cần đăng nhập để thực hiện bình luận");
+                    return;
+                  }
+                  setIsReplying(true)
+                }}>
                   Trả lời
                 </button>
               )}

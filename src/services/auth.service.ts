@@ -1,29 +1,37 @@
+import { authHttp } from "@/lib/axios";
 import { LoginRequest, LoginResponse } from "@/types/auth";
-import http from "./http";
 import { ApiResponse } from "@/types/common/api";
-import Cookies from "js-cookie";
-import { refresh } from "next/cache";
+import axios from "axios";
 
-export const login = (
+const login = (
   loginRequest: LoginRequest,
 ): Promise<ApiResponse<LoginResponse>> => {
-  return http.post("auth/login", loginRequest);
+  return authHttp.post("/login", loginRequest);
+
 };
 
-export const register = (
+const register = (
   registerRequest: LoginRequest,
 ): Promise<ApiResponse> => {
-  return http.post("auth/register", registerRequest);
+  return authHttp.post("/register", registerRequest);
 };
 
-export const logout = () => {
-  return http.post("auth/logout", {
-    refreshToken: Cookies.get('refresh_token')
-  })
+const logout = (accessToken: string) => {
+  return authHttp.post('/logout', {}, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+}
+
+const refreshToken = () => {
+  return axios.post('/api/auth/refresh', null, { withCredentials: true });
 }
 
 const authService = {
   login,
   register,
+  logout,
+  refreshToken
 };
 export default authService;

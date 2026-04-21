@@ -95,9 +95,9 @@ export default function ProfileCard() {
       {/* Stats */}
       <div className="border-border grid grid-cols-3 gap-1 border-t pt-3">
         {[
-          { n: userStats.totalPosts, l: "Bài viết" },
-          { n: userStats.followers, l: "Theo dõi" },
-          { n: userStats.following, l: "Đang theo dõi" },
+          { n: userStats.stats.totalPosts, l: "Bài viết" },
+          { n: userStats.stats.followers, l: "Theo dõi" },
+          { n: userStats.stats.following, l: "Đang theo dõi" },
         ].map((s) => (
           <div key={s.l} className="text-center">
             <p className="text-card-foreground text-[18px] leading-tight font-bold">

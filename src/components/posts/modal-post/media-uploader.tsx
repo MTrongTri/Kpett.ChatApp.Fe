@@ -2,18 +2,20 @@ import { Button } from "@/components/ui/button";
 import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
 import { uploadFileToCloudinary } from "@/services/media.service";
-import { deleteMedia } from "@/services/post.service";
 import { Media } from "@/types/media";
+import axios from "axios";
 import { Loader2, Play, Plus, UploadCloud, X } from "lucide-react";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MediaLightbox } from "../media-lightbox";
+import { deleteMedia } from "@/services/post.service";
 
 interface UploadingFile {
   id: string;
   file: File;
   progress: number;
-  abortController: AbortController; // Thêm controller để quản lý việc hủy
+  abortController: AbortController;
+  previewUrl: string; // Thêm local preview
 }
 
 interface MediaUploaderProps {
@@ -25,10 +27,9 @@ interface MediaUploaderProps {
 export default function MediaUploader({ media, onChange, onLoadingChange }: MediaUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // State quản lý những file ĐANG tải lên
   const [uploadQueue, setUploadQueue] = useState<UploadingFile[]>([]);
-  // Quản lý danh sách ID của các file ĐANG ĐƯỢC XÓA
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false); // Trạng thái Drag & Drop
 
   const latestMediaRef = useRef(media);
   const successfullyDeletedIdsRef = useRef<Set<string>>(new Set());
@@ -41,31 +42,34 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     handleOpenChange,
   } = useMediaLightbox();
 
-  // Cập nhật ref mỗi khi media thay đổi để tránh stale closure trong các hàm async
   useEffect(() => {
     latestMediaRef.current = media;
   }, [media]);
 
-  // Tính toán trạng thái loading tổng hợp: Đang upload HOẶC đang xóa
   const isUploading = uploadQueue.length > 0;
   const isDeleting = deletingIds.length > 0;
   const isBusy = useMemo(() => isUploading || isDeleting, [isUploading, isDeleting]);
 
-  // Gọi callback onLoadingChange mỗi khi trạng thái isBusy thay đổi
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isBusy);
     }
   }, [isBusy, onLoadingChange]);
-  // ------------------------------------------
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  // Giải phóng bộ nhớ RAM từ các URL tạm thời khi component unmount
+  useEffect(() => {
+    return () => {
+      uploadQueue.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tách riêng logic xử lý file để dùng chung cho Click và Drag&Drop
+  const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
 
     const validFiles: File[] = [];
 
-    // Validate toàn bộ file
     for (const file of files) {
       const validation = validateFile(file);
       if (!validation.isValid) {
@@ -92,20 +96,18 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         })
       );
 
-      // Khởi tạo hàng đợi với AbortController
       const newQueueItems: UploadingFile[] = processedFiles.map((file) => ({
         id: `${file.name}-${Date.now()}`,
         file,
         progress: 0,
         abortController: new AbortController(),
+        previewUrl: URL.createObjectURL(file), // Tạo URL xem trước
       }));
 
       setUploadQueue((prev) => [...prev, ...newQueueItems]);
 
-      // Xử lý upload song song
       const uploadPromises = newQueueItems.map(async (queueItem) => {
         try {
-          // Truyền signal vào hàm upload
           const result = await uploadFileToCloudinary(
             queueItem.file,
             (percent) => {
@@ -119,34 +121,37 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           );
           return { success: true, item: queueItem, result, canceled: false };
         } catch (error: any) {
-          // Bắt trường hợp người dùng bấm hủy
-          const isCanceled = error?.name === 'AbortError' || error?.message?.includes('cancel');
+          // Bắt lỗi hủy từ Axios chuẩn xác
+          const isCanceled = axios.isCancel(error);
           return { success: false, item: queueItem, error, canceled: isCanceled };
         }
       });
 
       const results = await Promise.allSettled(uploadPromises);
 
-      // Bóc tách kết quả
       const successfulUploads: Media[] = [];
       const completedIds: string[] = [];
       let hasError = false;
 
       results.forEach((res) => {
         if (res.status === "fulfilled") {
-          completedIds.push(res.value.item.id);
-          if (res.value.success) {
-            successfulUploads.push(res.value.result!);
-          } else if (!res.value.canceled) {
-            // Chỉ báo lỗi nếu không phải do người dùng chủ động hủy
-            console.error("Lỗi upload file:", res.value.item.file.name, res.value.error);
+          const { item, success, result, canceled, error } = res.value;
+          completedIds.push(item.id);
+
+          if (success) {
+            successfulUploads.push(result!);
+          } else if (!canceled) {
+            console.error("Lỗi upload file:", item.file.name, error);
             hasError = true;
           }
+
+          // Xóa preview URL khỏi RAM khi xử lý xong
+          URL.revokeObjectURL(item.previewUrl);
         }
       });
 
       if (hasError) {
-        toast.error("Một số file tải lên không thành công.");
+        toast.error("Một số file tải lên thất bại do lỗi mạng hoặc quá dung lượng.");
       }
 
       if (successfulUploads.length > 0) {
@@ -155,25 +160,54 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         latestMediaRef.current = updatedMedia;
       }
 
-      // Dọn dẹp hàng đợi
       setUploadQueue((currentQueue) =>
         currentQueue.filter((item) => !completedIds.includes(item.id))
       );
     } catch (error) {
+      console.error("Lỗi xử lý file:", error);
       toast.error("Đã có lỗi bất ngờ xảy ra khi xử lý file.");
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  // Hàm xử lý hủy upload đang diễn ra
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processFiles(Array.from(e.target.files || []));
+  };
+
+  // --- Các hàm hỗ trợ Drag & Drop ---
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(Array.from(e.dataTransfer.files));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // ------------------------------------
+
   const handleCancelUpload = (id: string) => {
     setUploadQueue((prev) => {
       const itemToCancel = prev.find((item) => item.id === id);
       if (itemToCancel) {
-        itemToCancel.abortController.abort(); // Kích hoạt tín hiệu hủy
+        itemToCancel.abortController.abort();
+        URL.revokeObjectURL(itemToCancel.previewUrl); // Cleanup RAM
       }
-      return prev.filter((item) => item.id !== id); // Xóa khỏi giao diện ngay lập tức
+      return prev.filter((item) => item.id !== id);
     });
   };
 
@@ -190,7 +224,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       );
       onChange(newMedia);
       latestMediaRef.current = newMedia;
-
     } catch (error) {
       toast.error("Không thể xóa file, vui lòng thử lại.");
     } finally {
@@ -210,26 +243,32 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       />
 
       <div className="text-muted-foreground mb-3 text-[11px]">
-        Chọn ảnh hoặc video tải lên từ thiết bị (Có thể chọn nhiều file).
+        Chọn ảnh/video hoặc kéo thả trực tiếp vào đây (Hỗ trợ JPG, PNG, MP4, WEBM).
       </div>
 
       {media.length === 0 && !isUploading ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-border hover:bg-secondary/50 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-border flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-all duration-200
+            ${isDragging ? "bg-primary/10 border-primary" : "hover:bg-secondary/50"}`}
         >
-          <div className="bg-secondary/80 mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+          <div className={`${isDragging ? "bg-primary/20 scale-110" : "bg-secondary/80"} mb-4 flex h-14 w-14 items-center justify-center rounded-full transition-transform`}>
             <UploadCloud className="text-primary h-7 w-7" />
           </div>
           <p className="text-foreground text-sm font-semibold">
-            Nhấn để tải lên ảnh hoặc video
-          </p>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Hỗ trợ định dạng JPG, PNG, MP4, WEBM
+            {isDragging ? "Thả file vào đây để tải lên" : "Nhấn hoặc Kéo thả ảnh/video vào đây"}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           {/* Hiển thị các file ĐÃ UPLOAD XONG */}
           {media.map((item, index) => {
             const isDeletingItem = deletingIds.includes(item.publicId);
@@ -250,17 +289,18 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                     className="group/video relative h-full w-full cursor-pointer"
                     onClick={() => openMediaLightBox(mediaLightbox, index)}
                   >
-                    <video
-                      src={item.url}
-                      className="h-full w-full object-cover"
-                      preload="metadata"
-                    />
+                    <video src={item.url} className="h-full w-full object-cover" preload="metadata" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                       <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                     </div>
                   </div>
                 ) : (
-                  <img src={item.url} alt="Uploaded" className="h-full w-full object-cover" onClick={() => openMediaLightBox(mediaLightbox, index)} />
+                  <img
+                    src={item.url}
+                    alt="Uploaded"
+                    className="h-full w-full object-cover cursor-pointer"
+                    onClick={() => openMediaLightBox(mediaLightbox, index)}
+                  />
                 )}
 
                 <Button
@@ -280,13 +320,22 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             );
           })}
 
-          {/* Hiển thị các file ĐANG UPLOAD (Có Progress Bar) */}
+          {/* Hiển thị các file ĐANG UPLOAD (Có Local Preview & Progress Bar) */}
           {uploadQueue.map((uploadItem) => (
             <div
               key={uploadItem.id}
               className="border-border group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
             >
-              {/* Nút hủy (Hiện khi hover vào file đang tải) */}
+              {/* Hình nền hiển thị file đang tải lên dạng mờ */}
+              {uploadItem.file.type.startsWith("image/") ? (
+                <img src={uploadItem.previewUrl} alt="Preview" className="absolute inset-0 h-full w-full object-cover opacity-40 blur-[2px]" />
+              ) : (
+                <video src={uploadItem.previewUrl} className="absolute inset-0 h-full w-full object-cover opacity-40 blur-[2px]" />
+              )}
+
+              {/* Lớp phủ tối để làm nổi bật số % */}
+              <div className="absolute inset-0 bg-black/20" />
+
               <Button
                 variant="destructive"
                 size="icon"
@@ -299,21 +348,17 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                 <X className="h-3 w-3" />
               </Button>
 
-              <div className="z-10 flex flex-col items-center">
-                <span className="text-xs font-semibold text-foreground mb-1">
+              <div className="z-10 flex flex-col items-center drop-shadow-md">
+                <span className="text-sm font-bold text-white mb-1">
                   {uploadItem.progress}%
                 </span>
-                <span className="text-[10px] text-muted-foreground">Đang tải...</span>
+                <span className="text-[10px] text-white/90 font-medium bg-black/40 px-2 py-0.5 rounded-full">Đang tải...</span>
               </div>
 
+              {/* Thanh progress bar chạy ngang ở dưới cùng */}
               <div
-                className="absolute bottom-0 left-0 h-1.5 bg-primary transition-all duration-300 ease-out"
+                className="absolute bottom-0 left-0 h-1.5 bg-primary transition-all duration-300 ease-out z-10"
                 style={{ width: `${uploadItem.progress}%` }}
-              />
-
-              <div
-                className="absolute top-0 left-0 w-full bg-primary/10 transition-all duration-300"
-                style={{ height: `${100 - uploadItem.progress}%` }}
               />
             </div>
           ))}
@@ -321,7 +366,8 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           {/* Nút thêm file phụ */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-border hover:bg-secondary/50 flex cursor-pointer aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+            className={`border-border flex cursor-pointer aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors
+               ${isDragging ? "bg-primary/10 border-primary" : "hover:bg-secondary/50"}`}
           >
             <Plus className="text-muted-foreground mb-1 h-6 w-6" />
             <span className="text-muted-foreground text-xs font-medium">

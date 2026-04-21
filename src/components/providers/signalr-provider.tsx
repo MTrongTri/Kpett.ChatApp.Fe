@@ -1,12 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import axios from "axios";
-import { setAccessToken, logout } from "@/store/features/authSlice";
-import { RootState } from "@/store/store";
-import { useDispatch, useSelector } from "react-redux";
 import Cookies from "js-cookie";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./auth-provider";
 
 interface SignalRContextType {

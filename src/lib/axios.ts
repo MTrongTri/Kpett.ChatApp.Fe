@@ -49,7 +49,7 @@ http.interceptors.response.use(
     (res: AxiosResponse) => res.data,
     async (err) => {
         const originalRequest = err.config;
-        const errorCode = err.response?.data?.ErrorCode;
+        const errorCode = err.response?.data?.errorCode;
 
         if (errorCode !== 'AUTH.ACCESS_TOKEN_INVALID' || originalRequest._retry) {
             return Promise.reject(err.response?.data || err);

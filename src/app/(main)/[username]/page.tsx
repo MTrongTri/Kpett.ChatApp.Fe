@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useRef } from "react";
-import { getProfileUser } from "@/services/user.service";
 import { notFound, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import ProfileAvatarRow from "./components/profile-avatar-row";
@@ -9,6 +8,7 @@ import ProfileCover from "./components/profile-cover";
 import ProfileInfo from "./components/profile-info";
 import ProfileTabs from "./components/profile-tabs";
 import ProfileSkeleton from "./components/profile-skeleton";
+import { getUserProfile } from "@/services/user.service";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
@@ -19,8 +19,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const searchParams = useSearchParams();
   const tabsRef = useRef<HTMLDivElement>(null);
 
+
   const { data, isLoading, error } = useSWR([`/users/profile`, username], () =>
-    getProfileUser(username),
+    getUserProfile(username),
   );
 
   useEffect(() => {

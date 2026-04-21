@@ -1,7 +1,6 @@
-// components/providers/auth-provider.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { setAccessToken, logout as logoutAction, setCredentials } from '@/store/features/authSlice';
 import axios from 'axios';
 import { sessionStorage } from '@/lib/cookie-storage-utils';
@@ -9,6 +8,7 @@ import Logo from '../layouts/main/logo';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { BaseUser } from '@/types/user';
+import Cookies from 'js-cookie'; // Thêm js-cookie nếu bạn dùng nó như file SignalR
 
 interface AuthContextType {
     isLoading: boolean;
@@ -23,16 +23,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { accessToken, user, isLoggedIn } = useSelector((state: RootState) => state.auth);
-    const [isLoading, setIsLoading] = useState(true);
     const dispatch = useDispatch();
 
+    const [isLoading, setIsLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const hasSession = Cookies.get('isLoggedIn') === 'true';
+            return hasSession;
+        }
+        return false;
+    });
 
     const logout = useCallback(() => {
         dispatch(logoutAction());
         sessionStorage.clearSession();
     }, [dispatch]);
 
-    // Hàm login tập trung
     const login = useCallback((token: string, userData: BaseUser, isProfileCompleted: boolean) => {
         dispatch(setCredentials({
             user: userData,
@@ -67,16 +72,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
         initializeAuth();
-    }, []);
+    }, [isLoggedIn, dispatch, logout]);
 
-    const value = {
+    const value = useMemo(() => ({
         isLoading,
         isAuthenticated: !!accessToken,
         accessToken,
         user,
         login,
         logout
-    };
+    }), [isLoading, accessToken, user, login, logout]);
 
     return (
         <AuthContext.Provider value={value}>

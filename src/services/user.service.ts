@@ -3,16 +3,22 @@ import http from "@/lib/axios";
 import { ApiResponse } from "@/types/common/api";
 import {
   CheckUsernameResponse,
+  UserGeneralInfo,
   UserLoginResponse,
   UserProfile,
-  UserStatsResponse,
+  UserWithStats,
 } from "@/types/user";
 
-export const getProfileUser = async (
+export const getMyProfile = async (): Promise<ApiResponse<UserProfile>> => {
+  return http.get("users/me");
+};
+
+export const getUserProfile = async (
   username: string,
 ): Promise<ApiResponse<UserProfile>> => {
   return http.get(`users/profile/${username}`);
 };
+
 
 export const checkUsername = async (
   username: string,
@@ -41,6 +47,10 @@ export const accountSetup = async ({
   });
 };
 
-export const getMyStats = async (): Promise<ApiResponse<UserStatsResponse>> => {
+export const getMyStats = async (): Promise<ApiResponse<UserWithStats>> => {
   return http.get("users/me/stats");
+};
+
+export const updateUserGeneralInfo = async (generalInfo: Partial<UserGeneralInfo>): Promise<ApiResponse<UserGeneralInfo>> => {
+  return http.put("users/me", { ...generalInfo });
 };

@@ -5,6 +5,8 @@ export interface BaseUser {
   displayName: string;
   avatarUrl: string | null;
   isVerified: boolean;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface BaseAuthor extends BaseUser { }
@@ -29,6 +31,13 @@ export interface UserStats {
   following: number;
 }
 
+export interface UserGeneralInfo extends BaseUser {
+  biography: string | null;
+  occupation: string | null;
+  location: string | null;
+  dateOfBirth: string | null;
+}
+
 export interface ProfileViewerContext {
   isOwner: boolean;
   isFriend: boolean;
@@ -40,25 +49,19 @@ export interface ProfileViewerContext {
   canMessage: boolean;
 }
 
-export interface UserProfile {
-  id: string;
-  username: string;
-  displayName: string;
-  biography: string;
-  cocupation: string;
-  location: string;
-  createdAt: string;
-  avatarUrl: string | null;
+export interface UserProfile extends UserGeneralInfo {
   coverUrl: string | null;
-
   isVerified: boolean;
   isOnline: boolean;
   lastActiveAt?: string;
-
   socialMedia: SocialProfile;
   stats: UserStats;
 
   viewerContext: ProfileViewerContext;
+}
+
+export interface UserWithStats extends BaseUser {
+  stats: UserStats;
 }
 
 // Response
@@ -70,8 +73,4 @@ export interface UserLoginResponse extends BaseUser {
   isProfileCompleted: boolean;
 }
 
-export interface UserStatsResponse extends BaseUser {
-  totalPosts: number;
-  followers: number;
-  following: number;
-}
+

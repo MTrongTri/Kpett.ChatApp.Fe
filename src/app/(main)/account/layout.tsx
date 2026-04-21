@@ -2,22 +2,14 @@
 
 import { ReactNode } from "react";
 import Sidebar from "./_components/side-bar";
-import TopNav from "./_components/top-nav";
 
-export default async function SettingsLayout({
-    children,
-    params,
+export default function SettingsLayout({
+    children
 }: {
     children: ReactNode;
-    params: Promise<{ username: string }>;
 }) {
-    const { username } = await params;
-
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans pb-20">
-
-            {/* Header Navbar */}
-            <TopNav username={username} />
+        <div className="mt-14.5 min-h-screen bg-background text-foreground font-sans pb-20">
 
             <div className="px-5 pt-8 pb-6 max-w-6xl mx-auto">
                 {/* Tiêu đề trang */}
@@ -32,7 +24,7 @@ export default async function SettingsLayout({
 
                 <div className="flex flex-col lg:flex-row gap-5 items-start relative">
                     {/* Sidebar Menu */}
-                    <Sidebar username={username} />
+                    <Sidebar />
 
                     {/* Cột Nội dung chính */}
                     <div className="flex-1 min-w-0 flex flex-col gap-6 w-full">

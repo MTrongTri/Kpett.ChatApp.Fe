@@ -261,7 +261,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         </div>
 
         <p className="text-foreground/50 flex justify-center text-sm font-medium">
-          @{profile.username} {profile.location && <>· {profile.cocupation}</>}
+          @{profile.username} {profile.location && <>· {profile.occupation}</>}
         </p>
       </div>
 
@@ -321,7 +321,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             {ctx.isOwner ? (
               <>
                 <Link
-                  href={`/${profile.username}/general`}
+                  href='/account/general'
                   className="inline-flex items-center justify-center border border-border text-foreground hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                 >
                   <Pencil size={14} />

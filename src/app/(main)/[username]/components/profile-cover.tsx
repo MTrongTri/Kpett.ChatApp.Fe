@@ -17,6 +17,7 @@ interface ProfileCoverProps {
   cover: string | null;
   decorations?: { emoji: string; className: string }[];
   isOwner?: boolean;
+  className?: string;
 }
 
 const DEFAULT_DECORATIONS = [
@@ -36,6 +37,7 @@ export default function ProfileCover({
   cover,
   decorations = DEFAULT_DECORATIONS,
   isOwner = false,
+  className,
 }: ProfileCoverProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,7 +63,7 @@ export default function ProfileCover({
   };
 
   return (
-    <div className="bg-muted relative h-52 w-full shrink-0 overflow-hidden md:h-80">
+    <div className={cn("bg-muted relative h-full w-full shrink-0 overflow-hidden md:h-80", className)}>
       {cover ? (
         <>
           <Image

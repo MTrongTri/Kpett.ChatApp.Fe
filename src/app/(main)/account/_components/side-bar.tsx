@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EDIT_TABS } from "../general/data/edit-profile-data";
 
-export default function Sidebar({ username }: { username: string }) {
+export default function Sidebar() {
     const pathname = usePathname();
 
     return (
         <aside className="w-full lg:w-[20%] shrink-0 lg:sticky lg:top-18.5 self-start space-y-4 mb-6 lg:mb-0">
             <nav className="rounded-md border border-border bg-card overflow-hidden">
                 {EDIT_TABS.map((tab, i) => {
-                    const href = `/${username}/${tab.key}`;
+                    const href = `/account/${tab.key}`;
                     const active = pathname === href;
 
                     return (

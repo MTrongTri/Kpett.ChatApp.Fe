@@ -48,11 +48,3 @@ export const updatePost = (postId: string, data: CreatePostRequest): Promise<Api
 export const deletePost = (postId: string): Promise<ApiResponse<Post>> => {
   return http.delete(`/posts/${postId}`);
 }
-
-export const deleteMedia = async (publicId: string, resourceType: string) => {
-  http.delete(`/posts/media/${publicId}`, {
-    params: {
-      resourceType,
-    },
-  });
-}

@@ -7,11 +7,11 @@ export function ProfileGeneralFormSkeleton() {
             {/* --- PHẦN 1: ẢNH BÌA & AVATAR SKELETON --- */}
             <div className="relative group">
                 {/* Cover Skeleton */}
-                <div className="h-48 md:h-64 w-full rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                <div className="h-48 md:h-52 w-full rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
 
                 {/* Avatar Skeleton */}
-                <div className="absolute -bottom-12 left-6 md:left-8">
-                    <div className="h-24 w-24 md:h-32 md:w-32 rounded-full border-4 border-white dark:border-slate-950 bg-slate-300 dark:bg-slate-700 animate-pulse" />
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                    <div className="h-28 w-28 md:h-36 md:w-36 rounded-full border-4 border-white dark:border-slate-950 bg-slate-300 dark:bg-slate-700 animate-pulse" />
                 </div>
             </div>
 

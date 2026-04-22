@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
-import { uploadFileToCloudinary } from "@/services/media.service";
+import { deleteFile, uploadFileToCloudinary } from "@/services/media.service";
 import { Media } from "@/types/media";
 import axios from "axios";
 import { Loader2, Play, Plus, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MediaLightbox } from "../media-lightbox";
-import { deleteMedia } from "@/services/post.service";
 
 interface UploadingFile {
   id: string;
@@ -110,6 +109,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         try {
           const result = await uploadFileToCloudinary(
             queueItem.file,
+            "posts",
             (percent) => {
               setUploadQueue((currentQueue) =>
                 currentQueue.map((item) =>
@@ -215,7 +215,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     try {
       setDeletingIds((prev) => [...prev, itemToRemove.publicId]);
 
-      await deleteMedia(itemToRemove.publicId, itemToRemove.type);
+      await deleteFile(itemToRemove.publicId, itemToRemove.type);
 
       successfullyDeletedIdsRef.current.add(itemToRemove.publicId);
 

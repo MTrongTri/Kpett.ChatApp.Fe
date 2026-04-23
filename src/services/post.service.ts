@@ -33,7 +33,7 @@ export const getPostsByUserId = async (
 export const getPostById = async (
   postId: string,
 ): Promise<ApiResponse<Post>> => {
-  return http.get(`/posts/${postId}`)
+  return await http.get(`/posts/${postId}`);
 };
 
 export const createPost = (data: CreatePostRequest): Promise<ApiResponse<Post>> => {
@@ -47,4 +47,14 @@ export const updatePost = (postId: string, data: CreatePostRequest): Promise<Api
 
 export const deletePost = (postId: string): Promise<ApiResponse<Post>> => {
   return http.delete(`/posts/${postId}`);
+}
+
+export const addReaction = (postId: string): Promise<ApiResponse> => {
+  return http.put(`/posts/${postId}/reactions`, {
+    reactionType: 1
+  });
+}
+
+export const removeReaction = (postId: string): Promise<ApiResponse> => {
+  return http.delete(`/posts/${postId}/reactions`);
 }

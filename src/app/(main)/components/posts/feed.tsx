@@ -1,16 +1,12 @@
+// components/posts/feed.tsx
 "use client";
 
-import { MediaLightbox } from "@/components/posts/media-lightbox";
-import PostLightbox from "@/components/posts/post-light-box/post-light-box";
 import { useHomeFeed } from "@/hooks/post/use-home-feed";
-import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
-import { usePostLightBox } from "@/hooks/post/use-post-light-box";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import PostCard from "./post-card";
 import { PostCardSkeleton } from "./post-card-skeleton";
 
-// ── MAIN EXPORT ──────────────────────────────────────────────────────
 export default function Feed() {
   const {
     posts,
@@ -19,6 +15,8 @@ export default function Feed() {
     hasMore: hasMoreFeed,
     isLoadingMore: isFeedLoadingMore,
   } = useHomeFeed();
+
+  console.log("Feed render", { posts });
 
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
@@ -31,28 +29,7 @@ export default function Feed() {
     }
   }, [inView, hasMoreFeed, isFeedLoadingMore, loadMore]);
 
-  const {
-    isOpen,
-    autoScrollTarget,
-    isPostLoading,
-    isCommentsLoading,
-    post,
-    comments,
-    isLoadingMore,
-    hasMore,
-    loadMoreComments,
-    openModal,
-    closeModal,
-    mutateComments
-  } = usePostLightBox();
-
-  const {
-    isOpen: isOpenMediaLightBox,
-    media,
-    currentIndex,
-    openLightbox: openMediaLightBox,
-    handleOpenChange,
-  } = useMediaLightbox();
+  console.log("render")
 
   return (
     <section className="">
@@ -63,29 +40,24 @@ export default function Feed() {
             <PostCardSkeleton />
             <PostCardSkeleton />
           </>
+        ) : posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-xl bg-muted/20">
+          </div>
         ) : (
-          posts.map((post, i) => (
-            <div key={post.id} className="">
-              <PostCard
-                post={post}
-                onOpenPostLightBox={openModal}
-                openMediaLightBox={openMediaLightBox}
-              />
+          posts.map((post) => (
+            <div key={post.id}>
+              <PostCard post={post} />
             </div>
           ))
         )}
       </div>
 
-      {/* Load more */}
-      {hasMoreFeed && (
+      {hasMoreFeed && posts.length > 0 && (
         <>
           <div className="mt-4">
             {isFeedLoadingMore && <PostCardSkeleton />}
           </div>
-          <div
-            ref={loadMoreRef}
-            className="flex w-full items-center justify-center py-6"
-          >
+          <div ref={loadMoreRef} className="flex w-full items-center justify-center py-6">
             {!isFeedLoadingMore && (
               <span className="text-muted-foreground/50 text-xs">
                 Cuộn để xem thêm
@@ -94,30 +66,6 @@ export default function Feed() {
           </div>
         </>
       )}
-
-      {isOpen && (
-        <PostLightbox
-          isOpen={isOpen}
-          onClose={closeModal}
-          post={post}
-          comments={comments}
-          autoScrollTarget={autoScrollTarget}
-          isPostLoading={isPostLoading}
-          isCommentsLoading={isCommentsLoading}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          onLoadMore={loadMoreComments}
-          mutateComments={mutateComments}
-        />
-      )}
-
-      <MediaLightbox
-        isOpen={isOpenMediaLightBox}
-        onOpenChange={handleOpenChange}
-        media={media}
-        initialIndex={currentIndex}
-        className="top-0 right-0 bottom-0 left-0 flex h-screen max-w-none! translate-x-0 translate-y-0"
-      />
     </section>
   );
 }

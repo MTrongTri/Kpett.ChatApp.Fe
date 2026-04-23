@@ -23,7 +23,7 @@ import authService from "@/services/auth.service";
 import Logo from "../layouts/main/logo";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/features/authSlice";
+import { setCredentials } from "@/store/features/auth-slice";
 import { useRouter } from "next/navigation";
 import { useSignalR } from "../providers/signalr-provider";
 import { sessionStorage } from "@/lib/cookie-storage-utils";
@@ -72,9 +72,9 @@ export default function FormLogin() {
 
       if (user.isProfileCompleted) {
         toast.success('Đăng nhập thành công!');
-        router.push('/');
+        window.location.href = "/";
       } else {
-        router.push('/account-setup');
+        window.location.href = "/account-setup";
       }
     } catch (err: any) {
       const errorCode = err?.errorCode;

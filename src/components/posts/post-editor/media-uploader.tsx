@@ -8,13 +8,16 @@ import { Loader2, Play, Plus, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { MediaLightbox } from "../media-lightbox";
+import { useDispatch } from "react-redux";
+import { openMediaLightBox } from "@/store/features/modal-slice";
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 
 interface UploadingFile {
   id: string;
   file: File;
   progress: number;
   abortController: AbortController;
-  previewUrl: string; // Thêm local preview
+  previewUrl: string;
 }
 
 interface MediaUploaderProps {
@@ -24,22 +27,16 @@ interface MediaUploaderProps {
 }
 
 export default function MediaUploader({ media, onChange, onLoadingChange }: MediaUploaderProps) {
+  const dispatch = useDispatch();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadQueue, setUploadQueue] = useState<UploadingFile[]>([]);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
-  const [isDragging, setIsDragging] = useState(false); // Trạng thái Drag & Drop
+  const [isDragging, setIsDragging] = useState(false);
 
   const latestMediaRef = useRef(media);
   const successfullyDeletedIdsRef = useRef<Set<string>>(new Set());
-
-  const {
-    isOpen: isOpenMediaLightBox,
-    media: mediaLightbox,
-    currentIndex,
-    openLightbox: openMediaLightBox,
-    handleOpenChange,
-  } = useMediaLightbox();
 
   useEffect(() => {
     latestMediaRef.current = media;
@@ -70,7 +67,12 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     const validFiles: File[] = [];
 
     for (const file of files) {
-      const validation = validateFile(file);
+      const validation = validateFile(file, {
+        allowedTypes: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"],
+        maxVideoSize: 100 * 1024 * 1024,
+        maxImageSize: 5 * 1024 * 1024,
+      });
+
       if (!validation.isValid) {
         toast.error(`File ${file.name}: ${validation.error}`);
         continue;
@@ -87,7 +89,9 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       const processedFiles = await Promise.all(
         validFiles.map(async (file) => {
           try {
-            return await compressImageClientSide(file);
+            return await compressImageClientSide(file, {
+
+            });
           } catch (error) {
             console.error("Lỗi nén file:", file.name, error);
             return file;
@@ -242,9 +246,9 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         onChange={handleFileChange}
       />
 
-      <div className="text-muted-foreground mb-3 text-[11px]">
+      {/* <div className="text-muted-foreground mb-3 text-[11px]">
         Chọn ảnh/video hoặc kéo thả trực tiếp vào đây (Hỗ trợ JPG, PNG, MP4, WEBM).
-      </div>
+      </div> */}
 
       {media.length === 0 && !isUploading ? (
         <div
@@ -264,7 +268,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         </div>
       ) : (
         <div
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+          className="flex flex-col items-center gap-4"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -276,7 +280,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             return (
               <div
                 key={item.publicId}
-                className="border-border group relative flex aspect-square items-center justify-center rounded-xl overflow-hidden border bg-black/5"
+                className="border-border group relative flex w-full h-100 items-center justify-center rounded-xl overflow-hidden border bg-black/5"
               >
                 {isDeletingItem && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
@@ -286,20 +290,20 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
 
                 {item.type === "video" ? (
                   <div
-                    className="group/video relative h-full w-full cursor-pointer"
-                    onClick={() => openMediaLightBox(mediaLightbox, index)}
+                    className="group/video relative h-full w-full cursor-pointer bg-black"
+                    onClick={() => dispatch(openMediaLightBox({ media, index }))}
                   >
-                    <video src={item.url} className="h-full w-full object-cover" preload="metadata" />
+                    <video src={getOptimizedCloudinaryUrl(item.url)} className="h-full w-full object-contain" preload="metadata" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                       <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                     </div>
                   </div>
                 ) : (
                   <img
-                    src={item.url}
+                    src={getOptimizedCloudinaryUrl(item.url)}
                     alt="Uploaded"
                     className="h-full w-full object-cover cursor-pointer"
-                    onClick={() => openMediaLightBox(mediaLightbox, index)}
+                    onClick={() => dispatch(openMediaLightBox({ media, index }))}
                   />
                 )}
 
@@ -307,55 +311,53 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                   variant="destructive"
                   size="icon"
                   disabled={isDeletingItem}
-                  className={`absolute top-1.5 right-1.5 z-20 h-6 w-6 rounded-full shadow-md transition-opacity 
+                  className={`absolute top-2 right-2 z-20 h-7 w-7 rounded-full shadow-md transition-opacity 
                     ${isDeletingItem ? "opacity-100 cursor-not-allowed" : "opacity-0 group-hover:opacity-100"}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRemove(item);
                   }}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             );
           })}
 
-          {/* Hiển thị các file ĐANG UPLOAD (Có Local Preview & Progress Bar) */}
+          {/* Hiển thị các file ĐANG UPLOAD */}
           {uploadQueue.map((uploadItem) => (
             <div
               key={uploadItem.id}
-              className="border-border group relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
+              // Tương tự, đồng bộ kích thước "max-w-[320px] w-full" cho file đang upload
+              className="border-border group relative flex w-full h-100 flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
             >
-              {/* Hình nền hiển thị file đang tải lên dạng mờ */}
               {uploadItem.file.type.startsWith("image/") ? (
                 <img src={uploadItem.previewUrl} alt="Preview" className="absolute inset-0 h-full w-full object-cover opacity-40 blur-[2px]" />
               ) : (
                 <video src={uploadItem.previewUrl} className="absolute inset-0 h-full w-full object-cover opacity-40 blur-[2px]" />
               )}
 
-              {/* Lớp phủ tối để làm nổi bật số % */}
               <div className="absolute inset-0 bg-black/20" />
 
               <Button
                 variant="destructive"
                 size="icon"
-                className="absolute top-1.5 right-1.5 z-20 h-6 w-6 rounded-full shadow-md opacity-0 transition-opacity group-hover:opacity-100"
+                className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full shadow-md opacity-0 transition-opacity group-hover:opacity-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCancelUpload(uploadItem.id);
                 }}
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </Button>
 
               <div className="z-10 flex flex-col items-center drop-shadow-md">
-                <span className="text-sm font-bold text-white mb-1">
+                <span className="text-xl font-bold text-white mb-1">
                   {uploadItem.progress}%
                 </span>
-                <span className="text-[10px] text-white/90 font-medium bg-black/40 px-2 py-0.5 rounded-full">Đang tải...</span>
+                <span className="text-xs text-white/90 font-medium bg-black/40 px-3 py-1 rounded-full">Đang tải lên...</span>
               </div>
 
-              {/* Thanh progress bar chạy ngang ở dưới cùng */}
               <div
                 className="absolute bottom-0 left-0 h-1.5 bg-primary transition-all duration-300 ease-out z-10"
                 style={{ width: `${uploadItem.progress}%` }}
@@ -363,27 +365,18 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             </div>
           ))}
 
-          {/* Nút thêm file phụ */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className={`border-border flex cursor-pointer aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors
+            className={`mb-6 border-border flex cursor-pointer w-full max-w-[320px] flex-row gap-2 py-4 items-center justify-center rounded-xl border-2 border-dashed transition-colors
                ${isDragging ? "bg-primary/10 border-primary" : "hover:bg-secondary/50"}`}
           >
-            <Plus className="text-muted-foreground mb-1 h-6 w-6" />
-            <span className="text-muted-foreground text-xs font-medium">
-              Thêm file
+            <Plus className="text-muted-foreground h-5 w-5" />
+            <span className="text-muted-foreground text-sm font-medium">
+              Thêm file khác
             </span>
           </div>
         </div>
       )}
-
-      <MediaLightbox
-        isOpen={isOpenMediaLightBox}
-        onOpenChange={handleOpenChange}
-        media={media}
-        initialIndex={currentIndex}
-        className="top-0 right-0 bottom-0 left-0 flex h-screen max-w-none! translate-x-0 translate-y-0"
-      />
     </div>
   );
 }

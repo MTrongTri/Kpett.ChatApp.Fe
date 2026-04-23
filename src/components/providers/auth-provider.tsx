@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { setAccessToken, logout as logoutAction, setCredentials } from '@/store/features/authSlice';
+import { setAccessToken, logout as logoutAction, setCredentials } from '@/store/features/auth-slice';
 import axios from 'axios';
 import { sessionStorage } from '@/lib/cookie-storage-utils';
 import Logo from '../layouts/main/logo';

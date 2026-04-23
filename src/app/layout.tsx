@@ -8,6 +8,7 @@ import { IBM_Plex_Mono, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { GlobalModalProvider } from "@/components/providers/global-modal-provider";
 
 const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
@@ -39,8 +40,8 @@ export default function RootLayout({
               {/* Toast */}
               <Toaster richColors position="top-center" />
               {/* Modals */}
+              <GlobalModalProvider />
             </SignalRProvider>
-
           </AuthProvider>
         </StoreProvider>
       </body>

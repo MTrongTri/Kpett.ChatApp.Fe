@@ -1,30 +1,21 @@
 "use client";
 
+import { openPostLightBox } from "@/store/features/modal-slice";
 import { PostThumbnail } from "@/types/post";
+import { useDispatch } from "react-redux";
 import ProfilePostItem from "./profile-post-item";
-import { usePostLightBox } from "@/hooks/post/use-post-light-box";
-import PostLightbox from "@/components/posts/post-light-box/post-light-box";
 
 interface ProfilePostsProps {
   posts: PostThumbnail[];
 }
 
 export default function ProfilePosts({ posts }: ProfilePostsProps) {
-  // Trích xuất toàn bộ state và actions từ custom hook
-  const {
-    isOpen,
-    isPostLoading,
-    isCommentsLoading,
-    post,
-    comments,
-    autoScrollTarget,
-    isLoadingMore,
-    hasMore,
-    loadMoreComments,
-    openModal,
-    closeModal,
-    mutateComments
-  } = usePostLightBox();
+
+  const dispatch = useDispatch();
+
+  const handleOpenComments = (postId: string) => {
+    dispatch(openPostLightBox({ postId }));
+  };
 
   if (posts.length === 0) {
     return (
@@ -40,31 +31,14 @@ export default function ProfilePosts({ posts }: ProfilePostsProps) {
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
-        {posts.map((thumbnail) => (
+        {posts.map((post) => (
           <ProfilePostItem
-            key={thumbnail.id}
-            post={thumbnail}
-            onClick={() => openModal(thumbnail.id)}
+            key={post.id}
+            post={post}
+            onClick={() => handleOpenComments(post.id)}
           />
         ))}
       </div>
-
-      {/* Chỉ render Lightbox khi isOpen = true để tối ưu hiệu suất */}
-      {isOpen && (
-        <PostLightbox
-          isOpen={isOpen}
-          onClose={closeModal}
-          post={post}
-          comments={comments}
-          autoScrollTarget={autoScrollTarget}
-          isPostLoading={isPostLoading}
-          isCommentsLoading={isCommentsLoading}
-          isLoadingMore={isLoadingMore}
-          hasMore={hasMore}
-          onLoadMore={loadMoreComments}
-          mutateComments={mutateComments}
-        />
-      )}
     </>
   );
 }

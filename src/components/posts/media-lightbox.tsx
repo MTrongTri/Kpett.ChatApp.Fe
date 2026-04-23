@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { cn } from "@/lib/utils";
 import { Media } from "@/types/media";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -69,36 +70,44 @@ export function MediaLightbox({
               }
             }}
             className="swiper-lightbox h-full w-full"
-            // Cập nhật slide khi prop initialIndex thay đổi
+          // Cập nhật slide khi prop initialIndex thay đổi
           >
-            {media.map((item, index) => (
-              <SwiperSlide
-                key={index}
-                className="flex items-center justify-center p-4"
-              >
-                <div className="relative flex h-full w-full items-center justify-center">
-                  {item.type.toLocaleLowerCase() === "image" ? (
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={item.url}
-                        alt={`Media detail ${index}`}
-                        fill
-                        className="object-contain"
-                        quality={100}
-                        unoptimized
+            {media.map((item, index) => {
+              const isImage = item.type.toLocaleLowerCase() === "image";
+              const optimizedUrl = getOptimizedCloudinaryUrl(
+                item.url,
+                isImage ? "image" : "video"
+              );
+
+              return (
+                <SwiperSlide
+                  key={index}
+                  className="flex items-center justify-center p-4"
+                >
+                  <div className="relative flex h-full w-full items-center justify-center">
+                    {item.type.toLocaleLowerCase() === "image" ? (
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={optimizedUrl}
+                          alt={`Media detail ${index}`}
+                          fill
+                          className="object-contain"
+                          quality={100}
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <video
+                        src={optimizedUrl}
+                        controls
+                        autoPlay
+                        className="max-h-full max-w-full shadow-2xl"
                       />
-                    </div>
-                  ) : (
-                    <video
-                      src={item.url}
-                      controls
-                      autoPlay
-                      className="max-h-full max-w-full shadow-2xl"
-                    />
-                  )}
-                </div>
-              </SwiperSlide>
-            ))}
+                    )}
+                  </div>
+                </SwiperSlide>
+              )
+            })}
           </Swiper>
 
           {/* Nút Previous */}

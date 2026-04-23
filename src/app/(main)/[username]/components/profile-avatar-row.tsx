@@ -27,6 +27,8 @@ import {
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
 import { uploadFileToCloudinary } from "@/services/media.service";
 import { deleteUserMediaPrimary, updateUserMedia } from "@/services/user.service";
+import { useDispatch } from "react-redux";
+import { openMediaLightBox } from "@/store/features/modal-slice";
 
 interface ProfileAvatarRowProps {
   profile: UserProfile;
@@ -39,6 +41,8 @@ export default function ProfileAvatarRow({
   isOwner = false,
   onAvatarChange,
 }: ProfileAvatarRowProps) {
+  const dispatch = useDispatch();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -52,7 +56,10 @@ export default function ProfileAvatarRow({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const validation = validateFile(file);
+    const validation = validateFile(file, {
+      allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+      maxImageSize: 1 * 1024 * 1024,
+    });
     if (!validation.isValid) {
       toast.error(`Lỗi: ${validation.error}`);
       if (event.target) event.target.value = "";
@@ -63,7 +70,10 @@ export default function ProfileAvatarRow({
     setUploadProgress(0);
 
     try {
-      const compressedFile = await compressImageClientSide(file);
+      const compressedFile = await compressImageClientSide(file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 400,
+      });
 
       const localUrl = URL.createObjectURL(compressedFile);
       setPreviewUrl(localUrl);
@@ -117,23 +127,40 @@ export default function ProfileAvatarRow({
     }
   };
 
+
   const displayProfile = {
     ...profile,
     avatarUrl: previewUrl ?? profile.avatarUrl,
   };
+
+  const handleShowAvatar = () => {
+    if (!displayProfile || !displayProfile.avatarUrl) return;
+    dispatch(openMediaLightBox({
+      media: [
+        {
+          publicId: "",
+          url: displayProfile.avatarUrl,
+          type: "image",
+        },
+      ],
+      index: 0,
+    }));
+  }
 
   return (
     <>
       <div className="relative z-10 -mt-16 mb-4 flex items-end justify-center px-5 md:-mt-24 md:px-7">
         <div className="relative rounded-full">
           {/* AVATAR GỐC */}
-          <UserAvatar
-            user={displayProfile}
-            isShowDotOnline={profile?.viewerContext?.isFriend && !profile?.viewerContext?.isBlocked}
-            className="h-28 w-28 md:h-36 md:w-36"
-            initialClassName="text-4xl md:text-5xl"
-            dotClassName={cn("h-6 w-6 bottom-2 right-2 border-[3px] border-background z-10")}
-          />
+          <button onClick={handleShowAvatar}>
+            <UserAvatar
+              user={displayProfile}
+              isShowDotOnline={profile?.viewerContext?.isFriend && !profile?.viewerContext?.isBlocked}
+              className="h-28 w-28 md:h-36 md:w-36"
+              initialClassName="text-4xl md:text-5xl"
+              dotClassName={cn("h-6 w-6 bottom-2 right-2 border-[3px] border-background z-10")}
+            />
+          </button>
 
           {/* OVERLAY KHI ĐANG UPLOAD */}
           {isUploading && (
@@ -215,10 +242,10 @@ export default function ProfileAvatarRow({
             </>
           )}
         </div>
-      </div>
+      </div >
 
       {/* POPUP XÁC NHẬN XÓA AVATAR */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} >
         <AlertDialogContent className="sm:max-w-106.25">
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa ảnh đại diện?</AlertDialogTitle>

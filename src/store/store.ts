@@ -10,7 +10,8 @@ import {
   REHYDRATE,
 } from "redux-persist";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
-import authReducer from "./features/authSlice";
+import authReducer from "./features/auth-slice";
+import modalReducer from "./features/modal-slice";
 
 const createNoopStorage = () => ({
   getItem: () => Promise.resolve(null),
@@ -31,6 +32,7 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
+  modal: modalReducer
 });
 
 export const store = configureStore({

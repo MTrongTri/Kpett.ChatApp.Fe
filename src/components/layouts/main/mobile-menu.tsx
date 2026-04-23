@@ -18,7 +18,7 @@ import { NAV_TABS } from "./nav-tab";
 import Logo from "./logo";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import PostModal from "@/components/posts/modal-post/post-modal";
+import PostModal from "@/components/posts/post-editor/post-editor";
 
 export default function MobileMenu() {
   const pathname = usePathname();

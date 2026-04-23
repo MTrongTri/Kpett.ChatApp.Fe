@@ -29,6 +29,9 @@ import {
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
 import { uploadFileToCloudinary } from "@/services/media.service";
 import { deleteUserMediaPrimary, updateUserMedia } from "@/services/user.service";
+import { openMediaLightBox } from "@/store/features/modal-slice";
+import { useDispatch } from "react-redux";
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 
 interface ProfileCoverProps {
   cover: string | null;
@@ -58,6 +61,8 @@ export default function ProfileCover({
   className,
   onCoverChange,
 }: ProfileCoverProps) {
+  const dispatch = useDispatch();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -72,7 +77,10 @@ export default function ProfileCover({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const validation = validateFile(file);
+    const validation = validateFile(file, {
+      allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+      maxImageSize: 1 * 1024 * 1024,
+    });
     if (!validation.isValid) {
       toast.error(`Lỗi: ${validation.error}`);
       if (event.target) event.target.value = "";
@@ -83,7 +91,10 @@ export default function ProfileCover({
     setUploadProgress(0);
 
     try {
-      const compressedFile = await compressImageClientSide(file);
+      const compressedFile = await compressImageClientSide(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1080,
+      });
 
       const localUrl = URL.createObjectURL(compressedFile);
       setPreviewUrl(localUrl);
@@ -119,7 +130,6 @@ export default function ProfileCover({
   };
 
   const handleDeleteCover = async () => {
-    // Đã xóa window.confirm
     setIsUploading(true);
     try {
       await deleteUserMediaPrimary("Cover");
@@ -135,23 +145,39 @@ export default function ProfileCover({
       toast.error("Không thể xóa ảnh bìa.");
     } finally {
       setIsUploading(false);
-      setShowDeleteDialog(false); // THÊM: Đóng popup sau khi hoàn tất
+      setShowDeleteDialog(false);
     }
   };
 
   const displayCover = previewUrl ?? cover;
+
+  const handleShowCover = () => {
+    if (!displayCover) return;
+    dispatch(openMediaLightBox({
+      media: [
+        {
+          publicId: "",
+          url: displayCover,
+          type: "image",
+        },
+      ],
+      index: 0,
+    }));
+  }
 
   return (
     <>
       <div className={cn("bg-muted relative h-full w-full shrink-0 overflow-hidden md:h-80", className)}>
         {displayCover ? (
           <>
-            <Image
-              src={displayCover}
-              alt="Profile Cover"
-              className="object-cover"
-              fill
-            />
+            <button onClick={handleShowCover} className="absolute inset-0 z-10 cursor-pointer">
+              <Image
+                src={displayCover ? getOptimizedCloudinaryUrl(displayCover, "image") : ""}
+                alt="Profile Cover"
+                className="object-cover"
+                fill
+              />
+            </button>
             <div className="absolute inset-0 bg-black/20" />
           </>
         ) : (

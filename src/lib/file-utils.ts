@@ -1,8 +1,27 @@
-import imageCompression from 'browser-image-compression';
+import imageCompression, { Options as CompressionOptions } from 'browser-image-compression';
 
-// Cấu hình giới hạn
-const FILE_LIMITS = {
-  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+export interface ValidationOptions {
+  allowedTypes?: string[];
+  maxSize?: number;
+  maxImageSize?: number;
+  maxVideoSize?: number;
+  customErrors?: {
+    invalidType?: string;
+    tooLarge?: string;
+  };
+}
+
+export type FileErrorCode = 'INVALID_TYPE' | 'FILE_TOO_LARGE';
+
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  errorCode?: FileErrorCode;
+}
+
+// Cấu hình mặc định (fallback nếu không truyền options)
+export const DEFAULT_FILE_LIMITS = {
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024,   // 5MB
   MAX_VIDEO_SIZE: 1024 * 1024 * 1024, // 1GB
   ALLOWED_TYPES: [
     "image/jpeg", "image/png", "image/webp",
@@ -10,45 +29,85 @@ const FILE_LIMITS = {
   ]
 };
 
-// Hàm Validation
-export const validateFile = (file: File): { isValid: boolean; error?: string } => {
-  // Check định dạng
-  if (!FILE_LIMITS.ALLOWED_TYPES.includes(file.type)) {
-    return { isValid: false, error: `Định dạng ${file.type} không được hỗ trợ.` };
+export const validateFile = (
+  file: File,
+  options?: ValidationOptions
+): ValidationResult => {
+  const allowedTypes = options?.allowedTypes || DEFAULT_FILE_LIMITS.ALLOWED_TYPES;
+
+  // Kiểm tra định dạng (Type Validation)
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      isValid: false,
+      error: options?.customErrors?.invalidType || `Định dạng ${file.type || 'này'} không được hỗ trợ.`,
+      errorCode: 'INVALID_TYPE'
+    };
   }
 
-  // Check dung lượng
-  const isVideo = file.type.startsWith('video/');
-  const maxSize = isVideo ? FILE_LIMITS.MAX_VIDEO_SIZE : FILE_LIMITS.MAX_IMAGE_SIZE;
+  // Xác định dung lượng tối đa cho phép (Size Resolution)
+  let maxSize = options?.maxSize;
+
+  // Nếu không set maxSize chung, tự động nhận diện theo loại file
+  if (!maxSize) {
+    if (file.type.startsWith('video/')) {
+      maxSize = options?.maxVideoSize || DEFAULT_FILE_LIMITS.MAX_VIDEO_SIZE;
+    } else if (file.type.startsWith('image/')) {
+      maxSize = options?.maxImageSize || DEFAULT_FILE_LIMITS.MAX_IMAGE_SIZE;
+    } else {
+      maxSize = 5 * 1024 * 1024; // 5MB
+    }
+  }
 
   if (file.size > maxSize) {
-    const sizeInMB = (maxSize / (1024 * 1024)).toFixed(0);
-    return { isValid: false, error: `File quá lớn. Tối đa cho phép là ${sizeInMB}MB.` };
+    const sizeInMB = (maxSize / (1024 * 1024)).toFixed(1);
+    const formattedSize = sizeInMB.endsWith('.0') ? sizeInMB.slice(0, -2) : sizeInMB;
+
+    return {
+      isValid: false,
+      error: options?.customErrors?.tooLarge || `File quá lớn. Tối đa cho phép là ${formattedSize}MB.`,
+      errorCode: 'FILE_TOO_LARGE'
+    };
   }
 
   return { isValid: true };
 };
 
-// 3. Hàm Nén ảnh (Chỉ áp dụng cho Image, Video nén ở client rất nặng và dễ gây treo máy)
-export const compressImageClientSide = async (file: File): Promise<File> => {
-  if (!file.type.startsWith('image/')) return file; // Bỏ qua nếu là video
+export const DEFAULT_COMPRESS_OPTIONS: CompressionOptions = {
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1080,
+  useWebWorker: true,
+  fileType: 'image/webp'
+};
 
-  const options = {
-    maxSizeMB: 1,          // Ép dung lượng tối đa xuống 1MB
-    maxWidthOrHeight: 1080, // Ép kích thước cạnh dài nhất tối đa
-    useWebWorker: true,     // Chạy ngầm không làm đơ UI
-    fileType: 'image/webp'  // (Tùy chọn) Chuyển hết sang WebP cho nhẹ
-  };
+export const compressImageClientSide = async (
+  file: File,
+  options?: CompressionOptions
+): Promise<File> => {
+  if (!file.type.startsWith('image/')) return file;
+
+  if (file.type === 'image/gif') return file;
+
+  const mergedOptions = { ...DEFAULT_COMPRESS_OPTIONS, ...options };
 
   try {
-    const compressedBlob = await imageCompression(file, options);
-    // Chuyển Blob về lại File object để tương thích với luồng upload cũ
-    return new File([compressedBlob], file.name, {
+    const compressedBlob = await imageCompression(file, mergedOptions);
+
+    let fileName = file.name;
+    if (mergedOptions.fileType) {
+      const targetExtension = mergedOptions.fileType.split('/')[1];
+      const originalNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+      if (!fileName.toLowerCase().endsWith(`.${targetExtension}`)) {
+        fileName = `${originalNameWithoutExt}.${targetExtension}`;
+      }
+    }
+
+    return new File([compressedBlob], fileName, {
       type: compressedBlob.type,
       lastModified: Date.now(),
     });
   } catch (error) {
     console.error("Lỗi nén ảnh:", error);
-    return file; // Nếu lỗi nén, trả về file gốc để upload tiếp
+    return file;
   }
 };

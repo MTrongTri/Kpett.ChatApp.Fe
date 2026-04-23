@@ -1,19 +1,16 @@
-// hooks/use-post-actions.ts
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { deletePost } from "@/services/post.service";
-import { useState } from "react";
+import { openPostEditorModal } from "@/store/features/modal-slice";
+import { Post } from "@/types/post";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
-export const usePostActions = (post: any, onClose: () => void) => {
-    const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-    const [postModalMode, setPostModalMode] = useState<"create" | "edit">("edit");
-    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+export const usePostActions = (post: Post | null, onClose: () => void) => {
+    const dispatch = useDispatch();
 
     const handleEditClick = () => {
         if (post) {
-            setPostModalMode("edit");
-            setSelectedPostId(post.id);
-            setIsPostModalOpen(true);
+            dispatch(openPostEditorModal({ mode: "edit", postId: post.id }));
         }
     };
 
@@ -42,10 +39,6 @@ export const usePostActions = (post: any, onClose: () => void) => {
     };
 
     return {
-        isPostModalOpen,
-        setIsPostModalOpen,
-        postModalMode,
-        selectedPostId,
         handleEditClick,
         handleDelete,
         fetchMentions

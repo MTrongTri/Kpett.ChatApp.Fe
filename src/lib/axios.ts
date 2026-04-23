@@ -1,5 +1,5 @@
 // lib/axios.ts
-import { logout, setAccessToken } from '@/store/features/authSlice';
+import { logout, setAccessToken } from '@/store/features/auth-slice';
 import { store } from '@/store/store';
 import { sessionStorage } from '@/lib/cookie-storage-utils';
 import axios, { AxiosResponse } from 'axios';

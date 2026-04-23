@@ -1,4 +1,5 @@
 import { getAvatarGradient } from "@/lib/avatar-utils";
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -40,7 +41,7 @@ export function UserAvatar({
       >
         {user.avatarUrl ? (
           <Image
-            src={user.avatarUrl}
+            src={user.avatarUrl ? getOptimizedCloudinaryUrl(user.avatarUrl, "image") : ""}
             alt={`Avatar of ${user.displayName || "user"}`}
             fill
             className="object-cover"

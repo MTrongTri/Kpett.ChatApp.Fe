@@ -20,7 +20,6 @@ export default function LikeButton({
     initialLiked,
     initialLikeCount,
 }: LikeButtonProps) {
-    console.log("Render LikeButton with:", { postId, initialLiked, initialLikeCount });
     const [liked, setLiked] = useState(initialLiked);
     const [likeCount, setLikeCount] = useState(initialLikeCount);
 

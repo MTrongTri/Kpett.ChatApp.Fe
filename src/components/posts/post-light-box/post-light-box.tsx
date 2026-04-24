@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle } from "lucide-react";
 
-import { usePostActions } from "@/hooks/post/use-post-actions";
 import { usePostDetail } from "@/hooks/post/use-post-detail";
 
 import PostContent from "@/components/posts/post-content";
@@ -28,6 +27,7 @@ import { PostLightboxSkeleton } from "./post-light-box-skeleton";
 import { PostLightboxMenu } from "./post-lightbox-menu";
 
 import PostCommentSection from "./post-comment-section";
+import { usePostMenuActions } from "@/hooks/post/use-post-menu-actions";
 
 interface PostLightboxProps {
   isOpen: boolean;
@@ -44,18 +44,15 @@ export default function PostLightbox({
   postId,
   autoScrollTarget,
 }: PostLightboxProps) {
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Chỉ còn giữ lại hook lấy chi tiết Post
   const { post, isPostLoading, error: postError } = usePostDetail(postId, initialPost);
 
   // Các hành động liên quan đến Post (và fetchMentions truyền xuống cho Comment)
   const {
     handleEditClick,
     handleDelete,
-    fetchMentions,
-  } = usePostActions(post || null, onClose);
+  } = usePostMenuActions(post || null);
 
   if (!isOpen) return null;
 
@@ -85,7 +82,7 @@ export default function PostLightbox({
     );
   }
 
-  const isAuthor = currentUser?.id === post?.author?.id;
+  const isAuthor = post?.viewerContext.isOwner
 
   return (
     <>
@@ -152,9 +149,7 @@ export default function PostLightbox({
                 {/* COMMENT SECTION */}
                 <PostCommentSection
                   post={post}
-                  currentUser={currentUser}
                   scrollContainerRef={scrollContainerRef}
-                  fetchMentions={fetchMentions}
                   autoScrollTarget={autoScrollTarget}
                 />
               </div>

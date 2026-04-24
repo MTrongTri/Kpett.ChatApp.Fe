@@ -14,6 +14,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Button } from "../ui/button";
 
 interface MediaLightboxProps {
   isOpen: boolean;
@@ -39,15 +40,15 @@ export function MediaLightbox({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "flex items-center justify-center rounded-none border-none bg-black/95 p-0 shadow-none backdrop-blur-sm outline-none",
+          "flex items-center justify-center rounded-none border-none bg-black/95 p-0 shadow-none backdrop-blur-sm outline-none [&>button]:hidden",
           className,
         )}
       >
         <DialogTitle className="sr-only">Xem phương tiện chi tiết</DialogTitle>
 
         {/* Nút đóng */}
-        <DialogClose className="absolute top-4 right-4 z-60 cursor-pointer rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20">
-          <X className="h-6 w-6" />
+        <DialogClose asChild className="absolute top-4 right-4 z-60 cursor-pointer rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20">
+          <X size={40} />
         </DialogClose>
 
         <div className="relative h-full w-full">

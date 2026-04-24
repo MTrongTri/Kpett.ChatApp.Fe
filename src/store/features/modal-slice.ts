@@ -78,13 +78,22 @@ export const modalSlice = createSlice({
             state.postEditorModal.mode = "create";
             state.postEditorModal.postId = null;
         },
+
+        // 
+        closeAllModal: (state) => {
+            state.postEditorModal.isOpen = false;
+            state.postLightBox.isOpen = false;
+            state.mediaLightBox.isOpen = false;
+        }
     },
 });
 
 export const {
     openPostLightBox, closePostLightBox,
     openMediaLightBox, closeMediaLightBox,
-    openPostEditorModal, closePostEditorModal
+    openPostEditorModal, closePostEditorModal,
+
+    closeAllModal
 } = modalSlice.actions;
 
 export default modalSlice.reducer;

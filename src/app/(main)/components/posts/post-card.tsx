@@ -1,7 +1,5 @@
 "use client";
 
-import { useDispatch } from "react-redux";
-import { openMediaLightBox, openPostLightBox } from "@/store/features/modal-slice";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,8 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { openPostLightBox } from "@/store/features/modal-slice";
 import type { Post } from "@/types/post";
-import type { Media } from "@/types/media";
 import {
   EyeOff,
   Flag,
@@ -18,13 +16,14 @@ import {
   MoreHorizontal,
   UserMinus
 } from "lucide-react";
+import { useDispatch } from "react-redux";
 
-import PostContent from "@/components/posts/post-content";
-import PostMediaSlider from "@/components/posts/post-media-slider";
-import LikeButton from "@/components/posts/like-button";
-import SaveButton from "@/components/posts/save-button";
 import CommentButton from "@/components/posts/comment-button";
+import LikeButton from "@/components/posts/like-button";
+import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
+import PostMediaSlider from "@/components/posts/post-media-slider";
+import SaveButton from "@/components/posts/save-button";
 
 interface PostCardProps {
   post: Post;

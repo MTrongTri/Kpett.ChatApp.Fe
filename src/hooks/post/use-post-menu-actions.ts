@@ -1,11 +1,11 @@
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { deletePost } from "@/services/post.service";
-import { openPostEditorModal } from "@/store/features/modal-slice";
+import { closePostLightBox, openPostEditorModal } from "@/store/features/modal-slice";
 import { Post } from "@/types/post";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
-export const usePostActions = (post: Post | null, onClose: () => void) => {
+export const usePostMenuActions = (post: Post | null) => {
     const dispatch = useDispatch();
 
     const handleEditClick = () => {
@@ -19,7 +19,8 @@ export const usePostActions = (post: Post | null, onClose: () => void) => {
             if (post) {
                 await deletePost(post.id);
                 toast.success("Xóa thành công");
-                onClose();
+                dispatch(closePostLightBox());
+
                 return;
             }
             toast.error("Đã có lỗi xảy ra");

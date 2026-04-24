@@ -1,16 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { useMediaLightbox } from "@/hooks/post/use-media-lightbox";
+import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
 import { deleteFile, uploadFileToCloudinary } from "@/services/media.service";
+import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
 import axios from "axios";
 import { Loader2, Play, Plus, UploadCloud, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { toast } from "sonner";
-import { MediaLightbox } from "../media-lightbox";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { openMediaLightBox } from "@/store/features/modal-slice";
-import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
+import { toast } from "sonner";
 
 interface UploadingFile {
   id: string;
@@ -328,7 +326,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           {uploadQueue.map((uploadItem) => (
             <div
               key={uploadItem.id}
-              // Tương tự, đồng bộ kích thước "max-w-[320px] w-full" cho file đang upload
               className="border-border group relative flex w-full h-100 flex-col items-center justify-center overflow-hidden rounded-xl border bg-secondary/30"
             >
               {uploadItem.file.type.startsWith("image/") ? (
@@ -372,7 +369,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           >
             <Plus className="text-muted-foreground h-5 w-5" />
             <span className="text-muted-foreground text-sm font-medium">
-              Thêm file khác
+              Thêm hình ảnh/ video
             </span>
           </div>
         </div>

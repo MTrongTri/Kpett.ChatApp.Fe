@@ -1,42 +1,41 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
-import { Post } from "@/types/post";
 import { useCreateComment } from "@/hooks/comment/use-create-comment";
 import { usePostComments } from "@/hooks/post/use-post-comments";
 import { useDebounceCallback } from "@/hooks/use-debounce";
+import { Post } from "@/types/post";
 
 import { CommentInput } from "@/components/comment/comment-input";
 import { CommentItemSkeleton } from "@/components/comment/comment-item-skeleton";
 import { CommentList } from "@/components/comment/comment-list";
 import { BaseUser } from "@/types/user";
 
-import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
 import { closePostLightBox } from "@/store/features/modal-slice";
+import { AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useAuth } from "@/components/providers/auth-provider";
+import { usePostMenuActions } from "@/hooks/post/use-post-menu-actions";
 
 interface PostCommentSectionProps {
     post: Post;
-    currentUser: BaseUser | null;
     scrollContainerRef: React.RefObject<HTMLDivElement | null>;
-    fetchMentions: (query: string) => Promise<any[]>;
     autoScrollTarget: string | null;
 }
 
 export default function PostCommentSection({
     post,
-    currentUser,
     scrollContainerRef,
-    fetchMentions,
     autoScrollTarget,
 }: PostCommentSectionProps) {
     const dispatch = useDispatch();
     const router = useRouter();
+
+    const { user: currentUser } = useAuth();
 
     // Quản lý State của Comments
     const {
@@ -76,6 +75,7 @@ export default function PostCommentSection({
     }, [autoScrollTarget, isCommentsLoading, commentsError]);
 
     // Logic Xử lý Mentions và Thêm Comment
+    const { fetchMentions } = usePostMenuActions(post);
     const debouncedFetchMentions = useDebounceCallback(fetchMentions, 300);
 
     const { handleAddComment } = useCreateComment({

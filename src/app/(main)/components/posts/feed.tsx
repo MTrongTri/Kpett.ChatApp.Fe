@@ -1,4 +1,3 @@
-// components/posts/feed.tsx
 "use client";
 
 import { useHomeFeed } from "@/hooks/post/use-home-feed";
@@ -16,8 +15,6 @@ export default function Feed() {
     isLoadingMore: isFeedLoadingMore,
   } = useHomeFeed();
 
-  console.log("Feed render", { posts });
-
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
     rootMargin: "400px",
@@ -28,8 +25,6 @@ export default function Feed() {
       loadMore();
     }
   }, [inView, hasMoreFeed, isFeedLoadingMore, loadMore]);
-
-  console.log("render")
 
   return (
     <section className="">

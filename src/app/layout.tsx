@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { GlobalModalProvider } from "@/components/providers/global-modal-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
@@ -29,18 +30,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body
         className={`${roboto.variable} ${ibmMono.variable} font-roboto bg-background`}
       >
         <StoreProvider>
           <AuthProvider>
             <SignalRProvider>
-              {children}
-              {/* Toast */}
-              <Toaster richColors position="top-center" />
-              {/* Modals */}
-              <GlobalModalProvider />
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+
+                {/* Toast */}
+                <Toaster richColors position="top-center" />
+
+                {/* Modals */}
+                <GlobalModalProvider />
+              </ThemeProvider>
+
             </SignalRProvider>
           </AuthProvider>
         </StoreProvider>

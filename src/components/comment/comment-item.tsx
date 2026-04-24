@@ -303,21 +303,20 @@ const CommentNavigation = ({
     <div className="mt-2">
       {shouldShowExpand && (
         <button onClick={onExpand} className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors">
-          <div className="bg-foreground/20 h-px w-6" />
           Xem {replyCount > 0 ? `${replyCount} câu trả lời` : "câu trả lời"}
         </button>
       )}
 
       {isExpanded && isLoading && (
         <button disabled className="text-foreground/50 flex items-center gap-2 text-[11px] font-semibold opacity-50">
-          <div className="bg-foreground/20 h-px w-6" /> Đang tải...
+          Đang tải...
         </button>
       )}
 
       {isExpanded && !isLoading && hasMore && (
         <div className="flex items-center gap-3">
           <button onClick={onLoadMore} disabled={isLoadingMore} className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50">
-            <div className="bg-foreground/20 h-px w-6" />
+
             {isLoadingMore ? "Đang tải..." : "Xem thêm câu trả lời"}
           </button>
           <span className="text-foreground/30 text-[10px]">•</span>
@@ -329,7 +328,7 @@ const CommentNavigation = ({
 
       {isExpanded && !isLoading && !hasMore && (
         <button onClick={onCollapse} className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors">
-          <div className="bg-foreground/20 h-px w-6" /> Ẩn bớt câu trả lời
+          Ẩn bớt câu trả lời
         </button>
       )}
     </div>

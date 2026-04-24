@@ -152,7 +152,7 @@ export default function ProfileAvatarRow({
       <div className="relative z-10 -mt-16 mb-4 flex items-end justify-center px-5 md:-mt-24 md:px-7">
         <div className="relative rounded-full">
           {/* AVATAR GỐC */}
-          <button onClick={handleShowAvatar}>
+          <button onClick={handleShowAvatar} className="flex items-center">
             <UserAvatar
               user={displayProfile}
               isShowDotOnline={profile?.viewerContext?.isFriend && !profile?.viewerContext?.isBlocked}

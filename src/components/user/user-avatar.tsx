@@ -35,6 +35,7 @@ export function UserAvatar({
       <div
         className={cn(
           "relative flex h-full w-full items-center justify-center overflow-hidden rounded-full text-sm font-bold text-white",
+          "border border-border/50 shadow-xs",
           !user.avatarUrl && "bg-linear-to-br",
           !user.avatarUrl && getAvatarGradient(user.id),
         )}

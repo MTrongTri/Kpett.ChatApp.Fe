@@ -1,25 +1,27 @@
 "use client";
 
+import ChatHeaderDropdown from "@/components/chat/chat-dropdown";
+import { useAuth } from "@/components/providers/auth-provider";
+import { Button } from "@/components/ui/button";
+import { Bell } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import ComposeButton from "./compose-button";
+import GuestThemeToggle from "./guest-theme-toggle";
 import Logo from "./logo";
+import MobileMenu from "./mobile-menu";
+import NavIconBtn from "./nav-icon-btn";
 import NavTabs from "./nav-tab";
 import SearchBar from "./search-bar";
-import NavIconBtn from "./nav-icon-btn";
-import { Bell, MessageSquare } from "lucide-react";
-import ComposeButton from "./compose-button";
 import UserMenu from "./user-menu";
-import MobileMenu from "./mobile-menu";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import GuestThemeToggle from "./guest-theme-toggle";
 
 export default function Header() {
   const [notifCount] = useState(10);
   const [msgCount] = useState(10);
 
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useAuth();
+  const dispatch = useDispatch();
 
   return (
     <header className="/* Thêm hiệu ứng chuyển màu mượt mà */ fixed top-0 right-0 left-0 z-50 flex h-14.5 items-center gap-0 border-b border-zinc-200 bg-white/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7 dark:border-zinc-800 dark:bg-zinc-950/90">
@@ -43,11 +45,14 @@ export default function Header() {
               tooltip="Thông báo"
               badgeCount={notifCount}
             />
-            <NavIconBtn
+            {/* <NavIconBtn
               icon={<MessageSquare size={15} />}
               tooltip="Tin nhắn"
               badgeCount={msgCount}
-            />
+            /> */}
+
+            <ChatHeaderDropdown />
+
             <ComposeButton />
             <UserMenu />
           </>

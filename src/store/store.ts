@@ -12,6 +12,7 @@ import {
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import authReducer from "./features/auth-slice";
 import modalReducer from "./features/modal-slice";
+import chatReducer from "./features/chat-slice";
 
 const createNoopStorage = () => ({
   getItem: () => Promise.resolve(null),
@@ -32,7 +33,8 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
-  modal: modalReducer
+  modal: modalReducer,
+  chatUI: chatReducer
 });
 
 export const store = configureStore({

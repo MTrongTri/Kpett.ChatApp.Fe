@@ -1,53 +1,58 @@
-// ── USER ─────────────────────────────────────────────────────────────
-export type OnlineStatus = "online" | "away" | "offline";
+export interface SystemMessageMetadata {
+  actor?: { id: string; name: string };
+  targets?: Array<{ id: string; name: string }>;
+}
 
-export interface ChatUser {
+export interface MessageAttachmentResponse {
   id: string;
-  username: string;
+  url: string;
+  type: string;
+}
+
+export interface MessageSnippetResponse {
+  id: string;
+  senderId: string;
+  senderName: string;
+  type: string;
+  content: string;
+  createdAt: string;
+  actionMetadata?: SystemMessageMetadata;
+}
+
+export interface ParticipantResponse {
+  id: string;
   displayName: string;
-  avatarInitial: string;
-  avatarGradient: string; // Tailwind gradient classes
-  status: OnlineStatus;
-  location?: string;
-  joinedAt?: string;
-  website?: string;
+  username: string;
+  avatarUrl?: string;
+  role: string;
+  isOnline?: boolean;
+  lastReadMessageId?: string;
 }
 
-// ── MESSAGE ───────────────────────────────────────────────────────────
-export type MessageStatus = "sending" | "sent" | "delivered" | "read";
-
-export interface ChatMessage {
+export interface ConversationResponse {
   id: string;
-  ownerId: string; // matches ChatUser.id; "me" for current user
-  text: string;
-  time: string; // display string e.g. "14:32"
-  status: MessageStatus;
-  reaction?: string; // emoji chosen by current user
+  type: "Direct" | "Group";
+  name?: string;
+  avatarUrl?: string;
+  createdAt: string;
+  lastMessageAt: string;
+  lastMessage?: MessageSnippetResponse;
+  participants: ParticipantResponse[];
+  hasUnread: boolean;
 }
 
-// ── CONVERSATION ─────────────────────────────────────────────────────
-export type FilterType = "all" | "unread" | "pinned";
-
-export interface Conversation {
+export interface MessageResponse {
   id: string;
-  partner: ChatUser;
-  messages: ChatMessage[];
-  pinned: boolean;
-  unread: number;
-  /** Shown as last-message preview in the sidebar */
-  preview: string;
-  time: string;
-}
-
-// ── SHARED MEDIA ─────────────────────────────────────────────────────
-export interface SharedMediaItem {
-  id: string;
-  emoji: string;
-  bgGradient: string; // Tailwind gradient classes
-}
-
-// ── SIDEBAR FILTER ────────────────────────────────────────────────────
-export interface SidebarFilterOption {
-  key: FilterType;
-  label: string;
+  conversationId?: string;
+  clientMessageId?: string;
+  senderId: string;
+  senderName: string;
+  senderAvatarUrl?: string;
+  type: string;
+  content: string;
+  createdAt: string;
+  actionMetadata?: SystemMessageMetadata;
+  replyToMessageId?: string;
+  attachments?: MessageAttachmentResponse[];
+  localStatus?: "sending" | "sent" | "error";
 }

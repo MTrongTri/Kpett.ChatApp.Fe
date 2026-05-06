@@ -9,6 +9,7 @@ import PostLightbox from '../posts/post-light-box/post-light-box';
 import PostEditor from '../posts/post-editor/post-editor';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import GlobalChatContainer from '../chat/global-chat-container';
 
 export function GlobalModalProvider() {
     const dispatch = useDispatch();
@@ -59,6 +60,8 @@ export function GlobalModalProvider() {
                     postId={postEditorModal.postId}
                 />
             )}
+
+            {!pathname.startsWith('/chat') && <GlobalChatContainer />}
         </>
     );
 }

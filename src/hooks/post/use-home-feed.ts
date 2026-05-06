@@ -1,86 +1,49 @@
-// hooks/use-home-feed.ts
 "use client";
-
 import { useMemo, useCallback } from "react";
-import useSWRInfinite from "swr/infinite";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { getFeedHome } from "@/services/post.service";
 
 const FEED_LIMIT = 10;
 
 export function useHomeFeed() {
   const {
-    data: pages,
+    data,
     error,
     isLoading,
-    isValidating,
-    size,
-    setSize,
-    mutate,
-  } = useSWRInfinite(
-    // 1. Hàm getKey: Khởi tạo mảng tham số
-    (pageIndex, previousPageData) => {
-      // Dừng fetch nếu đã tải trang trước đó nhưng không còn nextCursor
-      if (previousPageData && !previousPageData.data?.pagination.nextCursor) {
-        return null;
-      }
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ["feed"],
+    queryFn: ({ pageParam }) => getFeedHome(pageParam as string | null, FEED_LIMIT),
+    initialPageParam: null as string | null,
+    // Tự động trích xuất cursor cho trang tiếp theo
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor || undefined,
+  });
 
-      // Lấy cursor từ metadata của trang trước
-      const cursor = previousPageData
-        ? previousPageData.data.pagination.nextCursor
-        : null;
-
-      // Trả về mảng Key chuẩn (Không còn username nữa)
-      return ["feed", cursor, FEED_LIMIT];
-    },
-
-    // 2. Hàm fetcher: Nhận mảng Key và gọi API
-    ([_, currentCursor, limit]) => {
-      return getFeedHome(currentCursor, limit as number);
-    },
-    {
-      revalidateFirstPage: false,
-      persistSize: true,
-      revalidateOnFocus: false,
-    },
-  );
-
-  // 3. Xử lý làm phẳng mảng (Flattening)
+  // Gom phẳng mảng các trang thành 1 mảng bài viết duy nhất
   const posts = useMemo(() => {
-    if (!pages) return [];
-    return pages.flatMap((page) => page.data?.items ?? []);
-  }, [pages]);
-
-  // 4. Kiểm tra còn dữ liệu không
-  const hasMore = useMemo(() => {
-    if (!pages || pages.length === 0) return false;
-    const lastPage = pages[pages.length - 1];
-    return lastPage.data?.pagination.hasMore ?? false;
-  }, [pages]);
-
-  // 5. Trạng thái cuộn tải thêm (Loading More)
-  const isLoadingMore =
-    isLoading || (size > 0 && pages && typeof pages[size - 1] === "undefined");
+    return data?.pages.flatMap((page) => page.items ?? []) ?? [];
+  }, [data]);
 
   const loadMore = useCallback(() => {
-    if (!isLoadingMore && hasMore) {
-      setSize((prevSize) => prevSize + 1);
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [isLoadingMore, hasMore, setSize]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Hàm làm mới bảng tin (Pull to refresh)
   const refresh = useCallback(() => {
-    mutate(); // Gọi lại dữ liệu mới nhất ở background
-    setSize(1); // Reset cuộn về trang đầu
-  }, [mutate, setSize]);
+    refetch();
+  }, [refetch]);
 
   return {
     posts,
     error,
     isLoadingInitialData: isLoading,
-    isLoadingMore,
-    hasMore,
+    isLoadingMore: isFetchingNextPage,
+    hasMore: !!hasNextPage,
     loadMore,
     refresh,
-    mutate,
   };
 }

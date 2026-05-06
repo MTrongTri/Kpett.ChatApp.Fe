@@ -1,18 +1,19 @@
 "use client";
-
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import { getPostById } from "@/services/post.service";
 import { Post } from "@/types/post";
 
 export function usePostDetail(postId: string | null, initialPost: Post | null) {
-    const { data, isLoading, error } = useSWR(
-        postId && !initialPost ? ["post-detail", postId] : null,
-        ([_, id]) => getPostById(id).then(res => res.data)
-    );
+    const { data, isLoading, error } = useQuery({
+        queryKey: ["post-detail", postId],
+        queryFn: () => getPostById(postId!),
+        enabled: !!postId,
+        initialData: initialPost || undefined,
+    });
 
     return {
-        post: initialPost || data,
-        isPostLoading: !initialPost && isLoading,
+        post: data,
+        isPostLoading: isLoading && !initialPost,
         error,
     };
 }

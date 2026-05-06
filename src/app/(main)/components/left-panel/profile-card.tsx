@@ -1,8 +1,10 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { UserAvatar } from "@/components/user/user-avatar";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { getMyStats } from "@/services/user.service";
 import Link from "next/link";
-import useSWR from "swr";
 import { ProfileCardSkeleton } from "./profile-card-skeleton";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -11,10 +13,15 @@ export default function ProfileCard() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const {
-    data: response,
+    data: userStats,
     isLoading,
     error,
-  } = useSWR(currentUser ? ["/user/me/stats"] : null, () => getMyStats());
+  } = useQuery({
+    queryKey: ["user-stats", currentUser?.id],
+    queryFn: () => getMyStats(),
+    enabled: !!currentUser,
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (isLoading) {
     return <ProfileCardSkeleton />;
@@ -67,11 +74,9 @@ export default function ProfileCard() {
     );
   }
 
-  if (error || !response?.data) {
+  if (error || !userStats) {
     return null;
   }
-
-  const userStats = response.data;
 
   return (
     <div className="border-border bg-card rounded-xl border p-4">

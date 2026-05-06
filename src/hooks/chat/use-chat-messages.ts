@@ -1,103 +1,97 @@
 "use client";
+
 import { useMemo, useCallback, useEffect } from "react";
-import useSWRInfinite from "swr/infinite";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { chatService } from "@/services/chat.service";
 import { MessageResponse } from "@/types/chat";
+import { produce } from "immer";
 import { useSignalR } from "@/components/providers/signalr-provider";
-import { useConversations } from '@/hooks/chat/use-conversations';
 
 const MESSAGES_LIMIT = 20;
 
 export function useChatMessages(conversationId: string | null, isMinisized: boolean = false) {
+    const queryClient = useQueryClient();
     const { connection, isConnected } = useSignalR();
-    const { mutate: mutateConversations } = useConversations();
 
-    const { data, size, setSize, mutate, isLoading, isValidating } = useSWRInfinite(
-        (pageIndex, previousPageData) => {
-            if (!conversationId || isMinisized) return null;
-            if (previousPageData && !previousPageData.pagination.nextCursor) return null;
-            const cursor = previousPageData ? previousPageData.pagination.nextCursor : null;
-            return ["chat-messages", conversationId, cursor, MESSAGES_LIMIT];
-        },
-        ([_, id, cursor, limit]) => chatService.getMessages(id, limit as number, cursor),
-        { revalidateOnFocus: false, keepPreviousData: true }
-    );
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuery({
+        queryKey: ["chat-messages", conversationId],
+        queryFn: ({ pageParam }) => chatService.getMessages(conversationId!, MESSAGES_LIMIT, pageParam as string | undefined),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
+        enabled: !!conversationId && !isMinisized,
+    });
 
     const messages = useMemo(() => {
-        if (!data) return [];
-        return data.flatMap((page) => page?.items ?? []).reverse();
+        return data?.pages.flatMap((page) => page?.items ?? []).reverse() ?? [];
     }, [data]);
 
-    const hasMore = data ? data[data.length - 1]?.pagination.hasMore ?? false : false;
-    const isLoadingMore = isValidating && size > 0;
-
     const loadOlderMessages = useCallback(() => {
-        if (hasMore && !isValidating) {
-            setSize((prev) => prev + 1);
-        }
-    }, [hasMore, isValidating, setSize]);
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    const updateMessageStatus = useCallback((clientMessageId: string, status: "error") => {
-        mutate((currentPages: any) => {
-            if (!currentPages || currentPages.length === 0) return currentPages;
+    // CẬP NHẬT TRẠNG THÁI (Đang gửi -> Lỗi/Thành công) BẰNG IMMER
+    const updateMessageStatus = useCallback((clientMessageId: string, status: "error" | "sent") => {
+        queryClient.setQueryData(["chat-messages", conversationId], (oldData: any) => {
+            if (!oldData?.pages) return oldData;
 
-            const newPages = [...currentPages];
-            const currentItems = [...(newPages[0].items || [])];
+            return produce(oldData, (draft: any) => {
+                const currentItems = draft.pages[0]?.items;
+                if (!currentItems) return;
 
-            const idx = currentItems.findIndex((m: MessageResponse) => m.clientMessageId === clientMessageId);
-            if (idx > -1) {
-                currentItems[idx] = { ...currentItems[idx], localStatus: status };
-                newPages[0] = { ...newPages[0], items: currentItems };
-            }
-            return newPages;
-        }, { revalidate: false });
-    }, [mutate]);
+                const idx = currentItems.findIndex((m: MessageResponse) => m.clientMessageId === clientMessageId);
+                if (idx > -1) {
+                    if (status === "sent") {
+                        // Nếu gửi thành công, XÓA trạng thái localStatus để UI trở về bình thường
+                        delete currentItems[idx].localStatus;
+                    } else {
+                        // Nếu lỗi, gán thành "error"
+                        currentItems[idx].localStatus = status;
+                    }
+                }
+            });
+        });
+    }, [queryClient, conversationId]);
 
-    const addMessageToCache = useCallback(async (newMessage: MessageResponse) => {
-        // 1. Cập nhật mảng tin nhắn
-        mutate((currentPages: any) => {
-            let pages = currentPages;
-            if (!pages || !Array.isArray(pages) || pages.length === 0) {
-                pages = [{ items: [], pagination: {} }];
-            } else {
-                pages = [...currentPages];
-            }
+    // THÊM TIN NHẮN MỚI VÀO CACHE BẰNG IMMER
+    const addMessageToCache = useCallback((newMessage: MessageResponse) => {
+        // 1. Cập nhật mảng tin nhắn của cuộc hội thoại hiện tại
+        queryClient.setQueryData(["chat-messages", conversationId], (oldData: any) => {
 
-            const currentItems = [...(pages[0].items || [])];
-
-            const existingIndex = currentItems.findIndex(
-                (m: MessageResponse) =>
-                    m.id === newMessage.id ||
-                    (newMessage.clientMessageId && m.id === newMessage.clientMessageId)
-            );
-
-            if (existingIndex > -1) {
-                currentItems[existingIndex] = newMessage;
-            } else {
-                currentItems.unshift(newMessage);
+            // NẾU CHƯA CÓ CACHE (Chưa mở popup bao giờ) -> TUYỆT ĐỐI KHÔNG TẠO DUMMY DATA!
+            // Việc tạo Dummy Data sẽ làm React Query lầm tưởng đã load xong và không fetch API nữa.
+            if (!oldData?.pages || oldData.pages.length === 0) {
+                return oldData;
             }
 
-            pages[0] = { ...pages[0], items: currentItems };
-            return pages;
-        }, { revalidate: false });
+            return produce(oldData, (draft: any) => {
+                const currentItems = draft.pages[0]?.items;
+                if (!currentItems) return; // Bảo vệ an toàn
 
-        // 2. Đồng bộ Sidebar
-        if (conversationId) {
-            let isFoundInCache = false;
+                const existingIndex = currentItems.findIndex(
+                    (m: MessageResponse) => m.id === newMessage.id || (newMessage.clientMessageId && m.id === newMessage.clientMessageId)
+                );
 
-            mutateConversations((currentPages: any) => {
-                if (!currentPages || currentPages.length === 0) return currentPages;
+                if (existingIndex > -1) {
+                    currentItems[existingIndex] = newMessage;
+                } else {
+                    currentItems.unshift(newMessage);
+                }
+            });
+        });
 
-                const newPages = [...currentPages];
-                let foundConv: any = null;
+        // 2. Cập nhật Sidebar Conversations (Đẩy hội thoại lên đầu + Update tin nhắn cuối)
+        queryClient.setQueryData(["conversations"], (oldData: any) => {
+            if (!oldData?.pages) return oldData;
+
+            return produce(oldData, (draft: any) => {
+                let foundConv = null;
                 let pageIdx = -1;
                 let itemIdx = -1;
 
-                for (let i = 0; i < newPages.length; i++) {
-                    if (!newPages[i] || !newPages[i].items) continue;
-                    const idx = newPages[i].items.findIndex((c: any) => c.id === conversationId);
+                for (let i = 0; i < draft.pages.length; i++) {
+                    const idx = draft.pages[i].items?.findIndex((c: any) => c.id === conversationId);
                     if (idx > -1) {
-                        foundConv = { ...newPages[i].items[idx] };
+                        foundConv = draft.pages[i].items[idx];
                         pageIdx = i;
                         itemIdx = idx;
                         break;
@@ -105,73 +99,29 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
                 }
 
                 if (foundConv) {
-                    isFoundInCache = true;
                     foundConv.lastMessageAt = newMessage.createdAt;
-                    foundConv.lastMessage = {
-                        id: newMessage.id,
-                        senderId: newMessage.senderId,
-                        senderName: newMessage.senderName,
-                        content: newMessage.content,
-                        type: newMessage.type,
-                        actionMetadata: newMessage.actionMetadata,
-                        createdAt: newMessage.createdAt
-                    };
+                    foundConv.lastMessage = { ...newMessage };
+                    foundConv.hasUnread = isMinisized;
 
-                    // NẾU ĐANG THU NHỎ -> VẪN CÒN UNREAD (CHẤM ĐỎ)
-                    foundConv.hasUnread = isMinisized ? true : false;
-
-                    const itemsInPage = [...newPages[pageIdx].items];
-                    itemsInPage.splice(itemIdx, 1);
-                    newPages[pageIdx] = { ...newPages[pageIdx], items: itemsInPage };
-
-                    const firstPageItems = [...(newPages[0].items || [])];
-                    firstPageItems.unshift(foundConv);
-                    newPages[0] = { ...newPages[0], items: firstPageItems };
+                    // Cắt ra khỏi vị trí cũ và đẩy lên đầu trang 1
+                    draft.pages[pageIdx].items.splice(itemIdx, 1);
+                    draft.pages[0].items.unshift(foundConv);
                 }
-                return newPages;
-            }, { revalidate: false });
+            });
+        });
+    }, [queryClient, conversationId, isMinisized]);
 
-            if (!isFoundInCache) {
-                try {
-                    const missingConv = await chatService.getConversationById(conversationId);
-
-                    mutateConversations((currentPages: any) => {
-                        const pages = currentPages ? [...currentPages] : [];
-                        if (!pages[0]) pages[0] = { items: [], pagination: {} };
-                        if (!pages[0].items) pages[0].items = [];
-
-                        const alreadyExists = pages[0].items.some((c: any) => c.id === missingConv.id);
-                        if (!alreadyExists) {
-                            missingConv.hasUnread = isMinisized ? true : false;
-                            missingConv.lastMessageAt = newMessage.createdAt;
-                            missingConv.lastMessage = {
-                                id: newMessage.id,
-                                senderId: newMessage.senderId,
-                                senderName: newMessage.senderName,
-                                content: newMessage.content,
-                                type: newMessage.type,
-                                actionMetadata: newMessage.actionMetadata,
-                                createdAt: newMessage.createdAt
-                            };
-                            pages[0].items.unshift(missingConv);
-                        }
-                        return pages;
-                    }, { revalidate: false });
-                } catch (error) {
-                    console.error("Lỗi khi fetch bù thông tin hội thoại:", error);
-                    mutateConversations();
-                }
-            }
-        }
-    }, [mutate, mutateConversations, conversationId, isMinisized]);
-
+    // LẮNG NGHE TIN NHẮN MỚI VÀ TRẠNG THÁI NGƯỜI KHÁC ĐÃ ĐỌC TỪ SIGNALR
     useEffect(() => {
         if (!isConnected || !connection || !conversationId) return;
 
         const handleNewMessage = (newMessage: MessageResponse) => {
             const targetConvId = (newMessage as any).conversationId || conversationId;
             if (targetConvId === conversationId) {
+                // 1. Đẩy tin nhắn mới vào giao diện
                 addMessageToCache(newMessage);
+
+                // 2. Nếu đang mở khung chat (không thu nhỏ), báo server là đã đọc
                 if (!isMinisized) {
                     chatService.markAsRead(conversationId).catch(() => { });
                 }
@@ -181,25 +131,21 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
         const handleUserRead = (convId: string, userId: string, messageId: string) => {
             if (convId !== conversationId) return;
 
-            mutateConversations((currentPages: any) => {
-                if (!currentPages || currentPages.length === 0) return currentPages;
-
-                return currentPages.map((page: any) => {
-                    if (!page || !page.items) return page;
-                    const items = page.items.map((c: any) => {
-                        if (c.id === convId) {
-                            return {
-                                ...c,
-                                participants: c.participants.map((p: any) =>
-                                    p.id === userId ? { ...p, lastReadMessageId: messageId } : p
-                                )
-                            };
+            // Dùng Immer cập nhật an toàn avatar người đã đọc (lastReadMessageId)
+            queryClient.setQueryData(["conversations"], (oldData: any) => {
+                if (!oldData?.pages) return oldData;
+                return produce(oldData, (draft: any) => {
+                    for (const page of draft.pages) {
+                        const conv = page.items?.find((c: any) => c.id === convId);
+                        if (conv && conv.participants) {
+                            const participant = conv.participants.find((p: any) => p.id === userId);
+                            if (participant) {
+                                participant.lastReadMessageId = messageId;
+                            }
                         }
-                        return c;
-                    });
-                    return { ...page, items };
+                    }
                 });
-            }, { revalidate: false });
+            });
         };
 
         connection.on("ReceiveNewMessage", handleNewMessage);
@@ -209,45 +155,40 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
             connection.off("ReceiveNewMessage", handleNewMessage);
             connection.off("UserReadMessage", handleUserRead);
         };
-    }, [connection, isConnected, conversationId, addMessageToCache, mutateConversations, isMinisized]);
+    }, [connection, isConnected, conversationId, addMessageToCache, isMinisized, queryClient]);
 
+    // TỰ ĐỘNG XÓA CHẤM ĐỎ (UNREAD) KHI VỪA MỞ MÀN HÌNH CHAT
     useEffect(() => {
         if (conversationId && !isMinisized) {
             let needsApiCall = false;
 
-            mutateConversations((currentPages: any) => {
-                if (!currentPages || currentPages.length === 0) return currentPages;
+            queryClient.setQueryData(["conversations"], (oldData: any) => {
+                if (!oldData?.pages) return oldData;
 
-                let isChanged = false;
-                const newPages = currentPages.map((page: any) => {
-                    if (!page || !page.items) return page;
-                    const items = page.items.map((c: any) => {
-                        if (c.id === conversationId && c.hasUnread) {
-                            isChanged = true;
+                return produce(oldData, (draft: any) => {
+                    for (const page of draft.pages) {
+                        const conv = page.items?.find((c: any) => c.id === conversationId);
+                        if (conv && conv.hasUnread) {
+                            // Tắt chấm đỏ trên UI Sidebar/Dropdown ngay lập tức
+                            conv.hasUnread = false;
                             needsApiCall = true;
-                            return { ...c, hasUnread: false };
                         }
-                        return c;
-                    });
-                    return { ...page, items };
+                    }
                 });
+            });
 
-                if (!isChanged) return currentPages;
-                return newPages;
-            }, { revalidate: false });
-
+            // Nếu phát hiện có chấm đỏ, gọi API để đồng bộ với Database
             if (needsApiCall) {
                 chatService.markAsRead(conversationId).catch(() => { });
             }
         }
-    }, [conversationId, isMinisized, mutateConversations]);
+    }, [conversationId, isMinisized, queryClient]);
 
     return {
         messages,
         isLoading,
-        isValidating,
-        isLoadingMore,
-        hasMore,
+        isLoadingMore: isFetchingNextPage,
+        hasMore: !!hasNextPage,
         loadOlderMessages,
         addMessageToCache,
         updateMessageStatus

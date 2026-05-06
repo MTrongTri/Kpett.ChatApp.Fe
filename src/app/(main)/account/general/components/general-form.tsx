@@ -5,8 +5,9 @@ import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from "swr";
 import * as z from "zod";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import ProfileAvatarRow from "@/app/(main)/[username]/components/profile-avatar-row";
 import ProfileCover from "@/app/(main)/[username]/components/profile-cover";
@@ -25,8 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { checkUsername, getMyProfile, updateUserGeneralInfo } from "@/services/user.service";
-import { ApiResponse } from "@/types/common/api";
-import { UserProfile } from "@/types/user";
 import { ProfileGeneralFormSkeleton } from "./profile-general-form-skeleton";
 import { toast } from "sonner";
 
@@ -59,18 +58,15 @@ type ProfileFormValues = z.input<typeof profileFormSchema>;
 export default function ProfileGeneralForm() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
-  // Khởi tạo ref để lưu trữ timer của debounce
+  const queryClient = useQueryClient();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { data: response, isLoading, error } = useSWR<ApiResponse<UserProfile>>(
-    '/users/me',
-    () => getMyProfile(),
-    {
-      revalidateOnFocus: false,
-    }
-  );
-
-  const userProfile = response?.data;
+  const { data: userProfile, isLoading, error } = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: () => getMyProfile(),
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -107,29 +103,25 @@ export default function ProfileGeneralForm() {
 
     onChange(value);
 
-    // Clear timer cũ nếu user vẫn đang gõ
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Đặt timer mới (500ms)
     debounceTimerRef.current = setTimeout(async () => {
-      // Bỏ qua nếu giá trị giống với username ban đầu của user
       if (value === userProfile?.username) {
         form.clearErrors("username");
         return;
       }
 
-      // Kiểm tra xem format có hợp lệ không (độ dài, ký tự đặc biệt) trước khi gọi API
       const currentError = form.getFieldState("username").error;
       const isFormatValid = !currentError || currentError.type === "manual";
 
       if (value.length >= 3 && isFormatValid) {
         setIsCheckingUsername(true);
         try {
-          const { data } = await checkUsername(value);
+          const { isAvailable } = await checkUsername(value);
 
-          if (!data?.isAvailable) {
+          if (isAvailable) {
             form.setError("username", {
               type: "manual",
               message: "Username này đã được người khác sử dụng.",
@@ -146,6 +138,19 @@ export default function ProfileGeneralForm() {
     }, 500);
   };
 
+  // Xử lý API bằng useMutation
+  const updateMutation = useMutation({
+    mutationFn: (formattedData: any) => updateUserGeneralInfo(formattedData),
+    onSuccess: (res) => {
+      toast.success("Cập nhật thông tin thành công!");
+      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+    },
+    onError: () => {
+      toast.error("Cập nhật thông tin thất bại. Vui lòng thử lại.");
+    }
+  });
+
   // Xử lý Submit
   async function onSubmit(data: ProfileFormValues) {
     const formattedData = {
@@ -153,14 +158,7 @@ export default function ProfileGeneralForm() {
       dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, "yyyy-MM-dd") : null
     };
 
-    const res = await updateUserGeneralInfo(formattedData);
-
-    if (res.isSuccess) {
-      toast.success("Cập nhật thông tin thành công!");
-    }
-    else {
-      toast.error("Cập nhật thông tin thất bại. Vui lòng thử lại.");
-    }
+    await updateMutation.mutateAsync(formattedData);
   }
 
   // --- HIỂN THỊ SKELETON KHI ĐANG TẢI DỮ LIỆU ---
@@ -219,7 +217,6 @@ export default function ProfileGeneralForm() {
                       <Input
                         placeholder="nguyenvana"
                         {...field}
-                        // Thay thế onChange mặc định bằng hàm tùy chỉnh có chứa logic debounce
                         onChange={(e) => handleUsernameChange(e, field.onChange)}
                         className={cn(
                           "h-12 text-base px-4 py-1",
@@ -318,9 +315,9 @@ export default function ProfileGeneralForm() {
             <Button variant="outline" type="button" onClick={() => form.reset()}>Hủy bỏ</Button>
             <Button
               type="submit"
-              disabled={isCheckingUsername || form.formState.isSubmitting}
+              disabled={isCheckingUsername || updateMutation.isPending}
             >
-              {(isCheckingUsername || form.formState.isSubmitting) && (
+              {(isCheckingUsername || updateMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Lưu thay đổi

@@ -1,28 +1,33 @@
-import { MOCK_COMMENT } from "@/data/comment";
+// services/comment.service.ts
 import http from "@/lib/axios";
 import { Comment } from "@/types/comment";
-import { ApiResponse, PaginatedData } from "@/types/common/api";
-import { string } from "zod";
+import { PaginatedData } from "@/types/common/api";
 
 export const addComment = async (
   postId: string,
   content: string,
   parentCommentId: string | null = null,
-): Promise<ApiResponse<Comment>> => {
-  return http.post(`/comments/posts/${postId}`, {
+): Promise<Comment> => {
+  const response = await http.post(`/comments/posts/${postId}`, {
     content,
     parentCommentId
-  })
+  });
+  return response.data;
 };
 
-export const updateComment = async (commentId: string, newContent: string): Promise<ApiResponse<Comment>> => {
-  return http.put(`/comments/posts/${commentId}`, {
+export const updateComment = async (
+  commentId: string,
+  newContent: string
+): Promise<Comment> => {
+  const response = await http.put(`/comments/posts/${commentId}`, {
     content: newContent
-  })
+  });
+  return response.data;
 };
 
-export const deleteComment = async (commentId: string): Promise<ApiResponse<Comment>> => {
-  return http.delete(`/comments/posts/${commentId}`)
+export const deleteComment = async (commentId: string): Promise<Comment> => {
+  const response = await http.delete(`/comments/posts/${commentId}`);
+  return response.data;
 };
 
 export const getCommentsByPostId = async (
@@ -30,12 +35,13 @@ export const getCommentsByPostId = async (
   parentCommentId: string | null,
   cursor: string | null = null,
   limit: number = 10,
-): Promise<ApiResponse<PaginatedData<Comment>>> => {
-  return http.get(`/comments/posts/${postId}`, {
+): Promise<PaginatedData<Comment>> => {
+  const response = await http.get(`/comments/posts/${postId}`, {
     params: {
       parentCommentId,
       cursor,
       limit
     }
-  })
+  });
+  return response.data;
 };

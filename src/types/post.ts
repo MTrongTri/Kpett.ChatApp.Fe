@@ -27,6 +27,7 @@ export interface Post {
   author: PostAuthor;
   title?: string;
   content: string;
+  type: string;
   hashtags: string[];
   media: Media[];
 

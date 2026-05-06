@@ -33,7 +33,7 @@ export default function PostCard({ post }: PostCardProps) {
   const dispatch = useDispatch();
 
   const handleOpenLightBox = () => {
-    dispatch(openPostLightBox({ post, targetScroll: "comment-list-area" }));
+    dispatch(openPostLightBox({ postId: post.id, post, targetScroll: "comment-list-area" }));
   };
 
   return (

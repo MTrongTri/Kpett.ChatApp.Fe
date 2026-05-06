@@ -10,6 +10,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { GlobalModalProvider } from "@/components/providers/global-modal-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import QueryProvider from "@/components/providers/query-provider";
 
 const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
@@ -37,21 +38,22 @@ export default function RootLayout({
         <StoreProvider>
           <AuthProvider>
             <SignalRProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
+              <QueryProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
 
-                {/* Toast */}
-                <Toaster richColors position="top-center" />
+                  {/* Toast */}
+                  <Toaster richColors position="top-center" />
 
-                {/* Modals */}
-                <GlobalModalProvider />
-              </ThemeProvider>
-
+                  {/* Modals */}
+                  <GlobalModalProvider />
+                </ThemeProvider>
+              </QueryProvider>
             </SignalRProvider>
           </AuthProvider>
         </StoreProvider>

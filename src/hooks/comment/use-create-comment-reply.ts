@@ -1,14 +1,12 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addComment } from "@/services/comment.service";
 import { Comment } from "@/types/comment";
-import { useCallback } from "react";
 import { toast } from "sonner";
-import { useSWRConfig } from "swr";
 
 interface UseCreateReplyProps {
     postId: string;
     commentId: string;
     submitParentId: string;
-    localMutate: any;
     onReplySuccess?: (newReply: Comment, isDirectChild: boolean) => void;
 }
 
@@ -16,57 +14,47 @@ export const useCreateCommentReply = ({
     postId,
     commentId,
     submitParentId,
-    localMutate,
     onReplySuccess,
 }: UseCreateReplyProps) => {
-    const { mutate: globalMutate } = useSWRConfig();
+    const queryClient = useQueryClient();
 
-    const updateLocalCache = useCallback((newReply: Comment) => {
-        localMutate((currentPages: any) => {
-            if (!currentPages || currentPages.length === 0) {
-                return [{ data: { items: [newReply], pagination: { hasMore: false, nextCursor: null } } }];
+    const mutation = useMutation({
+        mutationFn: (content: string) => addComment(postId, content, submitParentId),
+        onSuccess: (response) => {
+            if (response) {
+                const newReply = response;
+                const isDirectChild = commentId === submitParentId;
+
+                toast.success("Câu trả lời đã được gửi");
+
+                // Tự động fetch lại danh sách replies của nhánh bình luận hiện tại
+                // Dùng exact: false (mặc định) sẽ làm mới tất cả các page của danh sách replies này
+                queryClient.invalidateQueries({
+                    queryKey: ["replies", postId, submitParentId]
+                });
+
+                // Làm mới luôn danh sách comment gốc để cập nhật lại số lượng replyCount
+                queryClient.invalidateQueries({
+                    queryKey: ["comments", postId]
+                });
+
+                // Trả kết quả về cho UI Component (như clear form, đóng input...)
+                if (onReplySuccess) {
+                    onReplySuccess(newReply, isDirectChild);
+                }
+            } else {
+                toast.error("Có lỗi xảy ra khi gửi phản hồi");
             }
-            const newPages = [...currentPages];
-            const lastIdx = newPages.length - 1;
-            newPages[lastIdx] = {
-                ...newPages[lastIdx],
-                data: {
-                    ...newPages[lastIdx].data,
-                    items: [...(newPages[lastIdx].data?.items || []), newReply],
-                },
-            };
-            return newPages;
-        }, { revalidate: false });
-    }, [localMutate]);
+        },
+        onError: (error) => {
+            console.error("Lỗi khi gửi reply:", error);
+            toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
+        }
+    });
 
     const handleReplySubmit = async (content: string) => {
-        const response = await addComment(postId, content, submitParentId);
-
-        if (response.isSuccess && response.data) {
-            const newReply = response.data;
-            const isDirectChild = commentId === submitParentId;
-
-            // 1. Cập nhật Cache SWR
-            if (isDirectChild) {
-                updateLocalCache(newReply);
-            }
-
-            toast.success("Đã gửi câu trả lời");
-
-            globalMutate(
-                (key) => Array.isArray(key) && key[0] === "replies" && key[1] === postId,
-                undefined,
-                { revalidate: true }
-            );
-
-            //  Trả kết quả về cho UI Component tự xử lý đóng Form và thêm vào mảng tạm
-            if (onReplySuccess) {
-                onReplySuccess(newReply, isDirectChild);
-            }
-        } else {
-            toast.error("Đã có lỗi xảy ra");
-        }
+        await mutation.mutateAsync(content);
     };
 
-    return { handleReplySubmit, updateLocalCache };
+    return { handleReplySubmit };
 };

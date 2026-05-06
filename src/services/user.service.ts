@@ -10,23 +10,27 @@ import {
   UserWithStats,
 } from "@/types/user";
 
-export const getMyProfile = async (): Promise<ApiResponse<UserProfile>> => {
-  return http.get("users/me");
+export const getMyProfile = async (): Promise<UserProfile> => {
+  const res = await http.get("users/me");
+  return res.data;
 };
 
 export const getUserProfile = async (
   username: string,
-): Promise<ApiResponse<UserProfile>> => {
-  return http.get(`users/profile/${username}`);
+): Promise<UserProfile> => {
+  const res = await http.get(`users/profile/${username}`);
+  return res.data;
 };
 
 
 export const checkUsername = async (
   username: string,
-): Promise<ApiResponse<CheckUsernameResponse>> => {
-  return http.get("users/check-username", {
+): Promise<CheckUsernameResponse> => {
+  const res = await http.get("users/check-username", {
     params: { username },
   });
+
+  return res.data;
 };
 
 export const accountSetup = async ({
@@ -39,27 +43,35 @@ export const accountSetup = async ({
   displayName: string;
   biography: string;
   interests: string[];
-}): Promise<ApiResponse<UserLoginResponse>> => {
-  return http.post("users/account-setup", {
+}): Promise<UserLoginResponse> => {
+  const res = await http.post("users/account-setup", {
     username,
     displayName,
     biography,
     interests,
   });
+
+  return res.data;
 };
 
-export const getMyStats = async (): Promise<ApiResponse<UserWithStats>> => {
-  return http.get("users/me/stats");
+export const getMyStats = async (): Promise<UserWithStats> => {
+  const response = await http.get("users/me/stats");
+  return response.data;
 };
 
-export const updateUserGeneralInfo = async (generalInfo: Partial<UserGeneralInfo>): Promise<ApiResponse<UserGeneralInfo>> => {
-  return http.put("users/me", { ...generalInfo });
+export const updateUserGeneralInfo = async (
+  generalInfo: Partial<UserGeneralInfo>
+): Promise<UserGeneralInfo> => {
+  const response = await http.put("users/me", { ...generalInfo });
+  return response.data;
 };
 
 export const updateUserMedia = async (media: Media, mediaType: 'Avatar' | 'Cover') => {
-  return await http.put(`users/me/media?mediaType=${mediaType}`, media);
+  const response = await http.put(`users/me/media?mediaType=${mediaType}`, media);
+  return response.data;
 };
 
 export const deleteUserMediaPrimary = async (mediaType: 'Avatar' | 'Cover') => {
-  return await http.delete(`users/me/media/primary?mediaType=${mediaType}`);
+  const response = await http.delete(`users/me/media/primary?mediaType=${mediaType}`);
+  return response.data;
 };

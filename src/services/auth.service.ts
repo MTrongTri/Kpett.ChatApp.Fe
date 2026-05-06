@@ -1,31 +1,45 @@
 import { authHttp } from "@/lib/axios";
 import { LoginRequest, LoginResponse } from "@/types/auth";
-import { ApiResponse } from "@/types/common/api";
 import axios from "axios";
 
-const login = (
+/**
+ * Đăng nhập hệ thống
+ */
+const login = async (
   loginRequest: LoginRequest,
-): Promise<ApiResponse<LoginResponse>> => {
-  return authHttp.post("/login", loginRequest);
-
+): Promise<LoginResponse> => {
+  const response = await authHttp.post("/login", loginRequest);
+  return response.data;
 };
 
-const register = (
+/**
+ * Đăng ký tài khoản mới
+ */
+const register = async (
   registerRequest: LoginRequest,
-): Promise<ApiResponse> => {
-  return authHttp.post("/register", registerRequest);
+): Promise<any> => {
+  const response = await authHttp.post("/register", registerRequest);
+  return response.data;
 };
 
-const logout = (accessToken: string) => {
-  return authHttp.post('/logout', {}, {
+/**
+ * Đăng xuất và hủy token
+ */
+const logout = async (accessToken: string): Promise<any> => {
+  const response = await authHttp.post('/logout', {}, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }
   });
+  return response.data;
 }
 
-const refreshToken = () => {
-  return axios.post('/api/auth/refresh', null, { withCredentials: true });
+/**
+ * Làm mới Access Token bằng Refresh Token (HttpOnly Cookie)
+ */
+const refreshToken = async (): Promise<any> => {
+  const response = await axios.post('/api/auth/refresh', null, { withCredentials: true });
+  return response.data;
 }
 
 const authService = {
@@ -34,4 +48,5 @@ const authService = {
   logout,
   refreshToken
 };
+
 export default authService;

@@ -55,7 +55,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         hasMore,
         isLoadingMore,
         loadOlderMessages
-    } = useChatMessages(!isMinimized ? conversationId : null, isMinimized);
+    } = useChatMessages(conversationId, isMinimized);
 
     // 1. LOGIC QUYẾT ĐỊNH HIỂN THỊ PREVIEW TEXT
     useEffect(() => {
@@ -146,6 +146,8 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
 
     const handleSend = async (content: string) => {
         const clientMessageId = crypto.randomUUID();
+
+        // 1. Tạo tin nhắn ảo (Optimistic UI)
         const optimisticMsg: MessageResponse = {
             id: clientMessageId,
             clientMessageId: clientMessageId,
@@ -156,10 +158,19 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
             createdAt: new Date().toISOString(),
             localStatus: "sending"
         };
+
         addMessageToCache(optimisticMsg);
+
         try {
+            // 2. Gọi API thực tế
             await chatService.sendMessage(conversationId, content, "Text", clientMessageId);
+
+            // 3. THÊM DÒNG NÀY: Cập nhật thành công để xóa chữ "sending"
+            updateMessageStatus(clientMessageId, "sent");
+
         } catch (error) {
+            console.error(error);
+            // Nếu lỗi mạng, API hỏng... thì chớp đỏ báo lỗi
             updateMessageStatus(clientMessageId, "error");
         }
     };

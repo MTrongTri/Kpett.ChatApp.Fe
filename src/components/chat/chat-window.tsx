@@ -110,6 +110,8 @@ export default function ChatWindow({ conversationId, toggleInfo }: { conversatio
 
         try {
             await chatService.sendMessage(conversationId, content, "Text", clientMessageId);
+            updateMessageStatus(clientMessageId, "sent");
+
         } catch (error) {
             console.error(error);
             updateMessageStatus(clientMessageId, "error");

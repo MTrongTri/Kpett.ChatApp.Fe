@@ -6,7 +6,7 @@ import { formatRelativeTime } from "@/lib/format-date-utils";
 import { RootState } from "@/store/store";
 import { Comment } from "@/types/comment";
 import Link from "next/link";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 import { UserAvatar } from "../user/user-avatar";
@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Hooks
+// Hooks React Query
 import { useCreateCommentReply } from "@/hooks/comment/use-create-comment-reply";
 import { useManageComment } from "@/hooks/comment/use-manage-comment";
 import { getFriendsWithFilter } from "@/services/friend.service";
@@ -60,10 +60,20 @@ export const CommentItem = memo(({
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Dùng tempReplies để hiển thị Optimistic UI (hiển thị ngay lập tức) 
+  // trong lúc React Query gọi background fetch cập nhật list replies
   const [tempReplies, setTempReplies] = useState<Comment[]>([]);
 
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const { replies, hasMore, isLoading: isRepliesLoading, isLoadingMore, loadMore, mutate: localMutate } = useCommentReplies(postId, currentComment.id, isExpanded);
+
+  const {
+    replies,
+    hasMore,
+    isLoading: isRepliesLoading,
+    isLoadingMore,
+    loadMore
+  } = useCommentReplies(postId, currentComment.id, isExpanded);
 
   const isAuthor = currentUser?.id === currentComment.author.id;
   const replyCount = currentComment.metrics.replyCount;
@@ -81,42 +91,29 @@ export const CommentItem = memo(({
 
   const handleChildReply = useCallback((newReply: Comment) => {
     if (currentComment.id === submitParentId) {
-      localMutate((currentPages: any) => {
-        if (!currentPages || currentPages.length === 0) {
-          return [{ data: { items: [newReply], pagination: { hasMore: false, nextCursor: null } } }];
-        }
-        const newPages = [...currentPages];
-        const lastPageIndex = newPages.length - 1;
-        newPages[lastPageIndex] = {
-          ...newPages[lastPageIndex],
-          data: {
-            ...newPages[lastPageIndex].data,
-            items: [...(newPages[lastPageIndex].data?.items || []), newReply],
-          },
-        };
-        return newPages;
-      }, { revalidate: false });
       setTempReplies((prev) => [...prev, newReply]);
     } else if (onReplySuccess) {
       onReplySuccess(newReply);
     }
-  }, [currentComment.id, submitParentId, localMutate, onReplySuccess]);
+  }, [currentComment.id, submitParentId, onReplySuccess]);
 
+  // Hook tạo reply mới (Đã tích hợp React Query)
   const { handleReplySubmit } = useCreateCommentReply({
     postId,
     commentId: currentComment.id,
     submitParentId,
-    localMutate,
     onReplySuccess: (newReply, isDirectChild) => {
       setIsReplying(false);
       if (isDirectChild) {
         setTempReplies((prev) => [...prev, newReply]);
+        setIsExpanded(true);
       } else if (onReplySuccess) {
         onReplySuccess(newReply);
       }
     }
   });
 
+  // Hook quản lý comment: sửa, xóa
   const { handleEditSubmit, handleDeleteSubmit } = useManageComment({
     postId,
     commentId: currentComment.id,
@@ -135,7 +132,7 @@ export const CommentItem = memo(({
   const fetchMentions = async (query: string) => {
     try {
       const response = await getFriendsWithFilter({ search: query, cursor: null, limit: 10 });
-      return (response.isSuccess && response.data) ? response.data?.items : [];
+      return response.items;
     } catch (error) {
       console.error("Lỗi tải mention:", error);
       return [];
@@ -143,21 +140,31 @@ export const CommentItem = memo(({
   };
   const debouncedFetchMentions = useDebounceCallback(fetchMentions, 300);
 
-  const renderReplies = (replyList: Comment[], keyPrefix: string = "") => (
-    <div className="mt-3 space-y-3">
-      {replyList.map((reply) => (
-        <CommentItem
-          key={`${keyPrefix}${reply.id}`}
-          comment={reply}
-          postId={postId}
-          level={nextLevel}
-          threadParentId={nextThreadParentId}
-          onReplySuccess={handleChildReply}
-          onEditSuccess={handleChildEdit}
-        />
-      ))}
-    </div>
-  );
+  // Lọc bỏ trùng lặp giữa tempReplies và replies
+  const renderReplies = (replyList: Comment[], keyPrefix: string = "") => {
+    // Nếu là tempReplies, kiểm tra xem nó đã tồn tại trong replies chính chưa
+    const displayList = keyPrefix === "temp-"
+      ? replyList.filter(temp => !replies.some(r => r.id === temp.id))
+      : replyList;
+
+    if (displayList.length === 0) return null;
+
+    return (
+      <div className="mt-3 space-y-3">
+        {displayList.map((reply) => (
+          <CommentItem
+            key={`${keyPrefix}${reply.id}`}
+            comment={reply}
+            postId={postId}
+            level={nextLevel}
+            threadParentId={nextThreadParentId}
+            onReplySuccess={handleChildReply}
+            onEditSuccess={handleChildEdit}
+          />
+        ))}
+      </div>
+    );
+  };
 
   if (isDeleted) {
     return null;
@@ -219,9 +226,7 @@ export const CommentItem = memo(({
                 <>
                   <button
                     className="hover:text-foreground/80 cursor-pointer font-semibold transition-colors"
-                    onClick={() =>
-                      setIsEditing(true)
-                    }
+                    onClick={() => setIsEditing(true)}
                   >
                     Sửa
                   </button>
@@ -258,8 +263,10 @@ export const CommentItem = memo(({
           </>
         )}
 
-        {!isExpanded && tempReplies.length > 0 && renderReplies(tempReplies, "temp-")}
-        {isExpanded && replies.length > 0 && renderReplies(replies)}
+        {/* Tránh render trùng lặp UI với cơ chế bóc tách tempReplies mới */}
+        {!isExpanded && renderReplies(tempReplies, "temp-")}
+        {isExpanded && renderReplies(tempReplies, "temp-")}
+        {isExpanded && renderReplies(replies)}
 
         <CommentNavigation
           isExpanded={isExpanded}
@@ -268,8 +275,8 @@ export const CommentItem = memo(({
           isLoading={isRepliesLoading}
           isLoadingMore={isLoadingMore}
           hasMore={hasMore}
-          onExpand={() => { setIsExpanded(true); setTempReplies([]); }}
-          onCollapse={() => setIsExpanded(false)}
+          onExpand={() => setIsExpanded(true)}
+          onCollapse={() => { setIsExpanded(false); setTempReplies([]); }}
           onLoadMore={loadMore}
         />
 
@@ -316,7 +323,6 @@ const CommentNavigation = ({
       {isExpanded && !isLoading && hasMore && (
         <div className="flex items-center gap-3">
           <button onClick={onLoadMore} disabled={isLoadingMore} className="text-foreground/50 hover:text-foreground/80 flex cursor-pointer items-center gap-2 text-[11px] font-semibold transition-colors disabled:opacity-50">
-
             {isLoadingMore ? "Đang tải..." : "Xem thêm câu trả lời"}
           </button>
           <span className="text-foreground/30 text-[10px]">•</span>

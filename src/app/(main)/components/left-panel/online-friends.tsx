@@ -1,4 +1,3 @@
-// components/online-friends.tsx
 "use client";
 
 import { useSignalR } from "@/components/providers/signalr-provider";
@@ -11,7 +10,9 @@ import { UserProfile } from "@/types/user";
 import Link from "next/link";
 import { useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
-import useSWR from "swr";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { produce } from "immer";
 
 const FriendItem = ({ friend }: { friend: UserProfile }) => (
   <Link href={friend.username}>
@@ -52,38 +53,33 @@ const FriendSkeleton = () => (
 export default function OnlineFriends() {
   const filterParams = useMemo(() => ({ search: "", cursor: null, limit: 10 }), []);
   const { connection, isConnected } = useSignalR();
-
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
-  const { data, isLoading, error, mutate } = useSWR(
-    currentUser ? ["online-friends", filterParams] : null,
-    ([, params]) => getFriendsWithFilter(params),
-    {
-      revalidateOnFocus: false,
-    }
-  );
+  const queryClient = useQueryClient();
 
-  const onlineFriends: UserProfile[] = data?.data?.items || [];
+  const { data: onlineFriends, isLoading, error } = useQuery({
+    queryKey: ["online-friends", filterParams],
+    queryFn: () => getFriendsWithFilter(filterParams),
+    enabled: !!currentUser,
+    staleTime: 60 * 1000,
+  });
 
-  const targetIds = useMemo(() => onlineFriends.map(f => f.id), [onlineFriends]);
+  const targetIds = useMemo(() => !onlineFriends ? [] : onlineFriends.items.map(f => f.id), [onlineFriends]);
 
+  // Xử lý logic Realtime bằng Immer
   const handleStatusChange = useCallback((statusData: { userId: string; isOnline: boolean }) => {
-    mutate((currentData: any) => {
-      if (!currentData?.data?.items) return currentData;
+    queryClient.setQueryData(["online-friends", filterParams], (oldData: any) => {
+      if (!oldData?.data?.items) return oldData;
 
-      return {
-        ...currentData,
-        data: {
-          ...currentData.data,
-          items: currentData.data.items.map((friend: UserProfile) =>
-            friend.id === statusData.userId
-              ? { ...friend, isOnline: statusData.isOnline }
-              : friend
-          ),
-        },
-      };
-    }, { revalidate: false });
-  }, [mutate]);
+      return produce(oldData, (draft: any) => {
+        // Tìm trực tiếp và thay đổi thuộc tính, Immer sẽ tự động lo việc Immutable
+        const friend = draft.data.items.find((f: UserProfile) => f.id === statusData.userId);
+        if (friend) {
+          friend.isOnline = statusData.isOnline;
+        }
+      });
+    });
+  }, [queryClient, filterParams]);
 
   useTrackPresence(targetIds, handleStatusChange);
 
@@ -102,18 +98,10 @@ export default function OnlineFriends() {
     return null;
   }
 
-  if (error || !data || !data.data?.items) {
+  if (error || !onlineFriends) {
     return (
       <div className="px-2 py-4 text-xs text-destructive">
         Không thể tải danh sách. Vui lòng thử lại.
-      </div>
-    );
-  }
-
-  if (onlineFriends.length === 0) {
-    return (
-      <div className="px-2 py-4 text-xs text-muted-foreground">
-        Không có bạn bè nào đang trực tuyến.
       </div>
     );
   }
@@ -124,7 +112,7 @@ export default function OnlineFriends() {
         Bạn bè online
       </div>
 
-      {onlineFriends.map((friend: UserProfile) => (
+      {onlineFriends.items.map((friend: UserProfile) => (
         <FriendItem key={friend.id} friend={friend} />
       ))}
     </div>

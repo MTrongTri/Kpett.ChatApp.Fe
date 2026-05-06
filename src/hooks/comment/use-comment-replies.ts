@@ -1,49 +1,35 @@
-// hooks/use-replies.ts
-import useSWRInfinite from "swr/infinite";
+// hooks/comment/use-comment-replies.ts
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { getCommentsByPostId } from "@/services/comment.service";
 
 const REPLIES_LIMIT = 12;
 
-const getRepliesKey =
-  (postId: string, commentId: string, enabled: boolean) =>
-    (pageIndex: number, previousPageData: any) => {
-      if (!enabled) return null;
-      if (previousPageData && !previousPageData.data?.pagination.hasMore)
-        return null;
-
-      const cursor =
-        pageIndex === 0
-          ? null
-          : (previousPageData?.data?.pagination.nextCursor ?? null);
-
-      return ["replies", postId, commentId, cursor, REPLIES_LIMIT];
-    };
-
 export const useCommentReplies = (postId: string, commentId: string, enabled: boolean) => {
-  const { data, size, setSize, mutate, isLoading, isValidating, error } =
-    useSWRInfinite(
-      getRepliesKey(postId, commentId, enabled),
-      ([, postId, parentId, cursor]) => getCommentsByPostId(postId, parentId, cursor, REPLIES_LIMIT),
-      {
-        revalidateFirstPage: false,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-      },
-    );
+  const {
+    data,
+    fetchNextPage,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    error,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ["replies", postId, commentId],
+    queryFn: ({ pageParam }) => getCommentsByPostId(postId, commentId, pageParam as string | null, REPLIES_LIMIT),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor || undefined,
+    enabled: enabled && !!postId && !!commentId,
+  });
 
-  const pages = data ?? [];
-  const replies = pages.flatMap((page) => page.data?.items ?? []);
-  const hasMore = pages.at(-1)?.data?.pagination.hasMore ?? false;
-
-  const loadMore = () => setSize(size + 1);
+  const replies = data?.pages.flatMap((page) => page.items ?? []) ?? [];
 
   return {
     replies,
-    hasMore,
+    hasMore: !!hasNextPage,
     isLoading,
-    isLoadingMore: isValidating && size > 1,
+    isLoadingMore: isFetchingNextPage,
     error,
-    loadMore,
-    mutate,
+    loadMore: fetchNextPage,
+    mutate: refetch,
   };
 };

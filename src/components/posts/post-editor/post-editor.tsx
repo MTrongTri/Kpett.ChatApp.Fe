@@ -1,3 +1,4 @@
+// components/posts/post-editor/post-editor.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowRight, Check, Loader2, Save, Send, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import useSWR from "swr";
+
+import { InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Media } from "@/types/media";
 import StepCompose from "./step-compose";
@@ -21,8 +23,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
 import { delay } from "@/lib/delay-utils";
+import { Post } from "@/types/post";
+import { PaginatedData } from "@/types/common/api";
 
-// --- ĐỊNH NGHĨA PROPS ---
 export type PostEditorMode = "create" | "edit";
 
 export interface PostModalProps {
@@ -46,36 +49,33 @@ export default function PostEditor({
 }: PostModalProps) {
   const isEdit = mode === "edit";
   const [step, setStep] = useState(0);
-
   const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
   const pathname = usePathname();
 
-  // --- SWR FETCHING ---
+  const queryClient = useQueryClient();
+
   const {
     data: postData,
     error: postError,
     isLoading: isFetchingSWR,
-  } = useSWR(
-    open && isEdit && postId ? `/api/posts/${postId}` : null,
-    () => getPostById(postId!).then((res) => res.data),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
-    }
-  );
+  } = useQuery({
+    queryKey: ["post-detail", postId],
+    queryFn: () => getPostById(postId!),
+    enabled: open && isEdit && !!postId,
+    staleTime: 5000,
+  });
 
   // States
   const [content, setContent] = useState("");
   const [privacy, setPrivacy] = useState("public");
   const [allowComments, setAllowComments] = useState(true);
   const [media, setMedia] = useState<Media[]>([]);
-
   const [uploadMediaLoading, setUploadMediaLoading] = useState(false);
   const [submitting, setSub] = useState(false);
   const [done, setDone] = useState(false);
 
-  // --- ĐỒNG BỘ DỮ LIỆU SWR VÀO STATE ---
+  // --- ĐỒNG BỘ DỮ LIỆU VÀO STATE ---
   useEffect(() => {
     if (open) {
       if (mode === "create") {
@@ -98,31 +98,53 @@ export default function PostEditor({
 
   const handleSubmit = async () => {
     setSub(true);
+    try {
+      if (mode === "create") {
+        const newPost = await createPost({ content, privacy, media });
 
-    if (mode === "create") {
-      await createPost({ content, privacy, media });
-    } else {
-      await updatePost(postId!, { content, privacy, media });
-    }
+        queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
+          { queryKey: ["feed"] },
+          (oldData) => {
+            if (!oldData || oldData.pages.length === 0) return oldData;
 
-    setSub(false);
-    setDone(true); // Kích hoạt UI thành công
+            const newPages = [...oldData.pages];
+            newPages[0] = {
+              ...newPages[0],
+              items: [newPost, ...newPages[0].items],
+            };
 
-    // Giữ UI thành công trong 1.6 giây cho người dùng đọc
-    await delay(1600);
-    onOpenChange(false);
+            return { ...oldData, pages: newPages };
+          }
+        );
 
-    // Đợi hiệu ứng đóng modal hoàn tất rồi mới reset state
-    await delay(300);
-    setDone(false);
-    setStep(0);
+      } else {
+        // Logic dành cho Update (Giữ nguyên)
+        await updatePost(postId!, { content, privacy, media });
+        queryClient.invalidateQueries({ queryKey: ["post-detail", postId] });
+      }
 
-    const targetPath = `/${user?.username}`;
-    const targetUrlWithQuery = `${targetPath}?scroll-to=tabs`;
-    if (pathname === targetPath) {
-      window.location.href = targetUrlWithQuery;
-    } else {
-      router.push(`${targetPath}?scroll-to=tabs`);
+      // --- Xử lý Animation đóng Modal (Dùng chung cho cả Create và Update) ---
+      setDone(true);
+      await delay(1600);
+      onOpenChange(false);
+
+      await delay(300);
+      setDone(false);
+      setStep(0);
+
+      // --- Xử lý Điều hướng ---
+      if (mode === "create") {
+        // Chuyển hướng về trang chủ
+        if (pathname !== "/") {
+          router.push("/");
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSub(false);
     }
   };
 

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
-import { useCreateComment } from "@/hooks/comment/use-create-comment";
 import { usePostComments } from "@/hooks/post/use-post-comments";
 import { useDebounceCallback } from "@/hooks/use-debounce";
 import { Post } from "@/types/post";
@@ -20,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useAuth } from "@/components/providers/auth-provider";
 import { usePostMenuActions } from "@/hooks/post/use-post-menu-actions";
+import useCreateComment from "@/hooks/comment/use-create-comment";
 
 interface PostCommentSectionProps {
     post: Post;
@@ -80,7 +80,6 @@ export default function PostCommentSection({
 
     const { handleAddComment } = useCreateComment({
         post,
-        localMutate: mutateComments,
         onSuccess: () => {
             setTimeout(() => {
                 if (scrollContainerRef.current) {

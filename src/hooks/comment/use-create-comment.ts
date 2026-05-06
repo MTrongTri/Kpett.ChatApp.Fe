@@ -1,48 +1,76 @@
+import { useMutation, useQueryClient, InfiniteData } from "@tanstack/react-query";
 import { addComment } from "@/services/comment.service";
 import { toast } from "sonner";
+import { ApiResponse, PaginatedData } from "@/types/common/api";
+import { Comment } from "@/types/comment";
+import { Post } from "@/types/post";
 
 interface UseCreateCommentProps {
     post: { id: string;[key: string]: any } | null;
-    localMutate: any;
     onSuccess?: () => void;
 }
 
-export const useCreateComment = ({ post, localMutate, onSuccess }: UseCreateCommentProps) => {
-    const handleAddComment = async (content: string) => {
-        if (!post) {
-            toast.error("Không tìm thấy bài viết");
-            return;
-        }
+export default function useCreateComment({ post, onSuccess }: UseCreateCommentProps) {
+    const queryClient = useQueryClient();
 
-        const res = await addComment(post.id, content, null);
+    const { mutate: handleAddComment, isPending } = useMutation<Comment, ApiResponse, string>({
+        mutationFn: (content: string) => {
+            if (!post) throw new Error("Không tìm thấy bài viết");
+            return addComment(post.id, content, null);
+        },
+        onSuccess: () => {
+            const postId = post!.id;
 
-        if (res.isSuccess && res.data) {
-            const newComment = res.data;
-
-            // Cập nhật danh sách comment của bài viết
-            localMutate((currentPages: any) => {
-                if (!currentPages || currentPages.length === 0) {
-                    return [{ data: { items: [newComment], pagination: { hasMore: false, nextCursor: null } } }];
-                }
-                const newPages = [...currentPages];
-                const lastIdx = newPages.length - 1;
-                newPages[lastIdx] = {
-                    ...newPages[lastIdx],
-                    data: {
-                        ...newPages[lastIdx].data,
-                        items: [...(newPages[lastIdx].data?.items || []), newComment],
+            // Cập nhật cache cho Post Detail
+            queryClient.setQueryData(["post-detail", postId], (oldData: Post | undefined) => {
+                if (!oldData) return oldData;
+                return {
+                    ...oldData,
+                    metrics: {
+                        ...oldData.metrics,
+                        commentCount: (oldData.metrics.commentCount || 0) + 1
                     },
                 };
-                return newPages;
-            }, { revalidate: false });
+            });
+
+            // Cập nhật cache cho các danh sách Infinite Query (Feed, Profile, Search...)
+            queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
+                { queryKey: ["feed"] },
+                (oldData) => {
+                    if (!oldData) return oldData;
+
+                    return {
+                        ...oldData,
+                        pages: oldData.pages.map((page) => ({
+                            ...page,
+                            items: page.items.map((item) =>
+                                item.id === postId
+                                    ? {
+                                        ...item,
+                                        metrics: {
+                                            ...item.metrics,
+                                            commentCount: (item.metrics.commentCount || 0) + 1
+                                        }
+                                    }
+                                    : item
+                            ),
+                        })),
+                    };
+                }
+            );
+
+            // Vẫn nên invalidate list comment để hiển thị comment mới vừa thêm
+            queryClient.invalidateQueries({ queryKey: ["comments", postId] });
 
             toast.success("Thêm bình luận thành công");
-
             if (onSuccess) onSuccess();
-        } else {
-            toast.error("Đã có lỗi xảy ra");
+        },
+        onError: (error) => {
+            if (error.statusCode < 500) {
+                toast.error(error.message || "Không thể thêm bình luận.");
+            }
         }
-    };
+    });
 
-    return { handleAddComment };
-};
+    return { handleAddComment, isPending };
+}

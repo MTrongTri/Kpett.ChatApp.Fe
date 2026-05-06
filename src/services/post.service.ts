@@ -1,4 +1,4 @@
-import { ApiResponse, PaginatedData } from "@/types/common/api";
+import { PaginatedData } from "@/types/common/api";
 import { CreatePostRequest, Post, PostThumbnail } from "@/types/post";
 import { ProfileTab } from "@/hooks/post/use-profile-posts";
 import http from "@/lib/axios";
@@ -6,13 +6,14 @@ import http from "@/lib/axios";
 export const getFeedHome = async (
   cursor: string | null = null,
   limit: number = 5,
-): Promise<ApiResponse<PaginatedData<Post>>> => {
-  return http.get("/posts", {
+): Promise<PaginatedData<Post>> => {
+  const response = await http.get("/posts", {
     params: {
       cursor,
       limit,
     },
   });
+  return response.data;
 };
 
 export const getPostsByUserId = async (
@@ -20,41 +21,47 @@ export const getPostsByUserId = async (
   tab: ProfileTab = "Post",
   cursor: string | null = null,
   limit: number = 6,
-): Promise<ApiResponse<PaginatedData<PostThumbnail>>> => {
-  return http.get(`/posts/users/${userId}`, {
+): Promise<PaginatedData<PostThumbnail>> => {
+  const response = await http.get(`/posts/users/${userId}`, {
     params: {
       type: tab,
       cursor,
       limit
     }
-  })
+  });
+  return response.data;
 };
 
 export const getPostById = async (
   postId: string,
-): Promise<ApiResponse<Post>> => {
-  return await http.get(`/posts/${postId}`);
+): Promise<Post> => {
+  const response = await http.get(`/posts/${postId}`);
+  return response.data;
 };
 
-export const createPost = (data: CreatePostRequest): Promise<ApiResponse<Post>> => {
-  return http.post("/posts", data);
+export const createPost = async (data: CreatePostRequest): Promise<Post> => {
+  const response = await http.post("/posts", data);
+  return response.data;
+};
 
-}
+export const updatePost = async (postId: string, data: CreatePostRequest): Promise<Post> => {
+  const response = await http.put(`/posts/${postId}`, data);
+  return response.data;
+};
 
-export const updatePost = (postId: string, data: CreatePostRequest): Promise<ApiResponse<Post>> => {
-  return http.put(`/posts/${postId}`, data);
-}
+export const deletePost = async (postId: string): Promise<Post> => {
+  const response = await http.delete(`/posts/${postId}`);
+  return response.data;
+};
 
-export const deletePost = (postId: string): Promise<ApiResponse<Post>> => {
-  return http.delete(`/posts/${postId}`);
-}
-
-export const addReaction = (postId: string): Promise<ApiResponse> => {
-  return http.put(`/posts/${postId}/reactions`, {
+export const addReaction = async (postId: string): Promise<any> => {
+  const response = await http.put(`/posts/${postId}/reactions`, {
     reactionType: 1
   });
-}
+  return response.data;
+};
 
-export const removeReaction = (postId: string): Promise<ApiResponse> => {
-  return http.delete(`/posts/${postId}/reactions`);
-}
+export const removeReaction = async (postId: string): Promise<any> => {
+  const response = await http.delete(`/posts/${postId}/reactions`);
+  return response.data;
+};

@@ -10,7 +10,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useSWRConfig } from "swr";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   HoverCard,
   HoverCardContent,
@@ -21,7 +21,8 @@ export default function UserMenu() {
   const { user, accessToken } = useSelector((state: RootState) => state.auth);
   const { logout } = useAuth();
   const { connection, isConnected } = useSignalR();
-  const { mutate } = useSWRConfig();
+
+  const queryClient = useQueryClient();
 
   // Theme state
   const { theme, setTheme } = useTheme();
@@ -41,7 +42,7 @@ export default function UserMenu() {
         await connection.stop();
       }
 
-      mutate(() => true, undefined, { revalidate: false });
+      queryClient.clear();
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);

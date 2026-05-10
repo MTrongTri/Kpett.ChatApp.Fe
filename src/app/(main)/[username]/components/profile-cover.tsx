@@ -167,7 +167,7 @@ export default function ProfileCover({
 
   return (
     <>
-      <div className={cn("bg-muted relative h-full w-full shrink-0 overflow-hidden md:h-80", className)}>
+      <div className={cn("bg-muted relative w-full h-60 shrink-0 overflow-hidden md:h-80", className)}>
         {displayCover ? (
           <>
             <button onClick={handleShowCover} className="absolute inset-0 z-10 cursor-pointer">

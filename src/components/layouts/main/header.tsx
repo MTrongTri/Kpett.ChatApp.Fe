@@ -3,28 +3,21 @@
 import ChatHeaderDropdown from "@/components/chat/chat-dropdown";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
 import ComposeButton from "./compose-button";
 import GuestThemeToggle from "./guest-theme-toggle";
 import Logo from "./logo";
 import MobileMenu from "./mobile-menu";
-import NavIconBtn from "./nav-icon-btn";
 import NavTabs from "./nav-tab";
+import NotificationDropdown from "./notification-dropdown";
 import SearchBar from "./search-bar";
 import UserMenu from "./user-menu";
 
 export default function Header() {
-  const [notifCount] = useState(10);
-  const [msgCount] = useState(10);
-
   const { user } = useAuth();
-  const dispatch = useDispatch();
 
   return (
-    <header className="/* Thêm hiệu ứng chuyển màu mượt mà */ fixed top-0 right-0 left-0 z-50 flex h-14.5 items-center gap-0 border-b border-zinc-200 bg-white/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7 dark:border-zinc-800 dark:bg-zinc-950/90">
+    <header className="fixed gap-4 top-0 right-0 left-0 z-50 flex h-14.5 items-center border-b border-zinc-200 bg-white/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7 dark:border-zinc-800 dark:bg-zinc-950/90">
       {/* Logo */}
       <Logo />
 
@@ -35,21 +28,22 @@ export default function Header() {
       <SearchBar />
 
       {/* Right action group */}
-      <div className="ml-auto flex shrink-0 items-center gap-4 md:ml-0">
+      <div className="ml-auto flex shrink-0 gap-2 items-center md:gap-4 md:ml-0">
 
-        {/* 2. Điều kiện hiển thị dựa trên trạng thái user */}
         {user ? (
           <>
-            <NavIconBtn
+            {/* <NavIconBtn
               icon={<Bell size={15} />}
               tooltip="Thông báo"
               badgeCount={notifCount}
-            />
+            /> */}
             {/* <NavIconBtn
               icon={<MessageSquare size={15} />}
               tooltip="Tin nhắn"
               badgeCount={msgCount}
             /> */}
+
+            <NotificationDropdown />
 
             <ChatHeaderDropdown />
 

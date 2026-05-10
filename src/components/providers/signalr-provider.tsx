@@ -26,7 +26,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
         if (Cookies.get("isLoggedIn") === "false" || !isAuthenticated) return;
 
         let isStopped = false;
-        const hubUrl = `${process.env.NEXT_PUBLIC_API_URL}/chat-Hub`;
+        const hubUrl = `${process.env.NEXT_PUBLIC_API_URL}/hubs/app`;
 
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {

@@ -9,11 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { useUserInteractions } from "@/hooks/user/use-user-interactions";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
-import { friendRequest, friendRequestAccept, friendRequestCancel, friendRequestDecline, unFriend } from "@/services/friend.service";
-import { RootState } from "@/store/store";
-import { ProfileViewerContext, UserProfile } from "@/types/user";
+import { UserProfile } from "@/types/user";
 import {
   Ban,
   BellOff,
@@ -31,14 +30,9 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
-  X
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
-import { chatService } from "@/services/chat.service";
-import { openChatPopup } from "@/store/features/chat-slice";
 
 // ── STAT BUTTON ───────────────────────────────────────────────────────
 function StatButton({ value, label }: { value: number; label: string }) {
@@ -60,152 +54,20 @@ interface ProfileInfoProps {
 }
 
 export default function ProfileInfo({ profile }: ProfileInfoProps) {
-  const [ctx, setCtx] = useState<ProfileViewerContext>(profile.viewerContext);
+  const { ctx, isLoading, isMessageLoading, actions } = useUserInteractions(
+    profile.id,
+    profile.username,
+    profile.viewerContext
+  );
 
-  // Tách riêng state loading
-  const [isLoading, setIsLoading] = useState(false); // Dành cho các action bạn bè
-  const [isMessageLoading, setIsMessageLoading] = useState(false); // Dành riêng cho nút nhắn tin
-
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
-
-  // API HANDLERS
-
-  const handleAddFriend = async () => {
-    if (!currentUser) {
-      toast.warning("Bạn cần đăng nhập để thực hiện gửi lời mời kết bạn");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const data = await friendRequest(profile.id);
-
-      if (!data) {
-        toast.error("Đã có lỗi xảy ra, không nhận được phản hồi");
-        return;
-      }
-
-      setCtx(prev => ({ ...prev, relationshipRequestId: data.requestId, hasSentFriendRequest: true, isFollowing: true }));
-      toast.success("Đã gửi lời mời kết bạn");
-
-    } catch (error) {
-      toast.error("Đã có lỗi xảy ra trong quá trình gửi yêu cầu");
-      console.error("[handleAddFriend] Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelRequest = async () => {
-    setIsLoading(true);
-    try {
-      if (!profile.viewerContext.relationshipRequestId) {
-        toast.error("Đã có lỗi xảy ra");
-        return;
-      }
-
-      await friendRequestCancel(profile.viewerContext.relationshipRequestId);
-
-      setCtx(prev => ({ ...prev, hasSentFriendRequest: false, relationshipRequestId: null }));
-    } catch (error) {
-      console.error("Lỗi:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAcceptRequest = async () => {
-    setIsLoading(true);
-    try {
-      if (!profile.viewerContext.relationshipRequestId) {
-        toast.error("Đã có lỗi xảy ra");
-        return;
-      }
-
-      await friendRequestAccept(profile.viewerContext.relationshipRequestId);
-      setCtx(prev => ({
-        ...prev,
-        hasReceivedFriendRequest: false,
-        isFriend: true,
-        isFollowing: true
-      }));
-    } catch (error) {
-      toast.error("Đã có lỗi xảy ra");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeclineRequest = async () => {
-    setIsLoading(true);
-    try {
-
-      if (!profile.viewerContext.relationshipRequestId) {
-        toast.error("Đã có lỗi xảy ra");
-        return;
-      }
-
-      await friendRequestDecline(profile.viewerContext.relationshipRequestId);
-
-      setCtx(prev => ({ ...prev, hasReceivedFriendRequest: false, relationshipRequestId: null }));
-    } catch (error) {
-      console.error("Lỗi:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUnfriend = async () => {
-    setIsLoading(true);
-    try {
-      await unFriend(profile.id);
-      setCtx(prev => ({ ...prev, isFriend: false, isFollowing: false }));
-    } catch (error) {
-      toast.error("Đã có lỗi xảy ra")
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBlockUser = async () => {
-
-  };
-
-  const handleMessageClick = async () => {
-    if (!currentUser) {
-      toast.warning("Bạn cần đăng nhập để nhắn tin");
-      return;
-    }
-
-    try {
-      // Dùng state loading riêng
-      setIsMessageLoading(true);
-      const data = await chatService.getOrCreateDirectConversation(profile.id);
-      if (data && data.id) {
-        dispatch(openChatPopup(data.id));
-      } else {
-        toast.error("Không thể tạo cuộc hội thoại");
-      }
-    } catch (error) {
-      toast.error("Đã có lỗi xảy ra khi tạo cuộc hội thoại");
-      console.error(error);
-    } finally {
-      // Dùng state loading riêng
-      setIsMessageLoading(false);
-    }
-  };
-
-  // RENDER HELPERS
-
+  // 2. RENDER HELPERS
   const renderFriendActionButtons = () => {
     if (ctx.isFriend) {
       return (
         <Button
           size="sm"
           disabled={isLoading}
-          onClick={handleUnfriend}
+          onClick={actions.handleUnfriend}
           className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
         >
           {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserCheck size={14} className="group-hover:hidden" />}
@@ -221,7 +83,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         <Button
           size="sm"
           disabled={isLoading}
-          onClick={handleCancelRequest}
+          onClick={actions.handleCancelRequest}
           className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
         >
           {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserMinus size={14} className="group-hover:text-destructive text-foreground/70 transition-colors" />}
@@ -237,7 +99,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           <Button
             size="sm"
             disabled={isLoading}
-            onClick={handleAcceptRequest}
+            onClick={actions.handleAcceptRequest}
             className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
           >
             {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
@@ -247,8 +109,8 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             size="sm"
             variant="outline"
             disabled={isLoading}
-            onClick={handleDeclineRequest}
-            className="flex items-center border-border hover:bg-muted text-foreground h-10 uppercase cursor-pointer gap-2 rounded-full px-4! text-[12px] font-bold racking-wide shadow-sm transition-all duration-200"
+            onClick={actions.handleDeclineRequest}
+            className="flex items-center border-border hover:bg-muted text-foreground h-10 uppercase cursor-pointer gap-2 rounded-full px-4! text-[12px] font-bold tracking-wide shadow-sm transition-all duration-200"
             title="Xóa lời mời"
           >
             {isLoading ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
@@ -263,7 +125,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
       <Button
         size="sm"
         disabled={isLoading}
-        onClick={handleAddFriend}
+        onClick={actions.handleAddFriend}
         className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200 hover:scale-105"
       >
         {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
@@ -313,7 +175,9 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         </span>
         {profile?.socialMedia?.website && (
           <a
-            href="#"
+            href={profile.socialMedia.website}
+            target="_blank"
+            rel="noreferrer"
             className="text-primary hover:text-primary/80 flex items-center gap-1.5 text-[13px] font-medium transition-colors"
           >
             <Link2 size={14} className="shrink-0" />
@@ -338,7 +202,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCtx(prev => ({ ...prev, isBlocked: false }))}
+            onClick={actions.handleUnblockUser}
             className="rounded-full"
           >
             Bỏ chặn
@@ -351,7 +215,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             {ctx.isOwner ? (
               <>
                 <Link
-                  href='/account/general'
+                  href="/account/general"
                   className="inline-flex items-center justify-center border border-border text-foreground hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                 >
                   <Pencil size={14} />
@@ -370,8 +234,8 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={isMessageLoading} // Thay thế bằng isMessageLoading
-                    onClick={handleMessageClick}
+                    disabled={isMessageLoading}
+                    onClick={actions.handleMessageClick}
                     className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                   >
                     {isMessageLoading ? <Loader2 size={14} className="animate-spin" /> : <MessageSquare size={14} />}
@@ -395,9 +259,8 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-border my-1" />
 
-                    {/* Thêm chức năng chặn vào menu */}
                     <DropdownMenuItem
-                      onClick={handleBlockUser}
+                      onClick={actions.handleBlockUser}
                       className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium"
                     >
                       <UserMinus size={14} className="text-foreground/60" /> Chặn người dùng

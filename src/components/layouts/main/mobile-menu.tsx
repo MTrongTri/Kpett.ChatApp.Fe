@@ -73,23 +73,6 @@ export default function MobileMenu() {
           <Logo />
         </div>
 
-        {/* Ô tìm kiếm linh hoạt màu sắc */}
-        <div className="px-4 pt-4">
-          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
-            <Search size={13} className="text-zinc-500" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm..."
-              className="
-                bg-transparent border-none shadow-none p-0 h-auto
-                text-[13px] text-zinc-900 dark:text-zinc-200 
-                placeholder:text-zinc-400 dark:placeholder:text-zinc-600
-                focus-visible:ring-0 focus-visible:ring-offset-0
-              "
-            />
-          </div>
-        </div>
-
         {/* Danh sách điều hướng */}
         <nav className="flex-1 px-3 pt-4 space-y-1">
           {NAV_TABS.map((tab) => {

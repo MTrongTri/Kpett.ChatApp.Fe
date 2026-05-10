@@ -1,8 +1,9 @@
 import { MOCK_USER_PROFILES } from "@/data/user";
 import http from "@/lib/axios";
-import { ApiResponse } from "@/types/common/api";
+import { ApiResponse, PaginatedData } from "@/types/common/api";
 import { Media } from "@/types/media";
 import {
+  BaseUser,
   CheckUsernameResponse,
   UserGeneralInfo,
   UserLoginResponse,
@@ -75,3 +76,14 @@ export const deleteUserMediaPrimary = async (mediaType: 'Avatar' | 'Cover') => {
   const response = await http.delete(`users/me/media/primary?mediaType=${mediaType}`);
   return response.data;
 };
+
+export const searchUsers = async (
+  keyword: string,
+  limit: number = 20,
+  cursor?: string
+): Promise<PaginatedData<BaseUser>> => {
+  const response = await http.get(`users/search`, {
+    params: { keyword, limit, cursor },
+  });
+  return response.data;
+}

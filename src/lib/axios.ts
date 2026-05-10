@@ -1,5 +1,5 @@
-import { logout, setAccessToken } from '@/store/features/auth-slice';
-import { store } from '@/store/store';
+import { setAccessToken } from '@/store/features/auth-slice';
+import { persistor, store } from '@/store/store';
 import { sessionStorage } from '@/lib/cookie-storage-utils';
 import axios, { AxiosResponse } from 'axios';
 import { ApiResponse } from '@/types/common/api';
@@ -21,7 +21,7 @@ const normalizeError = (err: any): ApiResponse => {
         return err.response.data as ApiResponse;
     }
 
-    // 2. Nếu lỗi do đứt mạng (Network Error), Timeout, hoặc CORS
+    // Nếu lỗi do đứt mạng (Network Error), Timeout, hoặc CORS
     const isNetworkError = err.message === 'Network Error';
     const isTimeout = err.code === 'ECONNABORTED';
 
@@ -57,21 +57,33 @@ http.interceptors.request.use(
     (err) => Promise.reject(normalizeError(err)),
 );
 
-let isRefreshing = false;
-let pendingRequests: Array<{
-    resolve: (token: string) => void;
-    reject: (error: any) => void
-}> = [];
+let refreshPromise: Promise<string> | null = null;
 
-const processQueue = (error: any, token: string | null = null) => {
-    pendingRequests.forEach((prom) => {
-        if (error) {
-            prom.reject(error);
-        } else if (token) {
-            prom.resolve(token);
+export const refreshToken = async (): Promise<string> => {
+    if (refreshPromise) {
+        return refreshPromise;
+    }
+
+    refreshPromise = new Promise(async (resolve, reject) => {
+        try {
+            const res = await axios.post('/api/auth/refresh', null, {
+                withCredentials: true,
+            });
+
+            const newAccessToken = res.data.data.accessToken;
+            store.dispatch(setAccessToken(newAccessToken));
+            resolve(newAccessToken);
+        } catch (error) {
+            persistor.purge();
+            sessionStorage.clearSession();
+            window.location.href = '/login';
+            reject(error);
+        } finally {
+            refreshPromise = null;
         }
     });
-    pendingRequests = [];
+
+    return refreshPromise;
 };
 
 // Response Interceptor
@@ -85,43 +97,12 @@ http.interceptors.response.use(
         if (errorCode === 'AUTH.ACCESS_TOKEN_INVALID' && !originalRequest._retry) {
             originalRequest._retry = true;
 
-            if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    pendingRequests.push({
-                        resolve: (newToken: string) => {
-                            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-                            resolve(http(originalRequest));
-                        },
-                        reject: (error: any) => {
-                            reject(normalizeError(error));
-                        }
-                    });
-                });
-            }
-
-            isRefreshing = true;
-
             try {
-                const res = await axios.post('/api/auth/refresh', null, {
-                    withCredentials: true,
-                });
-
-                const newAccessToken = res.data.data.accessToken;
-                store.dispatch(setAccessToken(newAccessToken));
-                processQueue(null, newAccessToken);
-
+                const newAccessToken = await refreshToken();
                 originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
                 return http(originalRequest);
-
             } catch (refreshError) {
-                processQueue(refreshError, null);
-                store.dispatch(logout());
-                sessionStorage.clearSession();
-                window.location.href = '/login';
-
                 return Promise.reject(normalizeError(refreshError));
-            } finally {
-                isRefreshing = false;
             }
         }
 

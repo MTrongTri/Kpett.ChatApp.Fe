@@ -3,6 +3,8 @@ import React from 'react';
 import { MessageResponse, ParticipantResponse } from '@/types/chat';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { AlertCircle, CheckCircle2, Circle } from 'lucide-react';
+import { useAuth } from '@/components/providers/auth-provider';
+import { formatSystemMessage } from '@/lib/message-utils';
 
 interface BubbleProps {
     msg: MessageResponse;
@@ -13,11 +15,15 @@ interface BubbleProps {
 }
 
 export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers = [], isLastMessage = false }: BubbleProps) {
+    const { user } = useAuth();
+    const currentUserId = user?.id;
+
+
     if (msg.type === "System") {
         return (
-            <div className="flex justify-center my-6">
-                <span className="text-xs text-muted-foreground bg-muted/80 px-3 py-1 rounded-full font-medium">
-                    {msg.content}
+            <div className="w-full flex justify-center items-center my-6">
+                <span className="text-[13px] text-muted-foreground bg-muted/50 px-4 py-1.5 rounded-full font-medium text-center max-w-[85%] border border-border/50 shadow-sm">
+                    {formatSystemMessage(msg, currentUserId)}
                 </span>
             </div>
         );
@@ -35,7 +41,11 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                         <div className="w-8 mr-2 shrink-0 flex items-end">
                             {!isConsecutive && (
                                 <UserAvatar
-                                    user={{ id: msg.senderId, displayName: msg.senderName, avatarUrl: msg.senderAvatarUrl }}
+                                    user={{
+                                        id: msg.senderId,
+                                        displayName: msg.senderName,
+                                        avatarUrl: msg.senderAvatarUrl,
+                                    }}
                                     className="w-7 h-7 border-border"
                                 />
                             )}
@@ -50,7 +60,6 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                     </div>
                 </div>
 
-                {/* TRẠNG THÁI GỬI TIN NHẮN (Đang gửi / Lỗi) */}
                 {isMine && msg.localStatus && (
                     <div className="flex items-center gap-1 mt-1 mr-1">
                         {msg.localStatus === "sending" && <Circle size={12} className="text-muted-foreground animate-pulse" />}
@@ -58,16 +67,13 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                     </div>
                 )}
 
-                {/* CHỈ HIỆN TICK KHI LÀ MESSAGE CUỐI CÙNG */}
                 {isMine && !msg.localStatus && readers.length === 0 && isLastMessage && (
                     <div className="flex items-center gap-1 mt-1 mr-1">
                         <CheckCircle2 size={12} className="text-muted-foreground" />
                     </div>
                 )}
-
             </div>
 
-            {/* HIỂN THỊ AVATAR NGƯỜI ĐÃ XEM */}
             {readers.length > 0 && isLastMessage && (
                 <div className="flex items-center gap-1 mt-1 justify-end">
                     {readers.map(reader => (

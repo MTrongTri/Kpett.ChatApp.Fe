@@ -1,6 +1,9 @@
 export interface SystemMessageMetadata {
+  actionType: string;
   actor?: { id: string; name: string };
   targets?: Array<{ id: string; name: string }>;
+  oldName?: string;
+  newName?: string;
 }
 
 export interface MessageAttachmentResponse {
@@ -39,6 +42,16 @@ export interface ConversationResponse {
   lastMessage?: MessageSnippetResponse;
   participants: ParticipantResponse[];
   hasUnread: boolean;
+}
+
+export interface TypingEventPayload {
+  userId: string;
+  displayName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  conversationId: string;
+  isTyping: boolean;
+  timestamp: string;
 }
 
 export interface MessageResponse {

@@ -26,8 +26,8 @@ export default function RightPanel() {
           </div>
 
           <div>
-            <PanelLabel>Hoạt động gần đây</PanelLabel>
-            <ActivityCard />
+            {/* <PanelLabel>Hoạt động gần đây</PanelLabel>
+            <ActivityCard /> */}
           </div>
         </div>
       </ScrollArea>

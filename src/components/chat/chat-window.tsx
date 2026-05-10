@@ -1,31 +1,37 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { Image as ImageIcon, Info, Loader2, Mic, Paperclip, Phone, Send, Smile, Video } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Image as ImageIcon, Info, Loader2, Mic, Paperclip, Phone, Send, Smile, Video, ArrowDown } from 'lucide-react';
 
 import { useAuth } from '@/components/providers/auth-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useChatMessages } from '@/hooks/chat/use-chat-messages';
+import { useChatScroll } from '@/hooks/chat/use-chat-scroll';
+import { useTyping } from '@/hooks/chat/use-typing';
 import { chatService } from '@/services/chat.service';
-import { MessageResponse } from '@/types/chat';
+import { MessageResponse, TypingEventPayload } from '@/types/chat';
 
 import ChatMessageBubble from './chat-message-bubble';
 import { ConversationAvatar } from './conversation-avatar';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { formatMessageDateHeader, formatMessageTime } from '@/lib/format-date-utils';
 import { ChatInputArea } from './chat-input-area';
+import { TypingIndicator } from './typing-indicator';
+import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 
 export default function ChatWindow({ conversationId, toggleInfo }: { conversationId: string, toggleInfo: () => void }) {
     const { user } = useAuth();
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const fetchLockRef = useRef<boolean>(false);
-    const isInitialScrolled = useRef<boolean>(false);
-    const previousScroll = useRef({ height: 0, top: 0 });
-
     const { conversations, isLoading: isConversationsLoading } = useConversations();
-    const currentConversation = conversations.find((c: any) => c.id === conversationId);
+    const currentConversationFromList = conversations.find((c: any) => c.id === conversationId);
+
+    const { data: fetchedConversation } = useQuery({
+        queryKey: ['conversation', conversationId],
+        queryFn: () => chatService.getConversationById(conversationId),
+        enabled: !currentConversationFromList && !!conversationId,
+    });
+
+    const currentConversation = currentConversationFromList || fetchedConversation;
 
     const isOnline = currentConversation?.participants
         ?.filter((p: any) => p.id !== user?.id)
@@ -40,57 +46,30 @@ export default function ChatWindow({ conversationId, toggleInfo }: { conversatio
         updateMessageStatus
     } = useChatMessages(isConversationsLoading ? null : conversationId);
 
-    const { ref: loadMoreRef, inView } = useInView({
-        threshold: 0,
-        rootMargin: "150px 0px 0px 0px"
+    const {
+        scrollContainerRef,
+        messagesEndRef,
+        loadMoreRef,
+        handleScroll,
+        showNewMessageButton,
+        scrollToBottom
+    } = useChatScroll({
+        messages,
+        hasMore,
+        isLoadingMore,
+        loadOlderMessages,
+        currentUserId: user?.id
     });
 
-    useEffect(() => {
-        if (inView && hasMore && !isLoadingMore && isInitialScrolled.current && !fetchLockRef.current) {
-            fetchLockRef.current = true;
-            loadOlderMessages();
-        }
-    }, [inView, hasMore, isLoadingMore, loadOlderMessages]);
+    useConversationPresenceSync(currentConversation?.id!, currentConversation?.participants!);
 
-    useEffect(() => {
-        if (!isLoadingMore) {
-            const timer = setTimeout(() => { fetchLockRef.current = false; }, 100);
-            return () => clearTimeout(timer);
-        } else {
-            fetchLockRef.current = true;
-        }
-    }, [isLoadingMore]);
+    // ---- TYPING INDICATOR ----
+    const [typers, setTypers] = useState<Map<string, TypingEventPayload>>(new Map());
+    const handleTypingChange = useCallback((newTypers: Map<string, TypingEventPayload>) => {
+        setTypers(new Map(newTypers));
+    }, []);
 
-    const handleScroll = () => {
-        if (scrollContainerRef.current) {
-            previousScroll.current.top = scrollContainerRef.current.scrollTop;
-        }
-    };
-
-    useLayoutEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-        const currentHeight = container.scrollHeight;
-        const previousHeight = previousScroll.current.height;
-
-        if (previousHeight > 0 && currentHeight > previousHeight && previousScroll.current.top <= 200) {
-            const heightDiff = currentHeight - previousHeight;
-            container.scrollTop = previousScroll.current.top + heightDiff;
-        }
-        previousScroll.current.height = currentHeight;
-    }, [messages]);
-
-    const newestMessageId = messages[messages.length - 1]?.id;
-
-    useEffect(() => {
-        if (!newestMessageId) return;
-        if (!isInitialScrolled.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-            isInitialScrolled.current = true;
-        } else {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [newestMessageId]);
+    const { notifyTyping, notifyStopTyping } = useTyping(conversationId, handleTypingChange);
 
     const handleSend = async (content: string) => {
         const clientMessageId = crypto.randomUUID();
@@ -211,8 +190,24 @@ export default function ChatWindow({ conversationId, toggleInfo }: { conversatio
                 <div ref={messagesEndRef} />
             </div>
 
+            {/* New Message Floating Button */}
+            {showNewMessageButton && (
+                <button
+                    onClick={() => scrollToBottom()}
+                    className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-2 shadow-lg text-sm flex items-center gap-2 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
+                >
+                    <ArrowDown size={16} />
+                    Xem các tin nhắn mới
+                </button>
+            )}
+
             {/* Input Area */}
-            <ChatInputArea onSendMessage={handleSend} />
+            <TypingIndicator typers={typers} />
+            <ChatInputArea
+                onSendMessage={handleSend}
+                onTyping={notifyTyping}
+                onStopTyping={notifyStopTyping}
+            />
         </div>
     );
 }

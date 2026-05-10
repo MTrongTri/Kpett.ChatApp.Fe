@@ -2,6 +2,7 @@ import http from '@/lib/axios';
 import {
     ConversationResponse,
     MessageResponse,
+    ParticipantResponse,
 } from '@/types/chat';
 import { PaginatedData } from '@/types/common/api';
 
@@ -57,6 +58,38 @@ export const chatService = {
     // Lấy chi tiết một cuộc hội thoại
     getConversationById: async (conversationId: string): Promise<ConversationResponse> => {
         const response = await http.get(`${API_URL}/${conversationId}`);
+        return response.data;
+    },
+
+    // Lấy hoặc tạo đoạn chat 1-1 với một user
+    getOrCreateDirectConversation: async (userId: string): Promise<ConversationResponse> => {
+        const response = await http.get(`${API_URL}/direct/${userId}`);
+        return response.data;
+    },
+
+    // Tạo nhóm mới
+    createGroupConversation: async (name: string, participantIds: string[]): Promise<ConversationResponse> => {
+        const payload = { type: 'Group', name, participantIds };
+        const response = await http.post(`${API_URL}`, payload);
+        return response.data;
+    },
+
+    // Lấy danh sách bạn bè chưa có trong nhóm
+    getFriendsNotInGroup: async (conversationId: string, search: string = "", limit = 20, cursor?: string): Promise<PaginatedData<any>> => {
+        const response = await http.get(`${API_URL}/${conversationId}/friends-not-in-group`, {
+            params: { search, limit, cursor }
+        });
+        return response.data;
+    },
+
+    getGroupMembers: async (
+        conversationId: string,
+        limit: number = 20,
+        cursor?: string
+    ): Promise<PaginatedData<ParticipantResponse>> => {
+        const response = await http.get(`${API_URL}/${conversationId}/members`, {
+            params: { limit, cursor }
+        });
         return response.data;
     },
 };

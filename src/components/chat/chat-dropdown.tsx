@@ -12,12 +12,18 @@ import { ConversationAvatar } from '../chat/conversation-avatar';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { useInView } from 'react-intersection-observer';
 import { useAuth } from '../providers/auth-provider';
+import { CreateGroupModal } from './create-group-modal';
+import { Edit } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { formatSystemMessage } from '@/lib/message-utils';
 
 export default function ChatHeaderDropdown() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
     const dispatch = useDispatch();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
+    const router = useRouter();
 
     // Dùng chung hook với Sidebar
     const {
@@ -80,7 +86,10 @@ export default function ChatHeaderDropdown() {
                     <div className="flex items-center justify-between p-4 pb-2">
                         <h2 className="font-bold text-2xl">Đoạn chat</h2>
                         <div className="flex gap-2 text-muted-foreground">
-                            <button className="p-1.5 hover:bg-muted rounded-full transition cursor-pointer"><MoreHorizontal size={20} /></button>
+                            <button onClick={() => setIsCreateGroupOpen(true)} className="hidden p-1.5 hover:bg-muted rounded-full transition cursor-pointer" title="Tạo nhóm">
+                                <Edit size={18} />
+                            </button>
+                            <button className="hidden p-1.5 hover:bg-muted rounded-full transition cursor-pointer"><MoreHorizontal size={20} /></button>
                             <Link href="/chat" onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-muted rounded-full transition cursor-pointer" title="Mở toàn màn hình">
                                 <Maximize2 size={18} />
                             </Link>
@@ -125,8 +134,19 @@ export default function ChatHeaderDropdown() {
                                             </h3>
                                             <div className="flex items-center text-sm mt-0.5">
                                                 <span className={clsx("truncate max-w-45", conv.hasUnread ? "font-semibold" : "text-muted-foreground")}>
-                                                    {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
-                                                    {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
+                                                    <p className={clsx("text-sm truncate pr-2", conv.hasUnread ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                                                        {conv.lastMessage?.type === "System" ? (
+                                                            // Nếu là tin nhắn hệ thống, gọi hàm format
+                                                            formatSystemMessage(conv.lastMessage, user?.id)
+                                                        ) : (
+                                                            // Nếu là tin nhắn thường, giữ nguyên logic cũ
+                                                            <>
+                                                                {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
+                                                                {conv.lastMessage?.senderId !== user?.id ? `${conv.lastMessage?.senderName}: ` : ''}
+                                                                {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
+                                                            </>
+                                                        )}
+                                                    </p>
                                                 </span>
                                                 <span className="mx-1 text-muted-foreground">·</span>
                                                 <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -138,7 +158,7 @@ export default function ChatHeaderDropdown() {
                                         {conv.hasUnread ? (
                                             <div className="w-3 h-3 bg-primary rounded-full shrink-0 ml-2 shadow-sm"></div>
                                         ) : (
-                                            <button className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:bg-background rounded-full transition ml-2 border border-border bg-card shadow-sm absolute right-4 cursor-pointer">
+                                            <button className="hidden opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:bg-background rounded-full transition ml-2 border border-border bg-card shadow-sm absolute right-4 cursor-pointer">
                                                 <MoreHorizontal size={16} />
                                             </button>
                                         )}
@@ -159,13 +179,21 @@ export default function ChatHeaderDropdown() {
                         <Link
                             href="/chat"
                             onClick={() => setIsOpen(false)}
-                            className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                            className="text-sm font-medium text-primary cursor-pointer"
                         >
                             Xem tất cả trong Messenger
                         </Link>
                     </div>
                 </div>
             )}
+            <CreateGroupModal
+                isOpen={isCreateGroupOpen}
+                onClose={() => setIsCreateGroupOpen(false)}
+                onSuccess={(id) => {
+                    setIsOpen(false);
+                    router.push(`/chat/${id}`);
+                }}
+            />
         </div>
     );
 }

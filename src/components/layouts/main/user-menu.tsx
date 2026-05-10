@@ -28,24 +28,25 @@ export default function UserMenu() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Tránh lỗi Hydration mismatch bằng cách chỉ render UI theme sau khi component đã mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = async () => {
     try {
-      await authService.logout(accessToken!);
-      logout();
+      if (accessToken) {
+        await authService.logout(accessToken);
+      }
 
       if (connection && isConnected) {
         await connection.stop();
       }
-
-      queryClient.clear();
-      window.location.href = "/login";
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout failed (API):", error);
+    } finally {
+      await logout();
+      // queryClient.clear();
+      window.location.href = "/login";
     }
   };
 

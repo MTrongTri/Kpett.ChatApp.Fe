@@ -49,3 +49,10 @@ export const getFriendsWithFilter = async (
     });
     return response.data;
 };
+
+export const getFriendSuggestions = async (limit: number = 10): Promise<UserProfile[]> => {
+    const response = await http.get(`/relationships/friends/suggestions`, {
+        params: { limit }
+    });
+    return response.data;
+};

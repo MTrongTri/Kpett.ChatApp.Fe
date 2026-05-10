@@ -54,6 +54,8 @@ export function ConversationAvatar({
 
     const participants = conversation.participants || [];
 
+    console.log(participants)
+
     // Nếu Group có set ảnh đại diện riêng -> Dùng ảnh đó luôn
     if (conversation.avatarUrl) {
         return (

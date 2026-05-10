@@ -2,21 +2,25 @@
 "use client";
 
 import { useAuth } from '@/components/providers/auth-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useChatMessages } from '@/hooks/chat/use-chat-messages';
 import { chatService } from '@/services/chat.service';
 import { closeChatPopup, toggleMinimizePopup } from '@/store/features/chat-slice';
-import { MessageResponse } from '@/types/chat';
-import { Maximize2, Minus, X, Loader2 } from 'lucide-react';
+import { MessageResponse, TypingEventPayload } from '@/types/chat';
+import { Maximize2, Minus, X, Loader2, ArrowDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useInView } from 'react-intersection-observer';
+import { useChatScroll } from '@/hooks/chat/use-chat-scroll';
+import { useTyping } from '@/hooks/chat/use-typing';
 
 import ChatMessageBubble from './chat-message-bubble';
 import { ConversationAvatar } from './conversation-avatar';
 import { ChatInputArea } from './chat-input-area';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { formatMessageDateHeader } from '@/lib/format-date-utils';
+import { TypingIndicator } from './typing-indicator';
+import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 
 interface ChatPopupProps {
     conversationId: string;
@@ -29,19 +33,20 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
     const router = useRouter();
     const { user } = useAuth();
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const fetchLockRef = useRef<boolean>(false);
-    const isInitialScrolled = useRef<boolean>(false);
-    const previousScroll = useRef({ height: 0, top: 0 });
-
-    // Ref ghi nhớ ID tin nhắn đã xử lý để tránh hiện lại preview khi đổi layout
     const lastHandledMsgId = useRef<string | null>(null);
     const [previewText, setPreviewText] = useState<string | null>(null);
 
     // LẤY DỮ LIỆU TỪ CACHE & HOOKS
     const { conversations } = useConversations();
-    const currentConversation = conversations.find((c: any) => c.id === conversationId);
+    const currentConversationFromList = conversations.find((c: any) => c.id === conversationId);
+
+    const { data: fetchedConversation } = useQuery({
+        queryKey: ['conversation', conversationId],
+        queryFn: () => chatService.getConversationById(conversationId),
+        enabled: !currentConversationFromList,
+    });
+
+    const currentConversation = currentConversationFromList || fetchedConversation;
 
     const isOnline = currentConversation?.participants
         ?.filter((p: any) => p.id !== user?.id)
@@ -56,6 +61,8 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         isLoadingMore,
         loadOlderMessages
     } = useChatMessages(conversationId, isMinimized);
+
+    useConversationPresenceSync(currentConversation?.id!, currentConversation?.participants!);
 
     // 1. LOGIC QUYẾT ĐỊNH HIỂN THỊ PREVIEW TEXT
     useEffect(() => {
@@ -88,61 +95,34 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         }
     }, [previewText]);
 
-    // XỬ LÝ TẢI THÊM TIN NHẮN CŨ (INFINITE SCROLL)
-    const { ref: loadMoreRef, inView } = useInView({
-        threshold: 0,
-        rootMargin: "150px 0px 0px 0px"
+    // XỬ LÝ TẢI THÊM TIN NHẮN CŨ (INFINITE SCROLL) VÀ TỰ ĐỘNG CUỘN
+    const {
+        scrollContainerRef,
+        messagesEndRef,
+        loadMoreRef,
+        handleScroll,
+        showNewMessageButton,
+        scrollToBottom
+    } = useChatScroll({
+        messages,
+        hasMore,
+        isLoadingMore,
+        loadOlderMessages,
+        currentUserId: user?.id,
+        isMinimized
     });
 
-    useEffect(() => {
-        if (inView && hasMore && !isLoadingMore && isInitialScrolled.current && !fetchLockRef.current && !isMinimized) {
-            fetchLockRef.current = true;
-            loadOlderMessages();
-        }
-    }, [inView, hasMore, isLoadingMore, loadOlderMessages, isMinimized]);
+    // ---- TYPING INDICATOR (chỉ khi popup đang mở) ----
+    const [typers, setTypers] = useState<Map<string, TypingEventPayload>>(new Map());
+    const handleTypingChange = useCallback((newTypers: Map<string, TypingEventPayload>) => {
+        setTypers(new Map(newTypers));
+    }, []);
 
-    useEffect(() => {
-        if (!isLoadingMore) {
-            const timer = setTimeout(() => { fetchLockRef.current = false; }, 100);
-            return () => clearTimeout(timer);
-        } else {
-            fetchLockRef.current = true;
-        }
-    }, [isLoadingMore]);
-
-    const handleScroll = () => {
-        if (scrollContainerRef.current) {
-            previousScroll.current.top = scrollContainerRef.current.scrollTop;
-        }
-    };
-
-    useLayoutEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container || isMinimized) return;
-        const currentHeight = container.scrollHeight;
-        const previousHeight = previousScroll.current.height;
-
-        if (previousHeight > 0 && currentHeight > previousHeight && previousScroll.current.top <= 200) {
-            const heightDiff = currentHeight - previousHeight;
-            container.scrollTop = previousScroll.current.top + heightDiff;
-        }
-        previousScroll.current.height = currentHeight;
-    }, [messages, isMinimized]);
-
-    const newestMessageId = messages[messages.length - 1]?.id;
-
-    useEffect(() => {
-        if (isMinimized || !newestMessageId) {
-            isInitialScrolled.current = false;
-            return;
-        }
-        if (!isInitialScrolled.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-            isInitialScrolled.current = true;
-        } else {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [newestMessageId, isMinimized]);
+    // Chỉ join room khi popup không bị thu nhỏ
+    const { notifyTyping, notifyStopTyping } = useTyping(
+        !isMinimized ? conversationId : null,
+        handleTypingChange
+    );
 
     const handleSend = async (content: string) => {
         const clientMessageId = crypto.randomUUID();
@@ -306,7 +286,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
             <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-muted/10 outline-none!"
+                className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar scrollbar-thin bg-muted/10 outline-none!"
             >
                 {hasMore && (
                     <div ref={loadMoreRef} style={{ overflowAnchor: 'none' }} className="flex justify-center py-2">
@@ -353,7 +333,23 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                 <div ref={messagesEndRef} />
             </div>
 
-            <ChatInputArea onSendMessage={handleSend} />
+            {/* New Message Floating Button */}
+            {showNewMessageButton && !isMinimized && (
+                <button
+                    onClick={() => scrollToBottom()}
+                    className="absolute bottom-[70px] left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
+                >
+                    <ArrowDown size={14} />
+                    Tin nhắn mới
+                </button>
+            )}
+
+            <TypingIndicator typers={typers} compact />
+            <ChatInputArea
+                onSendMessage={handleSend}
+                onTyping={notifyTyping}
+                onStopTyping={notifyStopTyping}
+            />
         </div>
     );
 }

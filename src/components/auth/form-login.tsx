@@ -58,10 +58,9 @@ export default function FormLogin() {
   // app/(auth)/login/page.tsx
   const onSubmit = async (dataLogin: LoginFormValues) => {
     try {
-      const loginRes = await authService.login(dataLogin);
-      const dataRes = loginRes.data;
+      const dataRes = await authService.login(dataLogin);
 
-      if (!dataRes?.user || !dataRes?.token) {
+      if (!dataRes.user || !dataRes?.token) {
         toast.error('Dữ liệu phản hồi từ máy chủ không hợp lệ!');
         return;
       }

@@ -14,10 +14,14 @@ import { useTheme } from 'next-themes';
 
 interface ChatInputAreaProps {
     onSendMessage: (content: string) => void;
+    /** Gọi mỗi khi user gõ phím (để gửi tín hiệu typing lên server) */
+    onTyping?: () => void;
+    /** Gọi khi user blur khỏi input (để lập tức dừng typing) */
+    onStopTyping?: () => void;
     className?: string;
 }
 
-export function ChatInputArea({ onSendMessage }: ChatInputAreaProps) {
+export function ChatInputArea({ onSendMessage, onTyping, onStopTyping }: ChatInputAreaProps) {
     const [inputValue, setInputValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +80,11 @@ export function ChatInputArea({ onSendMessage }: ChatInputAreaProps) {
                         ref={inputRef}
                         type="text"
                         value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
+                        onChange={(e) => {
+                            setInputValue(e.target.value);
+                            if (e.target.value) onTyping?.();
+                        }}
+                        onBlur={() => onStopTyping?.()}
                         placeholder="Aa"
                         className="flex-1 py-1 bg-transparent text-sm text-foreground outline-none w-full"
                     />

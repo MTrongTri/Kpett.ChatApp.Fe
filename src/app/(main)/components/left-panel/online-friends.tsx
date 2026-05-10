@@ -68,12 +68,13 @@ export default function OnlineFriends() {
 
   // Xử lý logic Realtime bằng Immer
   const handleStatusChange = useCallback((statusData: { userId: string; isOnline: boolean }) => {
+
     queryClient.setQueryData(["online-friends", filterParams], (oldData: any) => {
-      if (!oldData?.data?.items) return oldData;
+      if (!oldData.items) return oldData;
 
       return produce(oldData, (draft: any) => {
         // Tìm trực tiếp và thay đổi thuộc tính, Immer sẽ tự động lo việc Immutable
-        const friend = draft.data.items.find((f: UserProfile) => f.id === statusData.userId);
+        const friend = draft.items.find((f: UserProfile) => f.id === statusData.userId);
         if (friend) {
           friend.isOnline = statusData.isOnline;
         }

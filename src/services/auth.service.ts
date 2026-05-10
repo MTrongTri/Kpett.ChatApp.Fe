@@ -1,4 +1,4 @@
-import { authHttp } from "@/lib/axios";
+import { authHttp, refreshToken } from "@/lib/axios";
 import { LoginRequest, LoginResponse } from "@/types/auth";
 import axios from "axios";
 
@@ -37,16 +37,16 @@ const logout = async (accessToken: string): Promise<any> => {
 /**
  * Làm mới Access Token bằng Refresh Token (HttpOnly Cookie)
  */
-const refreshToken = async (): Promise<any> => {
-  const response = await axios.post('/api/auth/refresh', null, { withCredentials: true });
-  return response.data;
+const refreshTokenMethod = async (): Promise<any> => {
+  const token = await refreshToken();
+  return { data: { accessToken: token } };
 }
 
 const authService = {
   login,
   register,
   logout,
-  refreshToken
+  refreshToken: refreshTokenMethod
 };
 
 export default authService;

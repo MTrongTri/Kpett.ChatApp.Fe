@@ -4,16 +4,20 @@ import { chatService } from '@/services/chat.service';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Edit, MoreHorizontal, Search, Loader2 } from 'lucide-react';
+import { Edit, MoreHorizontal, Search, Loader2, Group, UserRoundCog, User2, GroupIcon, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ConversationAvatar } from './conversation-avatar';
 import { useAuth } from '../providers/auth-provider';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { useInView } from 'react-intersection-observer';
+import { CreateGroupModal } from './create-group-modal';
+import { formatSystemMessage } from '@/lib/message-utils';
+import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 
 export default function ChatSidebar() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
     const activeId = params?.id as string;
@@ -45,16 +49,16 @@ export default function ChatSidebar() {
             <div className="p-4 flex items-center justify-between">
                 <h1 className="font-bold text-2xl text-foreground">Đoạn chat</h1>
                 <div className="flex gap-2">
-                    <button className="p-2 bg-muted hover:bg-muted/80 rounded-full transition-colors text-foreground">
+                    <button className="hidden p-2 bg-muted hover:bg-muted/80 rounded-full transition-colors text-foreground">
                         <MoreHorizontal size={20} />
                     </button>
-                    <button className="p-2 bg-muted hover:bg-muted/80 rounded-full transition-colors text-foreground">
-                        <Edit size={20} />
+                    <button onClick={() => setIsCreateGroupOpen(true)} className="p-2 bg-muted hover:bg-muted/80 rounded-full transition-colors text-foreground">
+                        <Plus size={20} />
                     </button>
                 </div>
             </div>
 
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-2 hidden">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
@@ -110,8 +114,17 @@ export default function ChatSidebar() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className={clsx("text-sm truncate pr-2", conv.hasUnread ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                                            {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
-                                            {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
+                                            {conv.lastMessage?.type === "System" ? (
+                                                // Nếu là tin nhắn hệ thống, gọi hàm format
+                                                formatSystemMessage(conv.lastMessage, user?.id)
+                                            ) : (
+                                                // Nếu là tin nhắn thường, giữ nguyên logic cũ
+                                                <>
+                                                    {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
+                                                    {conv.lastMessage?.senderId !== user?.id ? `${conv.lastMessage?.senderName}: ` : ''}
+                                                    {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
+                                                </>
+                                            )}
                                         </p>
                                         {conv.hasUnread && <div className="w-2.5 h-2.5 bg-primary rounded-full shrink-0"></div>}
                                     </div>
@@ -128,6 +141,14 @@ export default function ChatSidebar() {
                     </>
                 )}
             </div>
+
+            <CreateGroupModal
+                isOpen={isCreateGroupOpen}
+                onClose={() => setIsCreateGroupOpen(false)}
+                onSuccess={(id) => {
+                    router.push(`/chat/${id}`);
+                }}
+            />
         </div>
     );
 }

@@ -35,8 +35,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import { chatService } from "@/services/chat.service";
+import { openChatPopup } from "@/store/features/chat-slice";
 
 // ── STAT BUTTON ───────────────────────────────────────────────────────
 function StatButton({ value, label }: { value: number; label: string }) {
@@ -52,18 +54,22 @@ function StatButton({ value, label }: { value: number; label: string }) {
   );
 }
 
-// ── MAIN COMPONENT ────────────────────────────────────────────────────
+// MAIN COMPONENT
 interface ProfileInfoProps {
   profile: UserProfile;
 }
 
 export default function ProfileInfo({ profile }: ProfileInfoProps) {
   const [ctx, setCtx] = useState<ProfileViewerContext>(profile.viewerContext);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Tách riêng state loading
+  const [isLoading, setIsLoading] = useState(false); // Dành cho các action bạn bè
+  const [isMessageLoading, setIsMessageLoading] = useState(false); // Dành riêng cho nút nhắn tin
 
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
-  // ── API HANDLERS ────────────────────────────────────────────────────
+  // API HANDLERS
 
   const handleAddFriend = async () => {
     if (!currentUser) {
@@ -74,7 +80,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
     try {
       setIsLoading(true);
 
-      const { data } = await friendRequest(profile.id);
+      const data = await friendRequest(profile.id);
 
       if (!data) {
         toast.error("Đã có lỗi xảy ra, không nhận được phản hồi");
@@ -167,7 +173,31 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
 
   };
 
-  // ── RENDER HELPERS ──────────────────────────────────────────────────
+  const handleMessageClick = async () => {
+    if (!currentUser) {
+      toast.warning("Bạn cần đăng nhập để nhắn tin");
+      return;
+    }
+
+    try {
+      // Dùng state loading riêng
+      setIsMessageLoading(true);
+      const data = await chatService.getOrCreateDirectConversation(profile.id);
+      if (data && data.id) {
+        dispatch(openChatPopup(data.id));
+      } else {
+        toast.error("Không thể tạo cuộc hội thoại");
+      }
+    } catch (error) {
+      toast.error("Đã có lỗi xảy ra khi tạo cuộc hội thoại");
+      console.error(error);
+    } finally {
+      // Dùng state loading riêng
+      setIsMessageLoading(false);
+    }
+  };
+
+  // RENDER HELPERS
 
   const renderFriendActionButtons = () => {
     if (ctx.isFriend) {
@@ -336,14 +366,16 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                 {/* Logic Kết Bạn */}
                 {renderFriendActionButtons()}
 
-                {/* Nút Nhắn Tin (Kiểm tra canMessage) */}
                 {ctx.canMessage && (
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={isMessageLoading} // Thay thế bằng isMessageLoading
+                    onClick={handleMessageClick}
                     className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                   >
-                    <MessageSquare size={14} /> Nhắn tin
+                    {isMessageLoading ? <Loader2 size={14} className="animate-spin" /> : <MessageSquare size={14} />}
+                    Nhắn tin
                   </Button>
                 )}
 

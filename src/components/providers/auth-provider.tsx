@@ -1,14 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { setAccessToken, logout as logoutAction, setCredentials } from '@/store/features/auth-slice';
-import axios from 'axios';
+import { logout as logoutAction, setCredentials } from '@/store/features/auth-slice';
+import { refreshToken } from '@/lib/axios';
 import { sessionStorage } from '@/lib/cookie-storage-utils';
 import Logo from '../layouts/main/logo';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import { persistor, RootState } from '@/store/store';
 import { BaseUser } from '@/types/user';
-import Cookies from 'js-cookie'; // Thêm js-cookie nếu bạn dùng nó như file SignalR
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
     isLoading: boolean;
@@ -16,7 +16,7 @@ interface AuthContextType {
     accessToken: string | null;
     user: BaseUser | null;
     login: (token: string, userData: BaseUser, isProfileCompleted: boolean) => void;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,10 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
     });
 
-    const logout = useCallback(() => {
-        dispatch(logoutAction());
+    const logout = useCallback(async () => {
+        // Xóa sạch storage persisted ngay lập tức để bảo mật
+        await persistor.purge();
         sessionStorage.clearSession();
-    }, [dispatch]);
+    }, []);
 
     const login = useCallback((token: string, userData: BaseUser, isProfileCompleted: boolean) => {
         dispatch(setCredentials({
@@ -56,23 +57,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             try {
-                const response = await axios.post(
-                    '/api/auth/refresh',
-                    null,
-                    { withCredentials: true }
-                );
-                const newAccessToken = response.data.data.accessToken;
-                dispatch(setAccessToken(newAccessToken));
+                await refreshToken();
             } catch (error) {
                 console.error("Auth Init Error:", error);
-                logout();
+                await persistor.purge();
+                sessionStorage.clearSession();
+                window.location.href = '/login';
             } finally {
                 setIsLoading(false);
             }
         };
 
         initializeAuth();
-    }, [isLoggedIn, dispatch, logout]);
+    }, [isLoggedIn, dispatch]);
 
     const value = useMemo(() => ({
         isLoading,

@@ -1,16 +1,14 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { getUserProfile } from "@/services/user.service";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
+import { use, useEffect, useRef } from "react";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
 import ProfileInfo from "./components/profile-info";
-import ProfileTabs from "./components/profile-tabs";
 import ProfileSkeleton from "./components/profile-skeleton";
-import { getUserProfile } from "@/services/user.service";
-import { ApiResponse } from "@/types/common/api";
-import { UserProfile } from "@/types/user";
+import ProfileTabs from "./components/profile-tabs";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;

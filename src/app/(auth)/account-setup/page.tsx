@@ -8,14 +8,16 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/auth-slice";
-import Cookies from "js-cookie";
-import { setAuthSession } from "@/lib/cookie-storage-utils";
+import { sessionStorage } from "@/lib/cookie-storage-utils";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  const { accessToken } = useAuth();
 
   const [formData, setFormData] = useState({
     displayName: "",
@@ -51,19 +53,21 @@ export default function SocialAccountSetup() {
 
     setIsSubmitting(true);
     try {
-      const { data } = await accountSetup(formData);
+      const data = await accountSetup(formData);
 
       if (!data) {
         toast.error("Đã có lỗi xảy ra");
         return;
       }
 
-      setAuthSession({ isProfileCompleted: data.isProfileCompleted });
+      sessionStorage.setSession({
+        isProfileCompleted: data.isProfileCompleted,
+      })
 
       dispatch(
         setCredentials({
           user: data,
-          isLogedIn: true,
+          accessToken: accessToken,
           isProfileCompleted: true,
         }),
       );
@@ -108,8 +112,8 @@ export default function SocialAccountSetup() {
                   <div className="relative">
                     <User
                       className={`absolute top-1/2 left-3.5 -translate-y-1/2 transition-colors ${isDisplayNameTouched && !isDisplayNameValid
-                          ? "text-red-500"
-                          : "text-slate-400"
+                        ? "text-red-500"
+                        : "text-slate-400"
                         }`}
                       size={18}
                     />
@@ -121,8 +125,8 @@ export default function SocialAccountSetup() {
                       onBlur={() => setIsDisplayNameTouched(true)}
                       placeholder="Ví dụ: Trọng Trí"
                       className={`w-full rounded-2xl border bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none dark:text-white ${isDisplayNameTouched && !isDisplayNameValid
-                          ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
+                        ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
                         }`}
                     />
                   </div>
@@ -205,8 +209,8 @@ export default function SocialAccountSetup() {
                       type="button"
                       onClick={() => toggleInterest(tag)}
                       className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${formData.interests.includes(tag)
-                          ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                          : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
+                        ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                        : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
                         }`}
                     >
                       {tag}

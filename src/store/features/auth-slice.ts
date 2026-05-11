@@ -23,7 +23,7 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         user: BaseUser;
-        accessToken: string;
+        accessToken: string | null;
         isProfileCompleted: boolean;
       }>,
     ) => {

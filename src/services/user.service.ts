@@ -1,6 +1,5 @@
-import { MOCK_USER_PROFILES } from "@/data/user";
 import http from "@/lib/axios";
-import { ApiResponse, PaginatedData } from "@/types/common/api";
+import { PaginatedData } from "@/types/common/api";
 import { Media } from "@/types/media";
 import {
   BaseUser,

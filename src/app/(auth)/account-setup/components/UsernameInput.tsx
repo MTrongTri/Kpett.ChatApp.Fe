@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { AtSign, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { checkUsername } from "@/services/user.service";
-import useSWR from "swr";
 
 interface UsernameFieldProps {
   value: string;
@@ -30,17 +30,23 @@ export default function UsernameInput({
   const shouldFetch =
     debouncedUsername.length >= 3 && !/[^a-z0-9._]/.test(debouncedUsername);
 
-  const { data, isValidating, error } = useSWR(
-    shouldFetch ? ["check-username", debouncedUsername] : null,
-    ([, uname]) => checkUsername(uname),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
-  );
+  const {
+    data,
+    isFetching,
+    error
+  } = useQuery({
+    queryKey: ["check-username", debouncedUsername],
+    queryFn: () => checkUsername(debouncedUsername),
+    enabled: shouldFetch,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
   useEffect(() => {
     const checking =
-      (value !== debouncedUsername && value.length >= 3) || isValidating;
+      (value !== debouncedUsername && value.length >= 3) || isFetching;
     onLoading(checking);
-  }, [value, debouncedUsername, isValidating, onLoading]);
+  }, [value, debouncedUsername, isFetching, onLoading]);
 
   useEffect(() => {
     if (value.length === 0) {
@@ -61,13 +67,13 @@ export default function UsernameInput({
       return;
     }
 
-    if (isValidating) {
+    if (isFetching) {
       setErrorMsg("");
       return;
     }
 
     if (data) {
-      if (data.data?.isAvailable) {
+      if (data.isAvailable) {
         setErrorMsg("");
         onValidation(true);
       } else {
@@ -80,19 +86,19 @@ export default function UsernameInput({
       setErrorMsg("Lỗi kết nối máy chủ");
       onValidation(false);
     }
-  }, [value, isFormatInvalid, data, isValidating, error, onValidation]);
+  }, [value, isFormatInvalid, data, isFetching, error, onValidation]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase();
     onChange(val);
   };
 
-  const showSuccess = shouldFetch && !isValidating && data?.data?.isAvailable;
-  const showLoading = isValidating;
+  const showSuccess = shouldFetch && !isFetching && data?.isAvailable;
+  const showLoading = isFetching;
   const showErrorIcon =
     (value.length > 0 && isFormatInvalid) ||
-    (value.length >= 3 && !isValidating && data && !data.data?.isAvailable) ||
-    (value.length > 0 && value.length < 3 && !isValidating);
+    (value.length >= 3 && !isFetching && data && !data.isAvailable) ||
+    (value.length > 0 && value.length < 3 && !isFetching);
 
   return (
     <div className="space-y-1.5">

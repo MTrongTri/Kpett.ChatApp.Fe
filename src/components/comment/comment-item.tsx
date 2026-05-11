@@ -206,7 +206,7 @@ export const CommentItem = memo(({
               <span>{formatRelativeTime(currentComment.createdAt)}</span>
               {currentComment.isEdited && <span>(Đã chỉnh sửa)</span>}
 
-              <button className={`hover:text-foreground/80 cursor-pointer font-semibold transition-colors ${currentComment.viewerContext?.isLiked ? "text-blue-500 hover:text-blue-600" : ""}`}>
+              <button className={`hidden hover:text-foreground/80 cursor-pointer font-semibold transition-colors ${currentComment.viewerContext?.isLiked ? "text-blue-500 hover:text-blue-600" : ""}`}>
                 Thích {currentComment.metrics.likeCount > 0 && `(${currentComment.metrics.likeCount})`}
               </button>
 

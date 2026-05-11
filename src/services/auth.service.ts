@@ -1,6 +1,5 @@
-import { authHttp, refreshToken } from "@/lib/axios";
+import http, { authHttp, refreshToken } from "@/lib/axios";
 import { LoginRequest, LoginResponse } from "@/types/auth";
-import axios from "axios";
 
 /**
  * Đăng nhập hệ thống
@@ -18,7 +17,7 @@ const login = async (
 const register = async (
   registerRequest: LoginRequest,
 ): Promise<any> => {
-  const response = await authHttp.post("/register", registerRequest);
+  const response = await http.post("auth/register", registerRequest);
   return response.data;
 };
 

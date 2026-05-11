@@ -76,7 +76,8 @@ export const refreshToken = async (): Promise<string> => {
         } catch (error) {
             persistor.purge();
             sessionStorage.clearSession();
-            window.location.href = '/login';
+            // window.location.href = '/login';
+            console.error(error)
             reject(error);
         } finally {
             refreshPromise = null;

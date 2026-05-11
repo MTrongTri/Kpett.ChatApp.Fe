@@ -5,9 +5,8 @@ import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { cn } from "@/lib/utils";
 import { ConversationResponse, ParticipantResponse } from "@/types/chat";
 import Image from "next/image";
-import { UserAvatar } from "../user/user-avatar";
 import { useAuth } from "../providers/auth-provider";
-import { BaseUser } from "@/types/user";
+import { UserAvatar } from "../user/user-avatar";
 
 interface ConversationAvatarProps {
     conversation: ConversationResponse;
@@ -53,8 +52,6 @@ export function ConversationAvatar({
     const { user } = useAuth();
 
     const participants = conversation.participants || [];
-
-    console.log(participants)
 
     // Nếu Group có set ảnh đại diện riêng -> Dùng ảnh đó luôn
     if (conversation.avatarUrl) {

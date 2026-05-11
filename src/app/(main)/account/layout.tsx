@@ -1,7 +1,5 @@
-// app/(main)/[username]/(settings)/layout.tsx
-
 import { ReactNode } from "react";
-import Sidebar from "./_components/side-bar";
+import Sidebar from "./components/side-bar";
 
 export default function SettingsLayout({
     children

@@ -16,6 +16,7 @@ import { CreateGroupModal } from './create-group-modal';
 import { Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatSystemMessage } from '@/lib/message-utils';
+import { shouldShowDotOnline } from '@/lib/conversation-utils';
 
 export default function ChatHeaderDropdown() {
     const [isOpen, setIsOpen] = useState(false);
@@ -113,57 +114,61 @@ export default function ChatHeaderDropdown() {
                             </div>
                         ) : (
                             <>
-                                {conversations.map((conv: any) => (
-                                    <div
-                                        key={conv.id}
-                                        onClick={() => handleOpenChat(conv.id)}
-                                        className="flex items-center p-2 rounded-xl cursor-pointer hover:bg-muted/60 transition-colors group relative"
-                                    >
-                                        <div className="shrink-0 mr-3">
-                                            <ConversationAvatar
-                                                conversation={conv}
-                                                isShowDotOnline={true}
-                                                className="w-14 h-14"
-                                                dotClassName="w-3.5 h-3.5"
-                                            />
-                                        </div>
+                                {conversations.map((conv) => {
+                                    const isShowDotOnline = shouldShowDotOnline(conv, user?.id);
 
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className={clsx("text-[15px] truncate", conv.hasUnread ? "font-semibold" : "font-medium")}>
-                                                {conv.name || "Người dùng"}
-                                            </h3>
-                                            <div className="flex items-center text-sm mt-0.5">
-                                                <span className={clsx("truncate max-w-45", conv.hasUnread ? "font-semibold" : "text-muted-foreground")}>
-                                                    <p className={clsx("text-sm truncate pr-2", conv.hasUnread ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                                                        {conv.lastMessage?.type === "System" ? (
-                                                            // Nếu là tin nhắn hệ thống, gọi hàm format
-                                                            formatSystemMessage(conv.lastMessage, user?.id)
-                                                        ) : (
-                                                            // Nếu là tin nhắn thường, giữ nguyên logic cũ
-                                                            <>
-                                                                {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
-                                                                {conv.lastMessage?.senderId !== user?.id ? `${conv.lastMessage?.senderName}: ` : ''}
-                                                                {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
-                                                            </>
-                                                        )}
-                                                    </p>
-                                                </span>
-                                                <span className="mx-1 text-muted-foreground">·</span>
-                                                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                                    {conv.lastMessageAt ? formatDistanceToNow(new Date(conv.lastMessageAt), { locale: vi, addSuffix: true }).replace('khoảng ', '').replace(' trước', '') : ''}
-                                                </span>
+                                    return (
+                                        <div
+                                            key={conv.id}
+                                            onClick={() => handleOpenChat(conv.id)}
+                                            className="flex items-center p-2 rounded-xl cursor-pointer hover:bg-muted/60 transition-colors group relative"
+                                        >
+                                            <div className="shrink-0 mr-3">
+                                                <ConversationAvatar
+                                                    conversation={conv}
+                                                    isShowDotOnline={isShowDotOnline}
+                                                    className="w-14 h-14"
+                                                    dotClassName="w-3.5 h-3.5"
+                                                />
                                             </div>
-                                        </div>
 
-                                        {conv.hasUnread ? (
-                                            <div className="w-3 h-3 bg-primary rounded-full shrink-0 ml-2 shadow-sm"></div>
-                                        ) : (
-                                            <button className="hidden opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:bg-background rounded-full transition ml-2 border border-border bg-card shadow-sm absolute right-4 cursor-pointer">
-                                                <MoreHorizontal size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className={clsx("text-[15px] truncate", conv.hasUnread ? "font-semibold" : "font-medium")}>
+                                                    {conv.name || "Người dùng"}
+                                                </h3>
+                                                <div className="flex items-center text-sm mt-0.5">
+                                                    <span className={clsx("truncate max-w-45", conv.hasUnread ? "font-semibold" : "text-muted-foreground")}>
+                                                        <p className={clsx("text-sm truncate pr-2", conv.hasUnread ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                                                            {conv.lastMessage?.type === "System" ? (
+                                                                // Nếu là tin nhắn hệ thống, gọi hàm format
+                                                                formatSystemMessage(conv.lastMessage, user?.id)
+                                                            ) : (
+                                                                // Nếu là tin nhắn thường, giữ nguyên logic cũ
+                                                                <>
+                                                                    {conv.lastMessage?.senderId === user?.id ? 'Bạn: ' : ''}
+                                                                    {conv.lastMessage?.senderId !== user?.id ? `${conv.lastMessage?.senderName}: ` : ''}
+                                                                    {conv.lastMessage?.content || "Đã gửi một tệp đính kèm"}
+                                                                </>
+                                                            )}
+                                                        </p>
+                                                    </span>
+                                                    <span className="mx-1 text-muted-foreground">·</span>
+                                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                        {conv.lastMessageAt ? formatDistanceToNow(new Date(conv.lastMessageAt), { locale: vi, addSuffix: true }).replace('khoảng ', '').replace(' trước', '') : ''}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {conv.hasUnread ? (
+                                                <div className="w-3 h-3 bg-primary rounded-full shrink-0 ml-2 shadow-sm"></div>
+                                            ) : (
+                                                <button className="hidden opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:bg-background rounded-full transition ml-2 border border-border bg-card shadow-sm absolute right-4 cursor-pointer">
+                                                    <MoreHorizontal size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )
+                                })}
 
                                 {/* Loader element */}
                                 {hasMore && (

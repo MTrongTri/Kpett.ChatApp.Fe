@@ -29,6 +29,7 @@ export interface ParticipantResponse {
   avatarUrl?: string;
   role: string;
   isOnline?: boolean;
+  isFriend: boolean;
   lastReadMessageId?: string;
 }
 

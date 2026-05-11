@@ -106,6 +106,7 @@ export function useUserInteractions(userId: string, username: string, initialCon
             }));
 
             refreshCache();
+            queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
         } catch (error) {
             toast.error("Đã có lỗi xảy ra");
         } finally {

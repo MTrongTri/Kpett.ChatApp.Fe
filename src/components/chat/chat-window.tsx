@@ -18,6 +18,8 @@ import { formatMessageDateHeader, formatMessageTime } from '@/lib/format-date-ut
 import { ChatInputArea } from './chat-input-area';
 import { TypingIndicator } from './typing-indicator';
 import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
+import { shouldShowDotOnline } from '@/lib/conversation-utils';
+import { is } from 'date-fns/locale';
 
 export default function ChatWindow({ conversationId, toggleInfo }: { conversationId: string, toggleInfo: () => void }) {
     const { user } = useAuth();
@@ -97,6 +99,8 @@ export default function ChatWindow({ conversationId, toggleInfo }: { conversatio
         }
     };
 
+    const isShowDotOnline = currentConversation ? shouldShowDotOnline(currentConversation, user?.id) : false;
+
     return (
         <div className="flex-1 flex flex-col h-full bg-background relative">
             {/* Header - Giữ nguyên */}
@@ -107,7 +111,7 @@ export default function ChatWindow({ conversationId, toggleInfo }: { conversatio
                             <div className="shrink-0 mr-3">
                                 <ConversationAvatar
                                     conversation={currentConversation}
-                                    isShowDotOnline={true}
+                                    isShowDotOnline={isShowDotOnline}
                                     className="w-10 h-10"
                                 />
                             </div>

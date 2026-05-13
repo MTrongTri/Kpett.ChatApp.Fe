@@ -25,12 +25,24 @@ export default function ChatConversationPage() {
             <ChatWindow
                 key={conversationId}
                 conversationId={conversationId}
-                toggleInfo={() => setIsInfoOpen(!isInfoOpen)}
+                mobileBackHref="/chat"
+                toggleInfo={() => setIsInfoOpen((open) => !open)}
             />
 
             {/* Cột phải: Thông tin hội thoại */}
             {isInfoOpen && (
-                <ChatInfo conversationId={conversationId} onClose={() => setIsInfoOpen(false)} />
+                <div
+                    className="fixed inset-0 z-50 bg-black/50 md:contents md:bg-transparent"
+                    onClick={() => setIsInfoOpen(false)}
+                >
+                    <div className="h-full w-full md:contents" onClick={(event) => event.stopPropagation()}>
+                        <ChatInfo
+                            conversationId={conversationId}
+                            onClose={() => setIsInfoOpen(false)}
+                            className="w-full border-l-0 md:w-[320px] md:border-l"
+                        />
+                    </div>
+                </div>
             )}
         </>
     );

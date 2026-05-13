@@ -51,6 +51,7 @@ export function useNotifications(isFetch: boolean = false) {
 
             if (newNotif.type === "FriendRequestAccepted" || newNotif.type === "FriendRequestReceived") {
                 queryClient.invalidateQueries({ queryKey: ["user-profile", newNotif.actor?.username] });
+                queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
             }
         };
 

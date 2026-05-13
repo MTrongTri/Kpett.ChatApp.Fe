@@ -88,7 +88,7 @@ export default function PostLightbox({
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent
-          className="bg-card border-border flex max-h-[94vh] w-[92vw] flex-col gap-0 overflow-hidden rounded-lg md:max-w-235 md:rounded-2xl p-0"
+          className="bg-card border-border flex max-w-screen h-screen md:max-h-[94vh] md:w-[92vw] flex-col gap-0 overflow-hidden rounded-lg md:max-w-235 md:rounded-2xl py-4 px-2 pt-8 md:p-0"
           aria-describedby={undefined}
         >
           <DialogTitle className="sr-only">Chi tiết bài viết</DialogTitle>
@@ -96,9 +96,9 @@ export default function PostLightbox({
           {isPostLoading || !post ? (
             <PostLightboxSkeleton />
           ) : (
-            <div className="flex flex-col h-full px-6 overflow-hidden">
+            <div className="flex flex-col h-full px-0 md:px-6 overflow-hidden">
               {/* ── HEADER BÀI VIẾT ── */}
-              <DialogHeader className="px-4 py-2 shrink-0">
+              <DialogHeader className="hidden md:block px-4 py-2 shrink-0">
                 <div className="flex w-full items-center justify-between border-b border-border">
                   <PostHeader
                     author={post.author}
@@ -114,16 +114,16 @@ export default function PostLightbox({
 
               {/* SCROLLABLE CONTENT AREA */}
               <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto flex flex-col">
-                <div className="px-4 py-3 shrink-0">
+                <div className="hidden md:block px-4 py-3 shrink-0">
                   <PostContent content={post.content} tags={post.hashtags} />
                 </div>
 
-                <div className="shrink-0">
+                <div className="hidden md:block shrink-0">
                   <PostMediaSlider media={post.media} />
                 </div>
 
                 {/* ACTION BUTTONS (Like, Comment, Save) */}
-                <div className="flex items-center gap-1 px-3 py-2.5 shrink-0">
+                <div className="hidden md:block flex items-center gap-1 px-3 py-2.5 shrink-0">
                   <LikeButton
                     postId={post.id}
                     initialLiked={post.viewerContext.isLiked ?? false}

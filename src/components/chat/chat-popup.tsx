@@ -21,6 +21,7 @@ import { useConversations } from '@/hooks/chat/use-conversations';
 import { formatMessageDateHeader } from '@/lib/format-date-utils';
 import { TypingIndicator } from './typing-indicator';
 import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
+import { shouldShowDotOnline } from '@/lib/conversation-utils';
 
 interface ChatPopupProps {
     conversationId: string;
@@ -64,7 +65,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
 
     useConversationPresenceSync(currentConversation?.id!, currentConversation?.participants!);
 
-    // 1. LOGIC QUYẾT ĐỊNH HIỂN THỊ PREVIEW TEXT
+    // LOGIC QUYẾT ĐỊNH HIỂN THỊ PREVIEW TEXT
     useEffect(() => {
         if (!isMinimized) {
             setPreviewText(null);
@@ -87,7 +88,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         }
     }, [newMessage, isMinimized]);
 
-    // 2. BỘ ĐẾM GIỜ TỰ XÓA PREVIEW (Độc lập để không bị kẹt)
+    // BỘ ĐẾM GIỜ TỰ XÓA PREVIEW (Độc lập để không bị kẹt)
     useEffect(() => {
         if (previewText) {
             const timer = setTimeout(() => setPreviewText(null), 4000);
@@ -127,7 +128,6 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
     const handleSend = async (content: string) => {
         const clientMessageId = crypto.randomUUID();
 
-        // 1. Tạo tin nhắn ảo (Optimistic UI)
         const optimisticMsg: MessageResponse = {
             id: clientMessageId,
             clientMessageId: clientMessageId,
@@ -142,15 +142,12 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         addMessageToCache(optimisticMsg);
 
         try {
-            // 2. Gọi API thực tế
             await chatService.sendMessage(conversationId, content, "Text", clientMessageId);
 
-            // 3. THÊM DÒNG NÀY: Cập nhật thành công để xóa chữ "sending"
             updateMessageStatus(clientMessageId, "sent");
 
         } catch (error) {
             console.error(error);
-            // Nếu lỗi mạng, API hỏng... thì chớp đỏ báo lỗi
             updateMessageStatus(clientMessageId, "error");
         }
     };
@@ -159,6 +156,8 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         dispatch(closeChatPopup(conversationId));
         router.push(`/chat/${conversationId}`);
     };
+
+    let isShowDotOnline = currentConversation ? shouldShowDotOnline(currentConversation, user?.id) : false;
 
     // UI 1: NẾU ĐANG THU NHỎ -> HIỂN THỊ BONG BÓNG
     if (isMinimized) {
@@ -196,7 +195,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                         <>
                             <ConversationAvatar
                                 conversation={currentConversation}
-                                isShowDotOnline={true}
+                                isShowDotOnline={isShowDotOnline}
                                 className="w-14 h-14"
                                 dotClassName="w-4 h-4 border-[2.5px]"
                             />
@@ -227,7 +226,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                         <>
                             <ConversationAvatar
                                 conversation={currentConversation}
-                                isShowDotOnline={true}
+                                isShowDotOnline={isShowDotOnline}
                                 className="w-8 h-8"
                                 dotClassName="w-2.5 h-2.5"
                             />
@@ -235,11 +234,16 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                                 <span className="font-semibold text-sm text-foreground truncate max-w-30">
                                     {chatName}
                                 </span>
-                                {isOnline ? (
-                                    <span className="text-[10px] text-emerald-500 font-medium leading-none">Đang hoạt động</span>
-                                ) : (
-                                    <span className="text-[10px] text-muted-foreground font-medium leading-none">Ngoại tuyến</span>
-                                )}
+                                {
+                                    isShowDotOnline && (
+                                        isOnline ? (
+                                            <span className="text-[10px] text-emerald-500 font-medium leading-none">Đang hoạt động</span>
+                                        ) : (
+                                            <span className="text-[10px] text-muted-foreground font-medium leading-none">Ngoại tuyến</span>
+                                        )
+                                    )
+                                }
+
                             </div>
                         </>
                     ) : (
@@ -334,15 +338,17 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
             </div>
 
             {/* New Message Floating Button */}
-            {showNewMessageButton && !isMinimized && (
-                <button
-                    onClick={() => scrollToBottom()}
-                    className="absolute bottom-[70px] left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
-                >
-                    <ArrowDown size={14} />
-                    Tin nhắn mới
-                </button>
-            )}
+            {
+                showNewMessageButton && !isMinimized && (
+                    <button
+                        onClick={() => scrollToBottom()}
+                        className="absolute bottom-17.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
+                    >
+                        <ArrowDown size={14} />
+                        Tin nhắn mới
+                    </button>
+                )
+            }
 
             <TypingIndicator typers={typers} compact />
             <ChatInputArea
@@ -350,6 +356,6 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                 onTyping={notifyTyping}
                 onStopTyping={notifyStopTyping}
             />
-        </div>
+        </div >
     );
 }

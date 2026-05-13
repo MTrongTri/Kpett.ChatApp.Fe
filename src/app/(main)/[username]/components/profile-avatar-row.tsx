@@ -1,7 +1,7 @@
 "use client";
 
 import { UserAvatar } from "@/components/user/user-avatar";
-import { UserProfile } from "@/types/user";
+import { UserProfile, UserStats } from "@/types/user";
 import { Camera, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
@@ -29,6 +29,9 @@ import { uploadFileToCloudinary } from "@/services/media.service";
 import { deleteUserMediaPrimary, updateUserMedia } from "@/services/user.service";
 import { useDispatch } from "react-redux";
 import { openMediaLightBox } from "@/store/features/modal-slice";
+import { useAuth } from "@/components/providers/auth-provider";
+import { setCredentials } from "@/store/features/auth-slice";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileAvatarRowProps {
   profile: UserProfile;
@@ -51,6 +54,10 @@ export default function ProfileAvatarRow({
 
   // State quản lý hiển thị Popup xác nhận xóa
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const { accessToken, user } = useAuth();
+
+  const queryClient = useQueryClient();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -92,6 +99,38 @@ export default function ProfileAvatarRow({
         },
         "Avatar"
       );
+
+      if (user) {
+        const updateAvatarUser = {
+          ...user,
+          avatarUrl: uploadedMedia.url,
+        };
+
+        dispatch(setCredentials({
+          accessToken,
+          user: updateAvatarUser,
+          isProfileCompleted: true
+        }))
+
+      }
+
+      queryClient.setQueryData(["user-profile", user?.username], (oldData: UserProfile) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            avatarUrl: uploadedMedia.url,
+          };
+        }
+      })
+
+      queryClient.setQueryData(["user-stats", user?.id], (oldData: UserStats) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            avatarUrl: uploadedMedia.url,
+          };
+        }
+      })
 
       toast.success("Cập nhật ảnh đại diện thành công!");
 

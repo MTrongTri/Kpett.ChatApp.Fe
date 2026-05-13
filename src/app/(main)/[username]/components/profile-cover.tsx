@@ -32,6 +32,9 @@ import { deleteUserMediaPrimary, updateUserMedia } from "@/services/user.service
 import { openMediaLightBox } from "@/store/features/modal-slice";
 import { useDispatch } from "react-redux";
 import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { UserProfile } from "@/types/user";
 
 interface ProfileCoverProps {
   cover: string | null;
@@ -71,6 +74,11 @@ export default function ProfileCover({
 
   // THÊM: State quản lý hiển thị Popup xác nhận xóa
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const { user } = useAuth();
+
+  const queryClient = useQueryClient();
+
 
   // Xử lý khi người dùng chọn file ảnh bìa mới
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +121,15 @@ export default function ProfileCover({
         },
         "Cover"
       );
+
+      queryClient.setQueryData(["user-profile", user?.username], (oldData: UserProfile) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            coverUrl: uploadedMedia.url,
+          };
+        }
+      })
 
       toast.success("Cập nhật ảnh bìa thành công!");
 

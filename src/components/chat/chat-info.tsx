@@ -6,8 +6,17 @@ import { chatService } from '@/services/chat.service';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { ConversationAvatar } from './conversation-avatar';
 import { GroupMembersModal } from './group-members-modal';
+import { cn } from '@/lib/utils';
 
-export default function ChatInfo({ conversationId, onClose }: { conversationId: string, onClose: () => void }) {
+export default function ChatInfo({
+    conversationId,
+    onClose,
+    className,
+}: {
+    conversationId: string;
+    onClose: () => void;
+    className?: string;
+}) {
     const { conversations } = useConversations();
     const currentConversationFromList = conversations.find(c => c.id === conversationId);
 
@@ -25,10 +34,9 @@ export default function ChatInfo({ conversationId, onClose }: { conversationId: 
     const chatName = currentConversation.name || "Người dùng";
     const isGroup = currentConversation.type === 'Group';
     return (
-        <div className="w-[320px] h-full bg-card border-l border-border flex flex-col shrink-0 shadow-xl overflow-y-auto">
+        <div className={cn("w-[320px] h-full bg-card border-l border-border flex flex-col shrink-0 shadow-xl overflow-y-auto", className)}>
             {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
-                <h3 className="font-semibold text-foreground">Chi tiết</h3>
+            <div className="p-4 border-b border-border flex items-center justify-end sticky top-0 bg-card z-10">
                 <button onClick={onClose} className="p-1 hover:bg-muted rounded-full transition">
                     <X size={20} className="text-muted-foreground" />
                 </button>

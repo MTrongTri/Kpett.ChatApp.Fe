@@ -37,7 +37,7 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="border-border bg-card rounded-xl border transition-all duration-200">
+    <article className="border-none md:border-border bg-card rounded-xl border transition-all duration-200">
 
       {/* ── HEADER ── */}
       <div className="flex items-center justify-between gap-3 pr-4 pt-1">

@@ -23,8 +23,8 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
     if (!media || media.length === 0) return null;
 
     return (
-        <div className="mx-4 mb-3">
-            <div className="border-border group relative h-100 w-full overflow-hidden rounded-xl border">
+        <div className="md:mx-4 md:mb-3">
+            <div className="border-border group relative h-100 w-full overflow-hidden md:rounded-xl border">
                 <Swiper
                     modules={[Navigation, Pagination]}
                     pagination={{ clickable: true }}

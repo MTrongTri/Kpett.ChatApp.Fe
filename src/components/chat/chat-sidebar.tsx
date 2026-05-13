@@ -1,10 +1,9 @@
 "use client";
 
-import { chatService } from '@/services/chat.service';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
-import { is, vi } from 'date-fns/locale';
-import { Edit, MoreHorizontal, Search, Loader2, Group, UserRoundCog, User2, GroupIcon, Plus } from 'lucide-react';
+import { vi } from 'date-fns/locale';
+import { MoreHorizontal, Search, Loader2, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ConversationAvatar } from './conversation-avatar';
@@ -13,7 +12,6 @@ import { useConversations } from '@/hooks/chat/use-conversations';
 import { useInView } from 'react-intersection-observer';
 import { CreateGroupModal } from './create-group-modal';
 import { formatSystemMessage } from '@/lib/message-utils';
-import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 import { shouldShowDotOnline } from '@/lib/conversation-utils';
 
 export default function ChatSidebar() {
@@ -45,7 +43,10 @@ export default function ChatSidebar() {
     }, [inView, hasMore, isLoadingMore, loadMore]);
 
     return (
-        <div className="w-85 h-full bg-card border-r border-border flex flex-col shrink-0">
+        <div className={clsx(
+            "h-full min-w-0 flex-col bg-card md:w-85 md:shrink-0 md:border-r md:border-border",
+            activeId ? "hidden md:flex" : "flex w-full"
+        )}>
             {/* Header Sidebar & Thanh tìm kiếm giữ nguyên... */}
             <div className="p-4 flex items-center justify-between">
                 <h1 className="font-bold text-2xl text-foreground">Đoạn chat</h1>
@@ -73,7 +74,7 @@ export default function ChatSidebar() {
             </div>
 
             {/* Danh sách */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+            <div className="min-h-0 flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                 {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                         <div key={i} className="flex items-center p-3 animate-pulse">

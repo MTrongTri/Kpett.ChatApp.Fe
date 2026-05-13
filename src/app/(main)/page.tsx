@@ -13,7 +13,7 @@ export default function HomePage() {
         </div>
 
         {/* ── CENTER FEED ── */}
-        <div className="min-w-0 px-4 py-5">
+        <div className="min-w-0 md:px-4 md:py-5">
           <SpotlightStrip />
           <Feed />
         </div>

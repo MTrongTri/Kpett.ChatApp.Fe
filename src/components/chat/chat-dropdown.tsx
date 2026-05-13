@@ -46,7 +46,7 @@ export default function ChatHeaderDropdown() {
         }
     }, [inView, hasMore, isLoadingMore, loadMore, isOpen]);
 
-    const hasAnyUnread = conversations.some((conv: any) => conv.hasUnread);
+    const hasAnyUnread = conversations.some((conv) => conv.hasUnread);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -83,8 +83,8 @@ export default function ChatHeaderDropdown() {
             </button>
 
             {isOpen && (
-                <div className="bg-background absolute top-[120%] right-0 w-90 bg-popover text-popover-foreground rounded-xl shadow-2xl border border-border z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center justify-between p-4 pb-2">
+                <div className="fixed top-16 right-3 left-3 z-50 flex max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-xl border border-border bg-background text-popover-foreground shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 sm:absolute sm:top-[120%] sm:right-0 sm:left-auto sm:w-90">
+                    <div className="flex shrink-0 items-center justify-between p-4 pb-2">
                         <h2 className="font-bold text-2xl">Đoạn chat</h2>
                         <div className="flex gap-2 text-muted-foreground">
                             <button onClick={() => setIsCreateGroupOpen(true)} className="hidden p-1.5 hover:bg-muted rounded-full transition cursor-pointer" title="Tạo nhóm">
@@ -97,7 +97,7 @@ export default function ChatHeaderDropdown() {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto max-h-100 p-2 space-y-1 custom-scrollbar">
+                    <div className="min-h-0 flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                         {isLoading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <div key={i} className="flex items-center p-2 animate-pulse">
@@ -180,7 +180,7 @@ export default function ChatHeaderDropdown() {
                         )}
                     </div>
 
-                    <div className="p-2 border-t border-border bg-muted/20 text-center">
+                    <div className="shrink-0 p-2 border-t border-border bg-muted/20 text-center">
                         <Link
                             href="/chat"
                             onClick={() => setIsOpen(false)}

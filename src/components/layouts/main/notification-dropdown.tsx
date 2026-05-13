@@ -38,7 +38,7 @@ export default function NotificationDropdown() {
             await notificationService.markAsRead(id);
             queryClient.setQueryData(["notifications-unread"], (old: number) => Math.max(0, old - 1));
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        } catch (e) { }
+        } catch { }
     };
 
     const handleMarkAllRead = async () => {
@@ -46,7 +46,7 @@ export default function NotificationDropdown() {
             await notificationService.markAllAsRead();
             queryClient.setQueryData(["notifications-unread"], 0);
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        } catch (e) { }
+        } catch { }
     };
 
     return (
@@ -66,17 +66,17 @@ export default function NotificationDropdown() {
                 </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-90 p-0 rounded-2xl border-border bg-card shadow-xl overflow-hidden z-100">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-                    <h3 className="font-bold text-lg">Thông báo</h3>
+            <DropdownMenuContent align="end" sideOffset={8} className="z-100 flex max-h-[calc(100dvh-5rem)] w-[calc(100vw-1.5rem)] max-w-90 flex-col overflow-hidden rounded-2xl border-border bg-card p-0 shadow-xl">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/50 px-4 py-3">
+                    <h3 className="shrink-0 font-bold text-lg">Thông báo</h3>
                     {unreadCount > 0 && (
-                        <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="h-8 px-2 text-xs text-primary hover:text-primary/80">
+                        <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="h-auto min-h-8 min-w-0 whitespace-normal px-2 py-1 text-right text-xs leading-tight text-primary hover:text-primary/80">
                             <Check size={14} className="mr-1" /> Đánh dấu đã đọc
                         </Button>
                     )}
                 </div>
 
-                <ScrollArea className="h-100">
+                <ScrollArea className="h-100 max-h-[calc(100dvh-9rem)] min-h-0">
                     {isLoading ? (
                         <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
                     ) : notifications.length === 0 ? (

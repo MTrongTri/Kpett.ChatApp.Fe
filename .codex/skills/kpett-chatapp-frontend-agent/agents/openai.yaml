@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kpett Frontend Agent"
+  short_description: "Build and maintain Kpett ChatApp frontend"
+  default_prompt: "Use $kpett-chatapp-frontend-agent to implement frontend changes in the Kpett ChatApp project."

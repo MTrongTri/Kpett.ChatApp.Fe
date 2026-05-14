@@ -1,40 +1,42 @@
 import { ReactNode } from "react";
 import Sidebar from "./components/side-bar";
+import { createPageMetadata } from "@/lib/seo";
 
-export default function SettingsLayout({
-    children
-}: {
-    children: ReactNode;
-}) {
-    return (
-        <div className="mt-14.5 min-h-screen bg-background text-foreground font-sans pb-20">
+export const metadata = createPageMetadata({
+  title: "Cài đặt tài khoản",
+  description:
+    "Cập nhật hồ sơ, quyền riêng tư và cài đặt tài khoản Kpett ChatApp.",
+  path: "/account/general",
+  noIndex: true,
+});
 
-            <div className="px-5 pt-8 pb-6 max-w-6xl mx-auto">
-                {/* Tiêu đề trang */}
-                <div className="mb-7">
-                    <h1 className="text-[28px] font-bold text-foreground tracking-tight">
-                        Chỉnh sửa trang cá nhân
-                    </h1>
-                    <p className="text-[12px] text-foreground/40 mt-1">
-                        Thay đổi sẽ được hiển thị công khai trên trang của bạn
-                    </p>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-5 items-start relative">
-                    {/* Sidebar Menu */}
-                    <Sidebar />
-
-                    {/* Cột Nội dung chính */}
-                    <div className="flex-1 min-w-0 flex flex-col gap-6 w-full">
-
-                        {/* Khung chứa các Form (Tab Edit, Account...) */}
-                        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                            {children}
-                        </div>
-
-                    </div>
-                </div>
-            </div>
+export default function SettingsLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-background text-foreground mt-14.5 min-h-screen pb-20 font-sans">
+      <div className="mx-auto max-w-6xl px-5 pt-8 pb-6">
+        {/* Tiêu đề trang */}
+        <div className="mb-7">
+          <h1 className="text-foreground text-[28px] font-bold tracking-tight">
+            Chỉnh sửa trang cá nhân
+          </h1>
+          <p className="text-foreground/40 mt-1 text-[12px]">
+            Thay đổi sẽ được hiển thị công khai trên trang của bạn
+          </p>
         </div>
-    );
+
+        <div className="relative flex flex-col items-start gap-5 lg:flex-row">
+          {/* Sidebar Menu */}
+          <Sidebar />
+
+          {/* Cột Nội dung chính */}
+          <div className="flex w-full min-w-0 flex-1 flex-col gap-6">
+            {/* Khung chứa các Form (Tab Edit, Account...) */}
+            <div className="border-border bg-card rounded-xl border p-6 shadow-sm">
+              {children}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

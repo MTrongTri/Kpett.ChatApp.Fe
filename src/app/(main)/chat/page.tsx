@@ -1,5 +1,3 @@
-// app/chat/page.tsx
-import React from 'react';
 import { MessageSquare } from 'lucide-react';
 
 export default function ChatIndexPage() {

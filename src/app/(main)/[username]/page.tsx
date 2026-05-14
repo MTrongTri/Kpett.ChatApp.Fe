@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation"; // Thêm notFound
 import { Metadata } from "next";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
@@ -16,43 +16,58 @@ interface ProfilePageProps {
 
 async function getUserProfile(username: string): Promise<UserProfile | null> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) return null;
+
+  if (!apiUrl) {
+    throw new Error("Missing NEXT_PUBLIC_API_URL environment variable");
+  }
 
   const cookieStore = await cookies();
   const authToken = cookieStore.get("access_token")?.value;
-  try {
-    const response = await fetch(
-      `${apiUrl}/api/users/profile/${encodeURIComponent(username)}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        next: {
-          revalidate: 300
-        }
+
+  const response = await fetch(
+    `${apiUrl}/api/users/profile/${encodeURIComponent(username)}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken && { Authorization: `Bearer ${authToken}` }),
+      },
+      next: {
+        revalidate: 300
       }
-    );
-    if (!response.ok) return null;
+    }
+  );
+
+  console.log("Fetch user profile response status:", response.status);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch profile: HTTP ${response.status}`);
+  }
+
+  try {
     const body = await response.json();
     return body?.data ?? body;
-  } catch {
-    return null;
+  } catch (error) {
+    throw new Error("Failed to parse profile JSON response");
   }
 }
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
+
   const userProfile = await getUserProfile(username);
 
-  if (!userProfile) return { title: 'User Not Found' };
+  if (!userProfile) return { title: 'Người dùng không tồn tại - Kpett ChatApp' };
 
   return createPageMetadata({
     title: `${userProfile.displayName} (@${userProfile.username}) - Kpett ChatApp`,
     description: userProfile.biography || `Xem trang cá nhân của ${userProfile.displayName} trên Kpett ChatApp.`,
     path: `/${userProfile.username}`,
     images: userProfile.avatarUrl ? [{ url: userProfile.avatarUrl, alt: `${userProfile.displayName}'s avatar` }] : undefined,
-  })
+  });
 }
 
 export default async function ProfilePage({ params, searchParams }: ProfilePageProps) {
@@ -62,7 +77,7 @@ export default async function ProfilePage({ params, searchParams }: ProfilePageP
   const userProfile = await getUserProfile(username);
 
   if (!userProfile) {
-    redirect("/error/server-error");
+    notFound();
   }
 
   return (

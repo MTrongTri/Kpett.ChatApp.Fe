@@ -1,4 +1,3 @@
-// app/api/auth/refresh/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -25,6 +24,14 @@ export async function POST(req: NextRequest) {
     const { accessToken, refreshToken: newRefreshToken } = result.data;
 
     const response = NextResponse.json({ data: { accessToken } });
+
+    response.cookies.set('access_token', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 5,
+    });
 
     response.cookies.set('refresh_token', newRefreshToken, {
         httpOnly: true,

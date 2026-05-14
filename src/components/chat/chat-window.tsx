@@ -17,6 +17,7 @@ import { ConversationAvatar } from './conversation-avatar';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { formatMessageDateHeader } from '@/lib/format-date-utils';
 import { ChatInputArea } from './chat-input-area';
+import { ChatMessageListSkeleton } from './chat-message-list-skeleton';
 import { TypingIndicator } from './typing-indicator';
 import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 import { shouldShowDotOnline } from '@/lib/conversation-utils';
@@ -48,6 +49,7 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
         messages,
         addMessageToCache,
         hasMore,
+        isLoading: isMessagesLoading,
         isLoadingMore,
         loadOlderMessages,
         updateMessageStatus
@@ -69,6 +71,7 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
     });
 
     useConversationPresenceSync(currentConversation?.id ?? "", currentConversation?.participants ?? []);
+    const isInitialChatLoading = isConversationsLoading || isMessagesLoading;
 
     // ---- TYPING INDICATOR ----
     const [typers, setTypers] = useState<Map<string, TypingEventPayload>>(new Map());
@@ -161,56 +164,62 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
                 onScroll={handleScroll}
                 className="min-h-0 flex-1 overflow-y-auto bg-muted/10 p-3 custom-scrollbar sm:p-4"
             >
-                {hasMore && (
-                    <div ref={loadMoreRef} style={{ overflowAnchor: 'none' }} className="flex justify-center py-4">
-                        {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <span className="text-xs text-muted-foreground">Cuộn để tải thêm...</span>}
-                    </div>
-                )}
-
-                {messages.map((msg, index) => {
-                    const isMine = msg.senderId === user?.id;
-                    const prevMsg = index > 0 ? messages[index - 1] : null;
-                    const isConsecutive = prevMsg?.senderId === msg.senderId && msg.type !== "System";
-
-                    // --- LOGIC PHÂN CHIA NGÀY ---
-                    const currentDateLabel = formatMessageDateHeader(msg.createdAt);
-                    const prevDateLabel = prevMsg ? formatMessageDateHeader(prevMsg.createdAt) : null;
-                    const showDateDivider = currentDateLabel !== prevDateLabel;
-
-                    const readers = currentConversation?.participants?.filter(
-                        (p) => p.id !== user?.id && p.lastReadMessageId === msg.id
-                    ) || [];
-
-                    const isLastMessage = index === messages.length - 1;
-
-                    return (
-                        <React.Fragment key={msg.id}>
-                            {/* Dòng phân chia ngày */}
-                            {showDateDivider && (
-                                <div className="flex justify-center my-6">
-                                    <span className="px-3 py-1 bg-background border border-border rounded-full text-[11px] font-medium text-muted-foreground shadow-sm">
-                                        {currentDateLabel}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} mb-4`}>
-                                <ChatMessageBubble
-                                    msg={msg}
-                                    isMine={isMine}
-                                    isConsecutive={isConsecutive}
-                                    readers={readers}
-                                    isLastMessage={isLastMessage}
-                                />
+                {isInitialChatLoading ? (
+                    <ChatMessageListSkeleton />
+                ) : (
+                    <>
+                        {hasMore && (
+                            <div ref={loadMoreRef} style={{ overflowAnchor: 'none' }} className="flex justify-center py-4">
+                                {isLoadingMore ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <span className="text-xs text-muted-foreground">Cuộn để tải thêm...</span>}
                             </div>
-                        </React.Fragment>
-                    );
-                })}
-                <div ref={messagesEndRef} />
+                        )}
+
+                        {messages.map((msg, index) => {
+                            const isMine = msg.senderId === user?.id;
+                            const prevMsg = index > 0 ? messages[index - 1] : null;
+                            const isConsecutive = prevMsg?.senderId === msg.senderId && msg.type !== "System";
+
+                            // --- LOGIC PHÂN CHIA NGÀY ---
+                            const currentDateLabel = formatMessageDateHeader(msg.createdAt);
+                            const prevDateLabel = prevMsg ? formatMessageDateHeader(prevMsg.createdAt) : null;
+                            const showDateDivider = currentDateLabel !== prevDateLabel;
+
+                            const readers = currentConversation?.participants?.filter(
+                                (p) => p.id !== user?.id && p.lastReadMessageId === msg.id
+                            ) || [];
+
+                            const isLastMessage = index === messages.length - 1;
+
+                            return (
+                                <React.Fragment key={msg.id}>
+                                    {/* Dòng phân chia ngày */}
+                                    {showDateDivider && (
+                                        <div className="flex justify-center my-6">
+                                            <span className="px-3 py-1 bg-background border border-border rounded-full text-[11px] font-medium text-muted-foreground shadow-sm">
+                                                {currentDateLabel}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} mb-4`}>
+                                        <ChatMessageBubble
+                                            msg={msg}
+                                            isMine={isMine}
+                                            isConsecutive={isConsecutive}
+                                            readers={readers}
+                                            isLastMessage={isLastMessage}
+                                        />
+                                    </div>
+                                </React.Fragment>
+                            );
+                        })}
+                    </>
+                )}
+                {!isInitialChatLoading && <div ref={messagesEndRef} />}
             </div>
 
             {/* New Message Floating Button */}
-            {showNewMessageButton && (
+            {showNewMessageButton && !isInitialChatLoading && (
                 <button
                     onClick={() => scrollToBottom()}
                     className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-2 shadow-lg text-sm flex items-center gap-2 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"

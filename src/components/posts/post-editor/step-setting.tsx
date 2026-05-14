@@ -81,7 +81,7 @@ export default function StepSettings({
       }
 
       {/* 2. Cài đặt Cho phép Bình luận */}
-      <div className="border-border bg-secondary/20 hover:bg-secondary/30 flex items-center justify-between rounded-xl border p-4 transition-colors">
+      <div className="hidden border-border bg-secondary/20 hover:bg-secondary/30 items-center justify-between rounded-xl border p-4 transition-colors">
         <div className="flex items-center gap-3">
           <div className="bg-background border-primary rounded-lg p-2 shadow-sm">
             <MessageSquare className="text-primary h-5 w-5" />

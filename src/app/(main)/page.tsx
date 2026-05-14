@@ -2,6 +2,14 @@ import Feed from "./components/posts/feed";
 import LeftPanel from "./components/left-panel/left-panel";
 import RightPanel from "./components/right-panel/right-panel";
 import SpotlightStrip from "./components/story/spotlight-strip";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Bảng tin",
+  description:
+    "Theo dõi bài viết mới, cập nhật hoạt động và kết nối với bạn bè trên Kpett ChatApp.",
+  path: "/",
+});
 
 export default function HomePage() {
   return (

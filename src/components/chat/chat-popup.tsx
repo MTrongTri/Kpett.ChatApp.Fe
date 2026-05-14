@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useChatMessages } from '@/hooks/chat/use-chat-messages';
 import { chatService } from '@/services/chat.service';
 import { closeChatPopup, toggleMinimizePopup } from '@/store/features/chat-slice';
-import { MessageResponse, TypingEventPayload } from '@/types/chat';
+import { ConversationResponse, MessageResponse, TypingEventPayload } from '@/types/chat';
 import { Maximize2, Minus, X, Loader2, ArrowDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import { useTyping } from '@/hooks/chat/use-typing';
 import ChatMessageBubble from './chat-message-bubble';
 import { ConversationAvatar } from './conversation-avatar';
 import { ChatInputArea } from './chat-input-area';
+import { ChatMessageListSkeleton } from './chat-message-list-skeleton';
 import { useConversations } from '@/hooks/chat/use-conversations';
 import { formatMessageDateHeader } from '@/lib/format-date-utils';
 import { TypingIndicator } from './typing-indicator';
@@ -39,7 +40,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
 
     // LẤY DỮ LIỆU TỪ CACHE & HOOKS
     const { conversations } = useConversations();
-    const currentConversationFromList = conversations.find((c: any) => c.id === conversationId);
+    const currentConversationFromList = conversations.find((c) => c.id === conversationId);
 
     const { data: fetchedConversation } = useQuery({
         queryKey: ['conversation', conversationId],
@@ -47,11 +48,11 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         enabled: !currentConversationFromList,
     });
 
-    const currentConversation = currentConversationFromList || fetchedConversation;
+    const currentConversation = (currentConversationFromList || fetchedConversation) as ConversationResponse | undefined;
 
     const isOnline = currentConversation?.participants
-        ?.filter((p: any) => p.id !== user?.id)
-        .some((p: any) => p.isOnline);
+        ?.filter((p) => p.id !== user?.id)
+        .some((p) => p.isOnline);
     const chatName = currentConversation?.name || "Người dùng";
 
     const {
@@ -59,18 +60,25 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         addMessageToCache,
         updateMessageStatus,
         hasMore,
+        isLoading: isMessagesLoading,
         isLoadingMore,
         loadOlderMessages
     } = useChatMessages(conversationId, isMinimized);
 
-    useConversationPresenceSync(currentConversation?.id!, currentConversation?.participants!);
+    useConversationPresenceSync(currentConversation?.id ?? "", currentConversation?.participants ?? []);
+    const isInitialChatLoading = !currentConversation || isMessagesLoading;
 
     // LOGIC QUYẾT ĐỊNH HIỂN THỊ PREVIEW TEXT
     useEffect(() => {
         if (!isMinimized) {
-            setPreviewText(null);
+            let clearTimer: number | undefined;
+            if (previewText) {
+                clearTimer = window.setTimeout(() => setPreviewText(null), 0);
+            }
             if (newMessage) lastHandledMsgId.current = newMessage.id;
-            return;
+            return () => {
+                if (clearTimer) window.clearTimeout(clearTimer);
+            };
         }
 
         if (newMessage && isMinimized && lastHandledMsgId.current !== newMessage.id) {
@@ -80,13 +88,14 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
             const isRecent = (now - msgTime) < 10000;
 
             if (isRecent) {
-                setPreviewText(newMessage.content);
+                const previewTimer = window.setTimeout(() => setPreviewText(newMessage.content), 0);
                 lastHandledMsgId.current = newMessage.id;
+                return () => window.clearTimeout(previewTimer);
             } else {
                 lastHandledMsgId.current = newMessage.id;
             }
         }
-    }, [newMessage, isMinimized]);
+    }, [newMessage, isMinimized, previewText]);
 
     // BỘ ĐẾM GIỜ TỰ XÓA PREVIEW (Độc lập để không bị kẹt)
     useEffect(() => {
@@ -157,7 +166,7 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
         router.push(`/chat/${conversationId}`);
     };
 
-    let isShowDotOnline = currentConversation ? shouldShowDotOnline(currentConversation, user?.id) : false;
+    const isShowDotOnline = currentConversation ? shouldShowDotOnline(currentConversation, user?.id) : false;
 
     // UI 1: NẾU ĐANG THU NHỎ -> HIỂN THỊ BONG BÓNG
     if (isMinimized) {
@@ -292,18 +301,20 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                 onScroll={handleScroll}
                 className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar scrollbar-thin bg-muted/10 outline-none!"
             >
-                {hasMore && (
+                {isInitialChatLoading && <ChatMessageListSkeleton compact count={5} />}
+
+                {!isInitialChatLoading && hasMore && (
                     <div ref={loadMoreRef} style={{ overflowAnchor: 'none' }} className="flex justify-center py-2">
                         {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : null}
                     </div>
                 )}
 
-                {messages.map((msg, index) => {
+                {!isInitialChatLoading && messages.map((msg, index) => {
                     const isMine = msg.senderId === user?.id;
                     const prevMsg = index > 0 ? messages[index - 1] : null;
                     const isConsecutive = prevMsg?.senderId === msg.senderId && msg.type !== "System";
                     const readers = currentConversation?.participants?.filter(
-                        (p: any) => p.id !== user?.id && p.lastReadMessageId === msg.id
+                        (p) => p.id !== user?.id && p.lastReadMessageId === msg.id
                     ) || [];
                     const isLastMessage = index === messages.length - 1;
 
@@ -334,12 +345,12 @@ export default function ChatPopup({ conversationId, isMinimized, newMessage }: C
                         </React.Fragment>
                     );
                 })}
-                <div ref={messagesEndRef} />
+                {!isInitialChatLoading && <div ref={messagesEndRef} />}
             </div>
 
             {/* New Message Floating Button */}
             {
-                showNewMessageButton && !isMinimized && (
+                showNewMessageButton && !isMinimized && !isInitialChatLoading && (
                     <button
                         onClick={() => scrollToBottom()}
                         className="absolute bottom-17.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"

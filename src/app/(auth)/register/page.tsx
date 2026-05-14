@@ -1,4 +1,12 @@
 import FormRegister from "@/components/auth/form-register";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Đăng ký",
+  description:
+    "Tạo tài khoản Kpett ChatApp để chia sẻ bài viết, trò chuyện và kết nối với cộng đồng.",
+  path: "/register",
+});
 
 function RegisterPage() {
   return (

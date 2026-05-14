@@ -1,65 +1,74 @@
-"use client";
-
-import { getUserProfile } from "@/services/user.service";
-import { useQuery } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
-import { use, useEffect, useRef } from "react";
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
 import ProfileInfo from "./components/profile-info";
-import ProfileSkeleton from "./components/profile-skeleton";
 import ProfileTabs from "./components/profile-tabs";
+import ScrollHandler from "./components/scroll-handler";
+import { UserProfile } from "@/types/user";
+import { createPageMetadata } from "@/lib/seo";
+import { cookies } from "next/headers";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function ProfilePage({ params }: ProfilePageProps) {
-  const { username } = use(params);
-  const searchParams = useSearchParams();
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+async function getUserProfile(username: string): Promise<UserProfile | null> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) return null;
 
-  const {
-    data: userProfile,
-    isLoading,
-    error,
-    isError
-  } = useQuery({
-    queryKey: ["user-profile", username],
-    queryFn: () => getUserProfile(username),
-    enabled: !!username,
-    staleTime: 60 * 1000,
-  });
-
-  // Xử lý scroll tới tabs nếu có query param
-  useEffect(() => {
-    if (!isLoading && userProfile) {
-      const scrollTo = searchParams.get("scroll-to");
-      if (scrollTo === "tabs" && tabsRef.current) {
-        setTimeout(() => {
-          tabsRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }, 150);
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("access_token")?.value;
+  try {
+    const response = await fetch(
+      `${apiUrl}/api/users/profile/${encodeURIComponent(username)}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        next: {
+          revalidate: 300
+        }
       }
-    }
-  }, [isLoading, userProfile, searchParams]);
-
-  // Render Skeleton
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
-
-  if (isError || !userProfile) {
-    router.push("/error/server-error");
-
+    );
+    if (!response.ok) return null;
+    const body = await response.json();
+    return body?.data ?? body;
+  } catch {
     return null;
+  }
+}
+
+export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+  const { username } = await params;
+  const userProfile = await getUserProfile(username);
+
+  if (!userProfile) return { title: 'User Not Found' };
+
+  return createPageMetadata({
+    title: `${userProfile.displayName} (@${userProfile.username}) - Kpett ChatApp`,
+    description: userProfile.biography || `Xem trang cá nhân của ${userProfile.displayName} trên Kpett ChatApp.`,
+    path: `/${userProfile.username}`,
+    images: userProfile.avatarUrl ? [{ url: userProfile.avatarUrl, alt: `${userProfile.displayName}'s avatar` }] : undefined,
+  })
+}
+
+export default async function ProfilePage({ params, searchParams }: ProfilePageProps) {
+  const { username } = await params;
+  const { "scroll-to": scrollTo } = await searchParams;
+
+  const userProfile = await getUserProfile(username);
+
+  if (!userProfile) {
+    redirect("/error/server-error");
   }
 
   return (
     <div className="bg-background min-h-screen pt-14.5">
+      {scrollTo === "tabs" && <ScrollHandler targetId="profile-tabs-section" />}
+
       <div className="min-w-0">
         <ProfileCover
           cover={userProfile.coverUrl}
@@ -71,7 +80,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         />
         <ProfileInfo profile={userProfile} />
 
-        <div ref={tabsRef} id="profile-tabs-section">
+        <div id="profile-tabs-section">
           <ProfileTabs author={userProfile} />
         </div>
       </div>

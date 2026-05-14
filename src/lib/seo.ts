@@ -82,6 +82,13 @@ export const defaultMetadata: Metadata = {
     title: siteConfig.fullName,
     description: siteConfig.description,
     url: "/",
+    images: [
+      {
+        url: `/kpet.png`,
+        width: 1200,
+        height: 630,
+      }
+    ],
     siteName: siteConfig.name,
     locale: siteConfig.locale,
     type: "website",
@@ -116,7 +123,7 @@ export function createPageMetadata({
       siteName: siteConfig.name,
       locale: siteConfig.locale,
       type: "website",
-      images,
+      images: images || defaultMetadata.openGraph?.images,
     },
     twitter: {
       card: "summary_large_image",

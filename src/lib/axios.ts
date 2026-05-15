@@ -15,15 +15,20 @@ export const authHttp = axios.create({
 });
 
 // Chuẩn hóa lỗi
-const normalizeError = (err: any): ApiResponse => {
+const normalizeError = (err: unknown): ApiResponse => {
+    const responseData = axios.isAxiosError(err) ? err.response?.data : undefined;
+    const statusCode = axios.isAxiosError(err) ? err.response?.status : undefined;
+    const errorMessage = err instanceof Error ? err.message : undefined;
+    const errorCode = axios.isAxiosError(err) ? err.code : undefined;
+
     // Nếu là lỗi do Backend trả về đúng format ApiResponse
-    if (err.response?.data && typeof err.response.data === 'object') {
-        return err.response.data as ApiResponse;
+    if (responseData && typeof responseData === 'object') {
+        return responseData as ApiResponse;
     }
 
     // Nếu lỗi do đứt mạng (Network Error), Timeout, hoặc CORS
-    const isNetworkError = err.message === 'Network Error';
-    const isTimeout = err.code === 'ECONNABORTED';
+    const isNetworkError = errorMessage === 'Network Error';
+    const isTimeout = errorCode === 'ECONNABORTED';
 
     let fallbackMessage = "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.";
     let fallbackErrorCode = "UNKNOWN_ERROR";
@@ -38,7 +43,7 @@ const normalizeError = (err: any): ApiResponse => {
 
     return {
         isSuccess: false,
-        statusCode: err.response?.status || 500,
+        statusCode: statusCode || 500,
         message: fallbackMessage,
         errorCode: fallbackErrorCode,
         data: null
@@ -109,6 +114,11 @@ http.interceptors.response.use(
 
         return Promise.reject(normalizeError(err));
     },
+);
+
+authHttp.interceptors.response.use(
+    (res: AxiosResponse) => res,
+    (err) => Promise.reject(normalizeError(err)),
 );
 
 export default http;

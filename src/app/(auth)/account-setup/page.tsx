@@ -4,7 +4,6 @@ import { ChevronLeft, FileText, User, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import UsernameInput from "./components/UsernameInput";
 import { accountSetup } from "@/services/user.service";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/auth-slice";
@@ -15,7 +14,6 @@ export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
-  const router = useRouter();
   const dispatch = useDispatch();
 
   const { accessToken, logout } = useAuth();
@@ -62,7 +60,7 @@ export default function SocialAccountSetup() {
       }
 
       sessionStorage.setSession({
-        isProfileCompleted: data.isProfileCompleted,
+        isProfileCompleted: true,
       });
 
       dispatch(
@@ -73,10 +71,21 @@ export default function SocialAccountSetup() {
         }),
       );
       toast.success("Thiết lập tài khoản thành công!");
-      router.push("/");
-    } catch (error) {
-      toast.error("Đã có lỗi xảy ra khi lưu thông tin");
+      window.location.replace("/");
+    } catch (error: unknown) {
       console.error(error);
+      const { errorCode } = (error as any) || {};
+
+      if (errorCode === "USER.USERNAME_ALREADY_EXISTS") {
+        setStep(1);
+        toast.error("Username này đã được sử dụng. Vui lòng chọn tên khác.");
+      } else if (errorCode === "NETWORK_ERROR") {
+        toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
+      } else {
+        toast.error(
+          "Đã có lỗi xảy ra khi lưu thông tin. Vui lòng thử lại.",
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -136,11 +145,10 @@ export default function SocialAccountSetup() {
                   </label>
                   <div className="relative">
                     <User
-                      className={`absolute top-1/2 left-3.5 -translate-y-1/2 transition-colors ${
-                        isDisplayNameTouched && !isDisplayNameValid
-                          ? "text-red-500"
-                          : "text-slate-400"
-                      }`}
+                      className={`absolute top-1/2 left-3.5 -translate-y-1/2 transition-colors ${isDisplayNameTouched && !isDisplayNameValid
+                        ? "text-red-500"
+                        : "text-slate-400"
+                        }`}
                       size={18}
                     />
                     <input
@@ -150,11 +158,10 @@ export default function SocialAccountSetup() {
                       onChange={handleChange}
                       onBlur={() => setIsDisplayNameTouched(true)}
                       placeholder="Ví dụ: Trọng Trí"
-                      className={`w-full rounded-2xl border bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none dark:text-white ${
-                        isDisplayNameTouched && !isDisplayNameValid
-                          ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
-                      }`}
+                      className={`w-full rounded-2xl border bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none dark:text-white ${isDisplayNameTouched && !isDisplayNameValid
+                        ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
+                        }`}
                     />
                   </div>
                   {isDisplayNameTouched && !isDisplayNameValid && (
@@ -235,11 +242,10 @@ export default function SocialAccountSetup() {
                       key={tag}
                       type="button"
                       onClick={() => toggleInterest(tag)}
-                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
-                        formData.interests.includes(tag)
-                          ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                          : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
-                      }`}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${formData.interests.includes(tag)
+                        ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                        : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
+                        }`}
                     >
                       {tag}
                     </button>

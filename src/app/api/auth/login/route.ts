@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         return NextResponse.json(result, { status: backendRes.status });
     }
 
-    const { accessToken, refreshToken } = result.data.token;
+    const { refreshToken } = result.data.token;
 
     const response = NextResponse.json({
         user: result.data.user,

@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,10 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authService from "@/services/auth.service";
 import Logo from "../layouts/main/logo";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-
-const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+import { AxiosError } from "axios";
 
 const registerSchema = z
   .object({
@@ -59,21 +58,33 @@ export default function FormRegister() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      const registerRes = await authService.register(data);
-      toast.success("Đăng ký thành công!");
+      await authService.register({
+        email: data.email,
+        password: data.password,
+      });
 
-      router.push("/login");
-    } catch (err: any) {
-      const errorCode = err?.errorCode;
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      router.replace("/login");
+    } catch (err: AxiosError | any) {
+      const { errorCode } = err || {};
 
-      if (errorCode === "USER.ALREADY_EXISTS_BY_EMAIL") {
+      if (
+        errorCode === "USER.ALREADY_EXISTS_BY_EMAIL" ||
+        errorCode === "AUTH.EMAIL_ALREADY_EXISTS"
+      ) {
         setError("email", {
           message: "Email này đã được sử dụng",
         });
         return;
       }
 
-      toast.error("Đã có lỗi xảy ra, vui lòng thử lại");
+      if (errorCode === "NETWORK_ERROR") {
+        toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
+        return;
+      }
+
+      toast.error("Đã có lỗi xảy ra, vui lòng thử lại"
+      );
     }
   };
 
@@ -84,7 +95,6 @@ export default function FormRegister() {
       transition={{ duration: 0.4 }}
       className="z-10 w-full max-w-md"
     >
-      {/* 2. Cập nhật Card hỗ trợ Dark Mode */}
       <Card className="border-zinc-200 bg-white/80 shadow-2xl shadow-zinc-200/50 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/50">
         <CardHeader className="space-y-2 pt-8 text-center">
           <div className="flex items-center justify-center">
@@ -100,7 +110,6 @@ export default function FormRegister() {
 
         <CardContent className="grid gap-5">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
             <div className="space-y-1.5">
               <Label
                 htmlFor="email"
@@ -113,9 +122,8 @@ export default function FormRegister() {
                 type="email"
                 placeholder="name@example.com"
                 {...register("email")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
-                  errors.email ? "border-red-500 dark:border-red-500" : ""
-                }`}
+                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.email ? "border-red-500 dark:border-red-500" : ""
+                  }`}
               />
               {errors.email && (
                 <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
@@ -124,7 +132,6 @@ export default function FormRegister() {
               )}
             </div>
 
-            {/* Password Field */}
             <div className="space-y-1.5">
               <Label
                 htmlFor="password"
@@ -138,9 +145,8 @@ export default function FormRegister() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("password")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
-                    errors.password ? "border-red-500 dark:border-red-500" : ""
-                  }`}
+                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.password ? "border-red-500 dark:border-red-500" : ""
+                    }`}
                 />
                 <button
                   type="button"
@@ -157,7 +163,6 @@ export default function FormRegister() {
               )}
             </div>
 
-            {/* Confirm Password Field */}
             <div className="space-y-1.5">
               <Label
                 htmlFor="confirmPassword"
@@ -171,11 +176,10 @@ export default function FormRegister() {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("confirmPassword")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${
-                    errors.confirmPassword
-                      ? "border-red-500 dark:border-red-500"
-                      : ""
-                  }`}
+                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.confirmPassword
+                    ? "border-red-500 dark:border-red-500"
+                    : ""
+                    }`}
                 />
                 <button
                   type="button"

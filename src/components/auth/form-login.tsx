@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authService from "@/services/auth.service";
+import { ApiResponse } from "@/types/common/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "../layouts/main/logo";
@@ -51,7 +52,6 @@ export default function FormLogin() {
     resolver: zodResolver(loginSchema),
   });
 
-  // app/(auth)/login/page.tsx
   const onSubmit = async (dataLogin: LoginFormValues) => {
     try {
       const dataRes = await authService.login(dataLogin);
@@ -67,20 +67,21 @@ export default function FormLogin() {
 
       if (user.isProfileCompleted) {
         toast.success('Đăng nhập thành công!');
-        window.location.href = "/";
+        router.replace("/");
       } else {
-        window.location.href = "/account-setup";
+        router.replace("/account-setup");
       }
-    } catch (err: any) {
-      const errorCode = err?.errorCode;
-
-      console.log(err)
+    } catch (err) {
+      const apiError = err as ApiResponse;
+      const errorCode = apiError.errorCode;
+      const errorMessage =
+        apiError.message || 'Đã có lỗi xảy ra, vui lòng thử lại!';
 
       if (errorCode === 'AUTH.UNAUTHORIZED') {
-        setError('email', { message: 'Tài khoản hoặc mật khẩu không chính xác' });
-        setError('password', { message: 'Tài khoản hoặc mật khẩu không chính xác' });
+        setError('email', { message: "Email hoặc mật khẩu không đúng" });
+        setError('password', { message: "Email hoặc mật khẩu không đúng" });
       } else {
-        toast.error('Đã có lỗi xảy ra, vui lòng thử lại!');
+        toast.error(errorMessage);
       }
     }
   };

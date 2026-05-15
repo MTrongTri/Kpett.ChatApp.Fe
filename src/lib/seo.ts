@@ -14,17 +14,17 @@ function getSiteUrl(url: string) {
 }
 
 export const siteConfig = {
-  name: "Kpett",
-  fullName: "Kpett ChatApp",
+  name: "Kpet",
+  fullName: "Kpet ChatApp",
   url: getSiteUrl(siteUrl),
   description:
-    "Kpett ChatApp là mạng xã hội giúp bạn chia sẻ bài viết, trò chuyện và kết nối với bạn bè theo thời gian thực.",
+    "Kpet ChatApp là mạng xã hội giúp bạn chia sẻ bài viết, trò chuyện và kết nối với bạn bè theo thời gian thực.",
   locale: "vi_VN",
 };
 
 const defaultKeywords = [
-  "Kpett",
-  "Kpett ChatApp",
+  "Kpet",
+  "Kpet ChatApp",
   "mạng xã hội",
   "chat",
   "nhắn tin",

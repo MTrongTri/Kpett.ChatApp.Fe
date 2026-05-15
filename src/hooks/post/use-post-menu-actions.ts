@@ -1,3 +1,4 @@
+import { copyToClipboard } from "@/lib/clipboard-utils";
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { deletePost } from "@/services/post.service";
 import { closePostLightBox, openPostEditorModal } from "@/store/features/modal-slice";
@@ -59,9 +60,24 @@ export const usePostMenuActions = (post: Post | null) => {
         }
     };
 
+
+    const handleCopyLink = async () => {
+        if (!post) return;
+        const url = `${window.location.origin}/post/${post.id}`;
+
+        const isSuccess = await copyToClipboard(url);
+
+        if (isSuccess) {
+            toast.success("Đã sao chép liên kết vào bộ nhớ tạm!");
+        } else {
+            toast.error("Không thể sao chép. Vui lòng thử lại.");
+        }
+    };
+
     return {
         handleEditClick,
         handleDelete,
-        fetchMentions
+        fetchMentions,
+        handleCopyLink
     };
 };

@@ -3,14 +3,15 @@ import type { NextRequest } from "next/server";
 
 const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
 const PUBLIC_ROUTES = ["/"];
-const PRIVATE_ROUTES = ["/chat"]
+const PRIVATE_ROUTES = ["/chat"];
 const SETUP_ROUTE = "/account-setup";
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isLoggedIn = request.cookies.get("isLoggedIn")?.value === "true";
-  const isProfileCompleted = request.cookies.get("isProfileCompleted")?.value === "true";
+  const isProfileCompleted =
+    request.cookies.get("isProfileCompleted")?.value === "true";
 
   // Hàm kiểm tra route hiện tại có phải là Profile (/{username}) hay không
   // Kịch bản: Route chỉ có 1 cấp (vd: /johndoe) và KHÔNG trùng với bất kỳ route hệ thống/auth nào
@@ -21,7 +22,9 @@ export default async function middleware(request: NextRequest) {
     pathname !== SETUP_ROUTE;
 
   // Gộp chung các trang cho phép truy cập tự do
-  const isPublicAccess = PUBLIC_ROUTES.includes(pathname) || isProfileRoute;
+  const isPostDetailRoute = /^\/post\/[^/]+$/.test(pathname);
+  const isPublicAccess =
+    PUBLIC_ROUTES.includes(pathname) || isProfileRoute || isPostDetailRoute;
 
   // LOGIC KHI USER ĐÃ ĐĂNG NHẬP
   if (isLoggedIn) {
@@ -55,6 +58,6 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

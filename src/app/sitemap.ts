@@ -17,6 +17,13 @@ type SitemapUser = {
   createdAt?: string | null;
 };
 
+type SitemapPost = {
+  id: string;
+  privacy?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+};
+
 type CursorPaginationMeta = {
   nextCursor: string | null;
   hasMore: boolean;
@@ -24,6 +31,11 @@ type CursorPaginationMeta = {
 
 type PaginatedUsers = {
   items: SitemapUser[];
+  pagination?: CursorPaginationMeta;
+};
+
+type PaginatedPosts = {
+  items: SitemapPost[];
   pagination?: CursorPaginationMeta;
 };
 
@@ -63,6 +75,24 @@ function createSitemapEntry({
 
 function unwrapPaginatedUsers(payload: unknown): PaginatedUsers | null {
   const response = payload as ApiResponse<PaginatedUsers> | PaginatedUsers;
+
+  if ("items" in response && Array.isArray(response.items)) {
+    return response;
+  }
+
+  if (
+    "data" in response &&
+    response.data &&
+    Array.isArray(response.data.items)
+  ) {
+    return response.data;
+  }
+
+  return null;
+}
+
+function unwrapPaginatedPosts(payload: unknown): PaginatedPosts | null {
+  const response = payload as ApiResponse<PaginatedPosts> | PaginatedPosts;
 
   if ("items" in response && Array.isArray(response.items)) {
     return response;
@@ -138,8 +168,71 @@ async function getProfileRoutes(): Promise<SitemapRoute[]> {
   return routes;
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const profileRoutes = await getProfileRoutes();
+async function getPostRoutes(): Promise<SitemapRoute[]> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  return [...publicRoutes, ...profileRoutes].map(createSitemapEntry);
+  if (!apiUrl) {
+    return [];
+  }
+
+  const routes: SitemapRoute[] = [];
+  let cursor: string | null = null;
+
+  for (let page = 0; page < 10; page += 1) {
+    const url = new URL("/api/posts", apiUrl);
+
+    url.searchParams.set("limit", "100");
+
+    if (cursor) {
+      url.searchParams.set("cursor", cursor);
+    }
+
+    try {
+      const response = await fetch(url, {
+        next: { revalidate },
+      });
+
+      if (!response.ok) {
+        break;
+      }
+
+      const posts = unwrapPaginatedPosts(await response.json());
+
+      if (!posts) {
+        break;
+      }
+
+      routes.push(
+        ...posts.items
+          .filter((post) => post.id && post.privacy === "public")
+          .map((post) => ({
+            path: `/post/${post.id}`,
+            lastModified: post.updatedAt || post.createdAt || undefined,
+            changeFrequency: "weekly" as const,
+            priority: 0.7,
+          })),
+      );
+
+      if (!posts.pagination?.hasMore || !posts.pagination.nextCursor) {
+        break;
+      }
+
+      cursor = posts.pagination.nextCursor;
+    } catch {
+      break;
+    }
+  }
+
+  return routes;
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [profileRoutes, postRoutes] = await Promise.all([
+    getProfileRoutes(),
+    getPostRoutes(),
+  ]);
+
+  return [...publicRoutes, ...profileRoutes, ...postRoutes].map(
+    createSitemapEntry,
+  );
 }

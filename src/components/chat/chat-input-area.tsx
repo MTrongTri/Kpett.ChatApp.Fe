@@ -69,7 +69,7 @@ export function ChatInputArea({ onSendMessage, onTyping, onStopTyping }: ChatInp
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
                 <button
                     type="button"
-                    className="text-primary hover:bg-muted p-1.5 rounded-full transition outline-none"
+                    className="hidden text-primary hover:bg-muted p-1.5 rounded-full transition outline-none"
                     title="Gửi ảnh"
                 >
                     <ImageIcon size={18} />

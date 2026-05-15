@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { copyToClipboard } from "@/lib/clipboard-utils";
 import { EyeOff, Flag, Link2, MoreHorizontal, Pencil, Trash2, UserMinus } from "lucide-react";
+import { toast } from "sonner";
 
-export const PostLightboxMenu = ({ isAuthor, onEdit, onDelete }: any) => {
+export const PostLightboxMenu = ({ isAuthor, onEdit, onDelete, onCopyLink }: any) => {
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -21,13 +24,8 @@ export const PostLightboxMenu = ({ isAuthor, onEdit, onDelete }: any) => {
                         </DropdownMenuItem>
                     </>
                 )}
-                <DropdownMenuItem className="cursor-pointer gap-2"><Link2 size={13} /> Sao chép liên kết</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2"><EyeOff size={13} /> Ẩn bài viết</DropdownMenuItem>
-                {!isAuthor && (
-                    <DropdownMenuItem className="cursor-pointer gap-2"><UserMinus size={13} /> Bỏ theo dõi</DropdownMenuItem>
-                )}
-                <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer gap-2">
-                    <Flag size={13} /> Báo cáo
+                <DropdownMenuItem className="cursor-pointer gap-2" onClick={onCopyLink}>
+                    <Link2 size={13} /> Sao chép liên kết
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

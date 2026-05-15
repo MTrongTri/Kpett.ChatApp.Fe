@@ -52,6 +52,7 @@ export default function PostLightbox({
   const {
     handleEditClick,
     handleDelete,
+    handleCopyLink
   } = usePostMenuActions(post || null);
 
   if (!isOpen) return null;
@@ -108,6 +109,7 @@ export default function PostLightbox({
                     isAuthor={isAuthor}
                     onEdit={handleEditClick}
                     onDelete={handleDelete}
+                    onCopyLink={handleCopyLink}
                   />
                 </div>
               </DialogHeader>
@@ -123,7 +125,7 @@ export default function PostLightbox({
                 </div>
 
                 {/* ACTION BUTTONS (Like, Comment, Save) */}
-                <div className="hidden md:block flex items-center gap-1 px-3 py-2.5 shrink-0">
+                <div className="md:block flex items-center gap-1 px-3 py-2.5 shrink-0">
                   <LikeButton
                     postId={post.id}
                     initialLiked={post.viewerContext.isLiked ?? false}

@@ -9,6 +9,11 @@ import { PaginatedData } from '@/types/common/api';
 const API_URL = '/conversations';
 
 export const chatService = {
+    hasUnreadConversations: async (): Promise<boolean> => {
+        const response = await http.get(`${API_URL}/has-unread`);
+        return response.data;
+    },
+
     // Lấy danh sách cuộc hội thoại
     getConversations: async (limit = 12, cursor?: string): Promise<PaginatedData<ConversationResponse>> => {
         const response = await http.get(API_URL, {

@@ -1,4 +1,4 @@
-import { redirect, notFound } from "next/navigation"; // Thêm notFound
+import { redirect, notFound } from "next/navigation";
 import { Metadata } from "next";
 import ProfileAvatarRow from "./components/profile-avatar-row";
 import ProfileCover from "./components/profile-cover";
@@ -37,8 +37,6 @@ async function getUserProfile(username: string): Promise<UserProfile | null> {
     }
   );
 
-  console.log("Fetch user profile response status:", response.status);
-
   if (response.status === 404) {
     return null;
   }
@@ -60,10 +58,10 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
   const userProfile = await getUserProfile(username);
 
-  if (!userProfile) return { title: 'Người dùng không tồn tại - Kpett ChatApp' };
+  if (!userProfile) return { title: 'Người dùng không tồn tại' };
 
   return createPageMetadata({
-    title: `${userProfile.displayName} (@${userProfile.username}) - Kpett ChatApp`,
+    title: `${userProfile.displayName} (@${userProfile.username})`,
     description: userProfile.biography || `Xem trang cá nhân của ${userProfile.displayName} trên Kpett ChatApp.`,
     path: `/${userProfile.username}`,
     images: userProfile.avatarUrl ? [{ url: userProfile.avatarUrl, alt: `${userProfile.displayName}'s avatar` }] : undefined,

@@ -42,7 +42,7 @@ export default function SaveButton({ postId, initialSaved }: SaveButtonProps) {
             size="icon"
             onClick={handleSave}
             className={cn(
-                "h-8 w-8 rounded-lg transition-all duration-150",
+                "hidden h-8 w-8 rounded-lg transition-all duration-150",
                 saved
                     ? "text-primary bg-primary/10 hover:bg-primary/15"
                     : "text-foreground/40 hover:text-foreground hover:bg-foreground/8",

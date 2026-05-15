@@ -17,6 +17,8 @@ import { Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatSystemMessage } from '@/lib/message-utils';
 import { shouldShowDotOnline } from '@/lib/conversation-utils';
+import { useQuery } from '@tanstack/react-query';
+import { chatService } from '@/services/chat.service';
 
 export default function ChatHeaderDropdown() {
     const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +35,9 @@ export default function ChatHeaderDropdown() {
         isLoadingMore,
         hasMore,
         loadMore
-    } = useConversations();
+    } = useConversations({
+        enabled: isOpen
+    });
 
     const { ref: loadMoreRef, inView } = useInView({
         threshold: 0,
@@ -46,7 +50,10 @@ export default function ChatHeaderDropdown() {
         }
     }, [inView, hasMore, isLoadingMore, loadMore, isOpen]);
 
-    const hasAnyUnread = conversations.some((conv) => conv.hasUnread);
+    const { data: hasAnyUnread } = useQuery({
+        queryKey: ['hasUnreadConversations'],
+        queryFn: chatService.hasUnreadConversations,
+    });
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {

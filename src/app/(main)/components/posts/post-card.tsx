@@ -24,6 +24,8 @@ import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
 import PostMediaSlider from "@/components/posts/post-media-slider";
 import SaveButton from "@/components/posts/save-button";
+import { copyToClipboard } from "@/lib/clipboard-utils";
+import { toast } from "sonner";
 
 interface PostCardProps {
   post: Post;
@@ -36,8 +38,21 @@ export default function PostCard({ post }: PostCardProps) {
     dispatch(openPostLightBox({ postId: post.id, post, targetScroll: "comment-list-area" }));
   };
 
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/post/${post.id}`;
+
+    const isSuccess = await copyToClipboard(url);
+
+    if (isSuccess) {
+      toast.success("Đã sao chép liên kết vào bộ nhớ tạm!");
+    } else {
+      toast.error("Không thể sao chép. Vui lòng thử lại.");
+    }
+  };
+
+
   return (
-    <article className="border-none md:border-border bg-card rounded-xl border transition-all duration-200">
+    <article className="border-0 md:border-border bg-card rounded-xl md:border transition-all duration-200">
 
       {/* ── HEADER ── */}
       <div className="flex items-center justify-between gap-3 pr-4 pt-1">
@@ -59,17 +74,8 @@ export default function PostCard({ post }: PostCardProps) {
             align="end"
             className="bg-card border-border text-card-foreground w-44 rounded-lg text-sm"
           >
-            <DropdownMenuItem className="hover:text-primary focus:text-primary cursor-pointer gap-2">
+            <DropdownMenuItem onClick={handleCopyLink} className="hover:text-primary focus:text-primary cursor-pointer gap-2">
               <Link2 size={13} /> Sao chép liên kết
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer gap-2">
-              <EyeOff size={13} /> Ẩn bài viết này
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer gap-2">
-              <UserMinus size={13} /> Bỏ theo dõi
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer gap-2">
-              <Flag size={13} /> Báo cáo
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

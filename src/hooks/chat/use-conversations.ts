@@ -7,7 +7,7 @@ import { produce } from "immer";
 
 const CONVERSATION_LIMIT = 12;
 
-export function useConversations() {
+export function useConversations({ enabled = true }: { enabled?: boolean } = {}) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
 
@@ -22,7 +22,7 @@ export function useConversations() {
         queryFn: ({ pageParam }) => chatService.getConversations(CONVERSATION_LIMIT, pageParam as string | undefined),
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
-        enabled: !!user,
+        enabled: !!user && enabled,
     });
 
     const conversations = useMemo(() => {

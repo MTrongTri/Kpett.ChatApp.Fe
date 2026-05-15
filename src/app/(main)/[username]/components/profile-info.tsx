@@ -5,21 +5,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useUserInteractions } from "@/hooks/user/use-user-interactions";
+import { copyToClipboard } from "@/lib/clipboard-utils";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { UserProfile } from "@/types/user";
 import {
   Ban,
-  BellOff,
   Calendar,
   Check,
   Copy,
-  Flag,
   Link2,
   Loader2,
   MapPin,
@@ -33,8 +31,8 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
-// ── STAT BUTTON ───────────────────────────────────────────────────────
 function StatButton({ value, label }: { value: number; label: string }) {
   return (
     <button className="group hover:bg-background/80 flex w-full cursor-pointer flex-col items-center gap-1 rounded-2xl border-none bg-transparent px-2 py-3 transition-all md:px-4">
@@ -57,8 +55,49 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
   const { ctx, isLoading, isMessageLoading, actions } = useUserInteractions(
     profile.id,
     profile.username,
-    profile.viewerContext
+    profile.viewerContext,
   );
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/${profile.username}`;
+
+    const isSuccess = await copyToClipboard(url);
+
+    if (isSuccess) {
+      toast.success("Đã sao chép liên kết vào bộ nhớ tạm!");
+    } else {
+      toast.error("Không thể sao chép. Vui lòng thử lại.");
+    }
+  };
+
+  const handleShareProfile = async () => {
+    const url = `${window.location.origin}/${profile.username}`;
+    const title = `${profile.displayName} (@${profile.username})`;
+    const text =
+      profile.biography ||
+      `Xem trang cá nhân của ${profile.displayName} trên Kpett ChatApp.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error("Không thể mở trình chia sẻ:", error);
+      }
+    }
+
+    const isSuccess = await copyToClipboard(url);
+
+    if (isSuccess) {
+      toast.success("Đã sao chép liên kết hồ sơ!");
+    } else {
+      toast.error("Không thể chia sẻ hồ sơ. Vui lòng thử lại.");
+    }
+  };
 
   // 2. RENDER HELPERS
   const renderFriendActionButtons = () => {
@@ -70,8 +109,14 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           onClick={actions.handleUnfriend}
           className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
         >
-          {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserCheck size={14} className="group-hover:hidden" />}
-          {!isLoading && <UserMinus size={14} className="hidden group-hover:block" />}
+          {isLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <UserCheck size={14} className="group-hover:hidden" />
+          )}
+          {!isLoading && (
+            <UserMinus size={14} className="hidden group-hover:block" />
+          )}
           <span className="group-hover:hidden">Bạn bè</span>
           <span className="hidden group-hover:inline">Hủy kết bạn</span>
         </Button>
@@ -86,7 +131,14 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           onClick={actions.handleCancelRequest}
           className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
         >
-          {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserMinus size={14} className="group-hover:text-destructive text-foreground/70 transition-colors" />}
+          {isLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <UserMinus
+              size={14}
+              className="group-hover:text-destructive text-foreground/70 transition-colors"
+            />
+          )}
           <span className="group-hover:hidden">Đã gửi lời mời</span>
           <span className="hidden group-hover:inline">Hủy lời mời</span>
         </Button>
@@ -102,7 +154,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             onClick={actions.handleAcceptRequest}
             className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
           >
-            {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+            {isLoading ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Check size={14} />
+            )}
             Chấp nhận
           </Button>
           <Button
@@ -110,10 +166,14 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             variant="outline"
             disabled={isLoading}
             onClick={actions.handleDeclineRequest}
-            className="flex items-center border-border hover:bg-muted text-foreground h-10 uppercase cursor-pointer gap-2 rounded-full px-4! text-[12px] font-bold tracking-wide shadow-sm transition-all duration-200"
+            className="border-border hover:bg-muted text-foreground flex h-10 cursor-pointer items-center gap-2 rounded-full px-4! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
             title="Xóa lời mời"
           >
-            {isLoading ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+            {isLoading ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <X size={14} />
+            )}
             Từ chối
           </Button>
         </div>
@@ -128,7 +188,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         onClick={actions.handleAddFriend}
         className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200 hover:scale-105"
       >
-        {isLoading ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+        {isLoading ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <UserPlus size={14} />
+        )}
         Thêm bạn bè
       </Button>
     );
@@ -198,7 +262,9 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
       {ctx.isBlocked ? (
         <div className="bg-destructive/10 border-destructive/20 mx-auto my-6 flex max-w-lg flex-col items-center gap-3 rounded-2xl border p-6 text-center">
           <Ban size={32} className="text-destructive opacity-80" />
-          <p className="text-foreground font-medium">Bạn đã chặn người dùng này</p>
+          <p className="text-foreground font-medium">
+            Bạn đã chặn người dùng này
+          </p>
           <Button
             variant="outline"
             size="sm"
@@ -216,12 +282,17 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
               <>
                 <Link
                   href="/account/general"
-                  className="inline-flex items-center justify-center border border-border text-foreground hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                  className="border-border text-foreground hover:bg-muted inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                 >
                   <Pencil size={14} />
                   <span>Chỉnh sửa</span>
                 </Link>
-                <Button variant="outline" size="sm" className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShareProfile}
+                  className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                >
                   <Share2 size={14} /> Chia sẻ
                 </Button>
               </>
@@ -238,7 +309,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                     onClick={actions.handleMessageClick}
                     className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
                   >
-                    {isMessageLoading ? <Loader2 size={14} className="animate-spin" /> : <MessageSquare size={14} />}
+                    {isMessageLoading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <MessageSquare size={14} />
+                    )}
                     Nhắn tin
                   </Button>
                 )}
@@ -246,28 +321,24 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                 {/* Menu Thêm */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="border-border hover:bg-muted h-10 w-10 rounded-full transition-all">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-border hover:bg-muted h-10 w-10 rounded-full transition-all"
+                    >
                       <MoreHorizontal size={16} />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-border text-card-foreground w-48 rounded-2xl p-1 shadow-lg">
-                    <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
-                      <Copy size={14} className="text-foreground/60" /> Sao chép liên kết
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
-                      <BellOff size={14} className="text-foreground/60" /> Tắt thông báo
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-border my-1" />
-
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-card border-border text-card-foreground w-48 rounded-2xl p-1 shadow-lg"
+                  >
                     <DropdownMenuItem
-                      onClick={actions.handleBlockUser}
+                      onClick={handleCopyLink}
                       className="hover:bg-muted focus:bg-muted cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium"
                     >
-                      <UserMinus size={14} className="text-foreground/60" /> Chặn người dùng
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer gap-2.5 rounded-xl p-2.5 text-sm font-medium">
-                      <Flag size={14} /> Báo cáo
+                      <Copy size={14} className="text-foreground/60" /> Sao chép
+                      liên kết
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

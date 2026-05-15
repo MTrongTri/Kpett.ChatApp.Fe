@@ -3,14 +3,20 @@
 import { useAuth } from "@/components/providers/auth-provider";
 import { useSignalR } from "@/components/providers/signalr-provider";
 import { UserAvatar } from "@/components/user/user-avatar";
-import authService from "@/services/auth.service";
 import { RootState } from "@/store/store";
-import { Bookmark, LogOut, Monitor, Moon, Settings, Sun, User } from "lucide-react";
+import {
+  Bookmark,
+  LogOut,
+  Monitor,
+  Moon,
+  Settings,
+  Sun,
+  User,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   HoverCard,
   HoverCardContent,
@@ -18,11 +24,9 @@ import {
 } from "../../ui/hover-card";
 
 export default function UserMenu() {
-  const { user, accessToken } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const { logout } = useAuth();
   const { connection, isConnected } = useSignalR();
-
-  const queryClient = useQueryClient();
 
   // Theme state
   const { theme, setTheme } = useTheme();
@@ -34,22 +38,15 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     try {
-      if (accessToken) {
-        await authService.logout(accessToken);
-      }
-
       if (connection && isConnected) {
         await connection.stop();
       }
     } catch (error) {
       console.error("Logout failed (API):", error);
     } finally {
-      await logout();
-      // queryClient.clear();
-      window.location.href = "/login";
+      await logout({ redirectTo: "/login", replace: true });
     }
   };
-
 
   if (!user) {
     return null;
@@ -58,7 +55,7 @@ export default function UserMenu() {
   return (
     <HoverCard openDelay={100} closeDelay={200}>
       <HoverCardTrigger asChild>
-        <button className="flex items-center appearance-none border-none bg-transparent p-0 outline-none">
+        <button className="flex appearance-none items-center border-none bg-transparent p-0 outline-none">
           <UserAvatar user={user} />
         </button>
       </HoverCardTrigger>
@@ -105,10 +102,11 @@ export default function UserMenu() {
               <button
                 onClick={() => setTheme("light")}
                 title="Sáng"
-                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${mounted && theme === "light"
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                  : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                  }`}
+                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${
+                  mounted && theme === "light"
+                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
+                    : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                }`}
               >
                 <Sun size={14} />
               </button>
@@ -116,10 +114,11 @@ export default function UserMenu() {
               <button
                 onClick={() => setTheme("dark")}
                 title="Tối"
-                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${mounted && theme === "dark"
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                  : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                  }`}
+                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${
+                  mounted && theme === "dark"
+                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
+                    : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                }`}
               >
                 <Moon size={14} />
               </button>
@@ -127,10 +126,11 @@ export default function UserMenu() {
               <button
                 onClick={() => setTheme("system")}
                 title="Hệ thống"
-                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${mounted && theme === "system"
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                  : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                  }`}
+                className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 transition-all duration-200 ${
+                  mounted && theme === "system"
+                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
+                    : "text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                }`}
               >
                 <Monitor size={14} />
               </button>

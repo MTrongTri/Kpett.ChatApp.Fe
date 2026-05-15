@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useCallback, useEffect } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { chatService } from "@/services/chat.service";
-import { MessageResponse } from "@/types/chat";
+import { ConversationResponse, MessageResponse } from "@/types/chat";
 import { produce } from "immer";
 import { useSignalR } from "@/components/providers/signalr-provider";
 
@@ -54,11 +54,9 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
 
     // THÊM TIN NHẮN MỚI VÀO CACHE BẰNG IMMER
     const addMessageToCache = useCallback((newMessage: MessageResponse) => {
-        // 1. Cập nhật mảng tin nhắn của cuộc hội thoại hiện tại
+        // Cập nhật mảng tin nhắn của cuộc hội thoại hiện tại
         queryClient.setQueryData(["chat-messages", conversationId], (oldData: any) => {
 
-            // NẾU CHƯA CÓ CACHE (Chưa mở popup bao giờ) -> TUYỆT ĐỐI KHÔNG TẠO DUMMY DATA!
-            // Việc tạo Dummy Data sẽ làm React Query lầm tưởng đã load xong và không fetch API nữa.
             if (!oldData?.pages || oldData.pages.length === 0) {
                 return oldData;
             }
@@ -118,10 +116,8 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
         const handleNewMessage = (newMessage: MessageResponse) => {
             const targetConvId = (newMessage as any).conversationId || conversationId;
             if (targetConvId === conversationId) {
-                // 1. Đẩy tin nhắn mới vào giao diện
                 addMessageToCache(newMessage);
 
-                // 2. Nếu đang mở khung chat (không thu nhỏ), báo server là đã đọc
                 if (!isMinisized) {
                     chatService.markAsRead(conversationId).catch(() => { });
                 }
@@ -169,7 +165,6 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
                     for (const page of draft.pages) {
                         const conv = page.items?.find((c: any) => c.id === conversationId);
                         if (conv && conv.hasUnread) {
-                            // Tắt chấm đỏ trên UI Sidebar/Dropdown ngay lập tức
                             conv.hasUnread = false;
                             needsApiCall = true;
                         }
@@ -177,9 +172,23 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
                 });
             });
 
-            // Nếu phát hiện có chấm đỏ, gọi API để đồng bộ với Database
             if (needsApiCall) {
                 chatService.markAsRead(conversationId).catch(() => { });
+                queryClient.setQueryData(["hasUnreadConversations"], (old: boolean) => {
+                    if (old === true) {
+                        const cachedData = queryClient.getQueryData<
+                            InfiniteData<{ items?: ConversationResponse[] }>
+                        >(["conversations"]);
+
+                        const hasOtherUnread = cachedData?.pages.some((page) =>
+                            page.items?.some((c: ConversationResponse) => c.hasUnread)
+                        );
+
+                        return hasOtherUnread ?? false;
+                    }
+
+                    return old;
+                });
             }
         }
     }, [conversationId, isMinisized, queryClient]);

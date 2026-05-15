@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, ChevronLeft, FileText, User, Loader2 } from "lucide-react";
+import { ChevronLeft, FileText, User, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import UsernameInput from "./components/UsernameInput";
 import { accountSetup } from "@/services/user.service";
@@ -14,10 +14,11 @@ import { useAuth } from "@/components/providers/auth-provider";
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const { accessToken } = useAuth();
+  const { accessToken, logout } = useAuth();
 
   const [formData, setFormData] = useState({
     displayName: "",
@@ -62,7 +63,7 @@ export default function SocialAccountSetup() {
 
       sessionStorage.setSession({
         isProfileCompleted: data.isProfileCompleted,
-      })
+      });
 
       dispatch(
         setCredentials({
@@ -81,9 +82,33 @@ export default function SocialAccountSetup() {
     }
   };
 
+  const handleSkipSetup = async () => {
+    if (isSkipping || isSubmitting) return;
+
+    setIsSkipping(true);
+    try {
+      await logout({ redirectTo: "/", replace: true });
+      toast.info("Bạn có thể thiết lập hồ sơ sau khi đăng nhập lại.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể thoát thiết lập tài khoản. Vui lòng thử lại.");
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-[#0B0E14]">
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 shadow-xl dark:border-slate-800 dark:bg-[#151921]">
+        <button
+          type="button"
+          onClick={handleSkipSetup}
+          disabled={isSkipping || isSubmitting}
+          className="absolute top-4 right-4 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          {isSkipping ? "Đang thoát..." : "Để sau"}
+        </button>
+
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 h-1.5 w-full bg-slate-100 dark:bg-slate-800">
           <div
@@ -111,10 +136,11 @@ export default function SocialAccountSetup() {
                   </label>
                   <div className="relative">
                     <User
-                      className={`absolute top-1/2 left-3.5 -translate-y-1/2 transition-colors ${isDisplayNameTouched && !isDisplayNameValid
-                        ? "text-red-500"
-                        : "text-slate-400"
-                        }`}
+                      className={`absolute top-1/2 left-3.5 -translate-y-1/2 transition-colors ${
+                        isDisplayNameTouched && !isDisplayNameValid
+                          ? "text-red-500"
+                          : "text-slate-400"
+                      }`}
                       size={18}
                     />
                     <input
@@ -124,10 +150,11 @@ export default function SocialAccountSetup() {
                       onChange={handleChange}
                       onBlur={() => setIsDisplayNameTouched(true)}
                       placeholder="Ví dụ: Trọng Trí"
-                      className={`w-full rounded-2xl border bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none dark:text-white ${isDisplayNameTouched && !isDisplayNameValid
-                        ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
-                        }`}
+                      className={`w-full rounded-2xl border bg-transparent py-3.5 pr-4 pl-11 transition-all outline-none dark:text-white ${
+                        isDisplayNameTouched && !isDisplayNameValid
+                          ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 dark:border-slate-700"
+                      }`}
                     />
                   </div>
                   {isDisplayNameTouched && !isDisplayNameValid && (
@@ -208,10 +235,11 @@ export default function SocialAccountSetup() {
                       key={tag}
                       type="button"
                       onClick={() => toggleInterest(tag)}
-                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${formData.interests.includes(tag)
-                        ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                        : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
-                        }`}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                        formData.interests.includes(tag)
+                          ? "border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                          : "border-slate-200 text-slate-600 hover:border-orange-200 dark:border-slate-700 dark:text-slate-300"
+                      }`}
                     >
                       {tag}
                     </button>

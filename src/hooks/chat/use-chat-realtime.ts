@@ -90,8 +90,10 @@ export const useChatRealtime = (currentConversationId?: string | null) => {
                 }
             }
 
+
             // C. MỞ BONG BÓNG CHAT NGẦM
             if (!isMyMessage && !isViewing) {
+                queryClient.setQueryData(["hasUnreadConversations"], true);
                 dispatch(openChatPopupSilent({ conversationId: targetConvId, newMessage }));
             }
         };

@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={value}>
       {isLoading ? (
         <div className="bg-background flex h-screen w-full flex-col items-center justify-center">
-          <Logo className="mb-4 animate-pulse text-5xl" />
+          <Logo className="mb-4 animate-pulse" size={160} />
           <div className="flex space-x-2">
             <span className="bg-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]"></span>
             <span className="bg-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]"></span>

@@ -1,16 +1,39 @@
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
-function Logo({ className }: { className?: string }) {
+import { IMAGES } from "@/constants/images";
+import { cn } from "@/lib/utils";
+
+type LogoProps = {
+  className?: string;
+  imageClassName?: string;
+  href?: string;
+  size?: number;
+};
+
+function Logo({
+  className,
+  imageClassName,
+  href = "/",
+  size = 58,
+}: LogoProps) {
   return (
     <Link
-      href="/"
-      className={cn("text-primary flex shrink-0 items-center justify-center font-serif text-[26px] leading-none font-black tracking-tighter italic transition-opacity select-none", className)}
+      href={href}
+      aria-label="Go to homepage"
+      className={cn(
+        "text-primary flex shrink-0 items-center justify-center transition-opacity select-none hover:opacity-80",
+        className,
+      )}
     >
-      K
-      <span className="font-light text-zinc-900 not-italic transition-colors duration-300 dark:text-zinc-100">
-        PET
-      </span>
+      <Image
+        src={IMAGES.LOGO}
+        alt="Logo"
+        width={size}
+        height={size}
+        priority
+        className={cn("object-contain", imageClassName)}
+      />
     </Link>
   );
 }

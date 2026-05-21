@@ -60,11 +60,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${roboto.variable} ${ibmMono.variable} bg-background`}
     >
-      <Script
-        id="theme-initializer"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
-      />
+      <head>
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: themeInitializerScript,
+          }}
+        />
+      </head>
       <body
         className="min-h-screen bg-background font-roboto text-foreground antialiased"
       >

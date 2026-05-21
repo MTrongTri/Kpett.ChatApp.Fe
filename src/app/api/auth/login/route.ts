@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         return NextResponse.json(result, { status: backendRes.status });
     }
 
-    const { refreshToken } = result.data.token;
+    const { accessToken, refreshToken } = result.data.token;
 
     const response = NextResponse.json({
         user: result.data.user,
@@ -29,6 +29,14 @@ export async function POST(req: Request) {
         sameSite: 'lax',
         path: '/',
         maxAge: 60 * 60 * 24 * 365,
+    });
+
+    response.cookies.set('access_token', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 5,
     });
 
     return response;

@@ -64,6 +64,16 @@ http.interceptors.request.use(
 
 let refreshPromise: Promise<string> | null = null;
 
+export const restoreAccessTokenFromCookie = async (): Promise<string> => {
+    const res = await axios.get('/api/auth/session', {
+        withCredentials: true,
+    });
+
+    const accessToken = res.data.data.accessToken;
+    store.dispatch(setAccessToken(accessToken));
+    return accessToken;
+};
+
 export const refreshToken = async (): Promise<string> => {
     if (refreshPromise) {
         return refreshPromise;
@@ -81,7 +91,7 @@ export const refreshToken = async (): Promise<string> => {
         } catch (error) {
             persistor.purge();
             sessionStorage.clearSession();
-            // window.location.href = '/login';
+            window.location.href = '/login';
             console.error(error)
             reject(error);
         } finally {

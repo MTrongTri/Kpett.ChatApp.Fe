@@ -1,5 +1,5 @@
 import http, { authHttp, refreshToken } from "@/lib/axios";
-import { LoginRequest, LoginResponse, RegisterRequest } from "@/types/auth";
+import { ForgotPasswordRequest, LoginRequest, LoginResponse, RegisterRequest, ResetPasswordRequest } from "@/types/auth";
 
 /**
  * Đăng nhập hệ thống
@@ -45,11 +45,33 @@ const refreshTokenMethod = async (): Promise<{
   return { data: { accessToken: token } };
 };
 
+/**
+ * Gửi email OTP để đặt lại mật khẩu
+ */
+const forgotPassword = async (
+  forgotPasswordRequest: ForgotPasswordRequest,
+): Promise<unknown> => {
+  const response = await authHttp.post("/forgot-password", forgotPasswordRequest);
+  return response.data;
+};
+
+/**
+ * Đặt lại mật khẩu với OTP
+ */
+const resetPassword = async (
+  resetPasswordRequest: ResetPasswordRequest,
+): Promise<unknown> => {
+  const response = await authHttp.post("/reset-password", resetPasswordRequest);
+  return response.data;
+};
+
 const authService = {
   login,
   register,
   logout,
   refreshToken: refreshTokenMethod,
+  forgotPassword,
+  resetPassword,
 };
 
 export default authService;

@@ -73,4 +73,3 @@ export interface UserLoginResponse extends BaseUser {
   isProfileCompleted: boolean;
 }
 
-

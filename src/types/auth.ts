@@ -21,7 +21,17 @@ export interface LoginResponse {
 
 // Register
 export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
+	username: string;
+	email: string;
+	password: string;
+}
+
+export interface ForgotPasswordRequest {
+	email: string;
+}
+
+export interface ResetPasswordRequest {
+	email: string;
+	otp: string;
+	newPassword: string;
 }

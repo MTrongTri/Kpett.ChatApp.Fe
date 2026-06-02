@@ -2,8 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -24,65 +23,37 @@ import { ApiResponse } from "@/types/common/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "../layouts/main/logo";
-import { useAuth } from "../providers/auth-provider";
 
-const loginSchema = z.object({
+const forgotPasswordSchema = z.object({
   email: z
     .string()
     .min(1, "Vui lòng không để trống email")
     .email("Email không hợp lệ"),
-  password: z.string().min(1, "Mật khẩu không được để trống"),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export default function FormLogin() {
-  const [showPassword, setShowPassword] = useState(false);
-
+export default function FormForgotPassword() {
   const router = useRouter();
-
-  const { login } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setError,
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (dataLogin: LoginFormValues) => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     try {
-      const dataRes = await authService.login(dataLogin);
-
-      if (!dataRes.user || !dataRes?.token) {
-        toast.error('Dữ liệu phản hồi từ máy chủ không hợp lệ!');
-        return;
-      }
-
-      const { user, token } = dataRes;
-
-      login(token.accessToken, user, user.isProfileCompleted);
-
-      if (user.isProfileCompleted) {
-        toast.success('Đăng nhập thành công!');
-        router.replace("/");
-      } else {
-        router.replace("/account-setup");
-      }
+      await authService.forgotPassword(data);
+      toast.success("Mã OTP đã được gửi đến email của bạn!");
+      router.push(`/reset-password?email=${encodeURIComponent(data.email)}`);
     } catch (err) {
       const apiError = err as ApiResponse;
-      const errorCode = apiError.errorCode;
       const errorMessage =
-        apiError.message || 'Đã có lỗi xảy ra, vui lòng thử lại!';
-
-      if (errorCode === 'AUTH.UNAUTHORIZED') {
-        setError('email', { message: "Email hoặc mật khẩu không đúng" });
-        setError('password', { message: "Email hoặc mật khẩu không đúng" });
-      } else {
-        toast.error(errorMessage);
-      }
+        apiError.message || "Đã có lỗi xảy ra, vui lòng thử lại!";
+      toast.error(errorMessage);
     }
   };
 
@@ -95,27 +66,25 @@ export default function FormLogin() {
     >
       <Card className="border-zinc-200 bg-white/80 shadow-2xl shadow-zinc-200/50 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/50">
         <CardHeader className="space-y-2 pt-8 text-center">
-          {/* Mock Logo hỗ trợ Dark mode */}
           <div className="mx-auto flex items-center justify-center">
             <Logo />
           </div>
           <CardTitle className="text-2xl font-black tracking-tighter text-zinc-950 dark:text-zinc-50">
-            Đăng nhập
+            Quên mật khẩu
           </CardTitle>
           <CardDescription className="font-medium text-zinc-500 dark:text-zinc-400">
-            Nhập thông tin để tiếp tục trải nghiệm
+            Nhập email để nhận mã OTP đặt lại mật khẩu
           </CardDescription>
         </CardHeader>
 
         <CardContent className="grid gap-5">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
             <div className="space-y-1.5">
               <Label
                 htmlFor="email"
                 className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
               >
-                Tài khoản
+                Email
               </Label>
               <Input
                 id="email"
@@ -132,47 +101,6 @@ export default function FormLogin() {
               )}
             </div>
 
-            {/* Password Field */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="password"
-                  title="Mật khẩu"
-                  className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
-                >
-                  Mật khẩu
-                </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[10px] font-bold text-zinc-400 transition-colors hover:text-zinc-950 dark:text-zinc-500 dark:hover:text-zinc-300"
-                >
-                  Quên mật khẩu?
-                </Link>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  {...register("password")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.password ? "border-red-500 dark:border-red-500" : ""
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-zinc-50"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
             <Button
               type="submit"
               disabled={isSubmitting}
@@ -181,7 +109,7 @@ export default function FormLogin() {
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "ĐĂNG NHẬP"
+                "GỬI OTP"
               )}
             </Button>
           </form>
@@ -189,12 +117,12 @@ export default function FormLogin() {
 
         <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-8">
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            Chưa có tài khoản?{" "}
+            Đã nhớ mật khẩu?{" "}
             <Link
-              href="/register"
+              href="/login"
               className="cursor-pointer font-black text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50"
             >
-              Đăng ký ngay
+              Đăng nhập
             </Link>
           </p>
         </CardFooter>

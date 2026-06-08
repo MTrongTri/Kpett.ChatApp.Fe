@@ -12,6 +12,7 @@ import {
 import { RootState } from '@/store/store';
 import { ConversationResponse, MessageResponse } from '@/types/chat';
 import { PaginatedData } from '@/types/common/api';
+import { playSound } from '@/lib/notification-sound';
 
 type ConversationsCache = InfiniteData<
     PaginatedData<ConversationResponse>,
@@ -33,6 +34,22 @@ const createConversationCache = (
     ],
     pageParams: [undefined],
 });
+
+const playedMessageSoundIds = new Set<string>();
+
+const playIncomingMessageSoundOnce = (messageId: string) => {
+    if (playedMessageSoundIds.has(messageId)) return;
+
+    playedMessageSoundIds.add(messageId);
+    if (playedMessageSoundIds.size > 100) {
+        const oldestMessageId = playedMessageSoundIds.values().next().value;
+        if (oldestMessageId) {
+            playedMessageSoundIds.delete(oldestMessageId);
+        }
+    }
+
+    playSound('chat_message', 0.75);
+};
 
 export const useChatRealtime = (currentConversationId?: string | null) => {
     const { connection, isConnected } = useSignalR();
@@ -162,6 +179,10 @@ export const useChatRealtime = (currentConversationId?: string | null) => {
             }
 
             if (!isMyMessage && !isViewing) {
+                if (newMessage.type !== 'System') {
+                    playIncomingMessageSoundOnce(newMessage.id);
+                }
+
                 queryClient.setQueryData(['hasUnreadConversations'], true);
                 dispatch(
                     openChatPopupSilent({

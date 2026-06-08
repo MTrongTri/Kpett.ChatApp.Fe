@@ -43,7 +43,7 @@ export const uploadFileToCloudinary = async (
 
     const cloudFormat = uploadRes.data.format;
 
-    let finalMimeType = `${filePrefix}/${cloudFormat}`;
+    const finalMimeType = `${filePrefix}/${cloudFormat}`;
 
     return {
       publicId: uploadRes.data.public_id,
@@ -51,12 +51,14 @@ export const uploadFileToCloudinary = async (
       type: resourceType as "image" | "video",
       mimeType: finalMimeType,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (axios.isCancel(error)) {
       throw error;
     }
 
-    const cloudinaryError = error.response?.data?.error?.message;
+    const cloudinaryError = axios.isAxiosError(error)
+      ? (error.response?.data as { error?: { message?: string } } | undefined)?.error?.message
+      : undefined;
     if (cloudinaryError) {
       throw new Error(`Cloudinary Error: ${cloudinaryError}`);
     }

@@ -87,7 +87,7 @@ export default function SearchPage() {
 
                 {query && (
                     <h1 className="text-xl font-bold px-1">
-                        Kết quả cho: <span className="text-primary break-all">"{query}"</span>
+                        Kết quả cho: <span className="text-primary break-all">&quot;{query}&quot;</span>
                     </h1>
                 )}
             </div>

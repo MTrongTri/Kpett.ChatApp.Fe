@@ -9,7 +9,16 @@ export interface MentionUser {
   avatarUrl?: string;
 }
 
-const MentionList = forwardRef((props: any, ref) => {
+interface MentionListProps {
+  items: MentionUser[];
+  command: (payload: { id: string; label: string }) => void;
+}
+
+export interface MentionListHandle {
+  onKeyDown: (params: { event: KeyboardEvent }) => boolean;
+}
+
+const MentionList = forwardRef<MentionListHandle, MentionListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const selectItem = (index: number) => {
@@ -20,7 +29,11 @@ const MentionList = forwardRef((props: any, ref) => {
   };
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }: any) => {
+    onKeyDown: ({ event }) => {
+      if (!props.items.length) {
+        return false;
+      }
+
       if (event.key === "ArrowUp") {
         setSelectedIndex(
           (prev) => (prev + props.items.length - 1) % props.items.length,
@@ -43,7 +56,11 @@ const MentionList = forwardRef((props: any, ref) => {
   }));
 
   useEffect(() => {
-    setSelectedIndex(0);
+    const timer = setTimeout(() => {
+      setSelectedIndex(0);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [props.items]);
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { AtSign, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import React, { useEffect, useMemo } from "react";
+import { AtSign, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { checkUsername } from "@/services/user.service";
@@ -19,22 +19,20 @@ export default function UsernameInput({
   onValidation,
   onLoading,
 }: UsernameFieldProps) {
-  const [errorMsg, setErrorMsg] = useState("");
   const debouncedUsername = useDebounce(value, 500);
 
   const isFormatInvalid = useMemo(() => {
-    if (!value) return false;
+    if (!value) {
+      return false;
+    }
+
     return /[^a-z0-9._]/.test(value);
   }, [value]);
 
   const shouldFetch =
     debouncedUsername.length >= 3 && !/[^a-z0-9._]/.test(debouncedUsername);
 
-  const {
-    data,
-    isFetching,
-    error
-  } = useQuery({
+  const { data, isFetching, error } = useQuery({
     queryKey: ["check-username", debouncedUsername],
     queryFn: () => checkUsername(debouncedUsername),
     enabled: shouldFetch,
@@ -46,51 +44,48 @@ export default function UsernameInput({
     const checking =
       (value !== debouncedUsername && value.length >= 3) || isFetching;
     onLoading(checking);
-  }, [value, debouncedUsername, isFetching, onLoading]);
+  }, [debouncedUsername, isFetching, onLoading, value]);
 
-  useEffect(() => {
-    if (value.length === 0) {
-      setErrorMsg("");
-      onValidation(false);
-      return;
+  const errorMsg = useMemo(() => {
+    if (value.length === 0 || isFetching) {
+      return "";
     }
 
     if (isFormatInvalid) {
-      setErrorMsg("Chỉ dùng chữ cái, số, dấu chấm (.) và gạch dưới (_)");
-      onValidation(false);
-      return;
+      return "Chi dung chu cai, so, dau cham (.) va gach duoi (_)";
     }
 
     if (value.length < 3) {
-      setErrorMsg("Username phải có ít nhất 3 ký tự");
-      onValidation(false);
-      return;
-    }
-
-    if (isFetching) {
-      setErrorMsg("");
-      return;
-    }
-
-    if (data) {
-      if (data.isAvailable) {
-        setErrorMsg("");
-        onValidation(true);
-      } else {
-        setErrorMsg("Tên này đã có người sử dụng");
-        onValidation(false);
-      }
+      return "Username phai co it nhat 3 ky tu";
     }
 
     if (error) {
-      setErrorMsg("Lỗi kết nối máy chủ");
-      onValidation(false);
+      return "Loi ket noi may chu";
     }
-  }, [value, isFormatInvalid, data, isFetching, error, onValidation]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toLowerCase();
-    onChange(val);
+    if (data && !data.isAvailable) {
+      return "Ten nay da co nguoi su dung";
+    }
+
+    return "";
+  }, [data, error, isFetching, isFormatInvalid, value.length]);
+
+  const isValid = useMemo(() => {
+    return Boolean(
+      value.length >= 3 &&
+        !isFormatInvalid &&
+        !isFetching &&
+        data?.isAvailable &&
+        !error,
+    );
+  }, [data?.isAvailable, error, isFetching, isFormatInvalid, value.length]);
+
+  useEffect(() => {
+    onValidation(isValid);
+  }, [isValid, onValidation]);
+
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value.toLowerCase());
   };
 
   const showSuccess = shouldFetch && !isFetching && data?.isAvailable;

@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import authService from "@/services/auth.service";
 import Logo from "../layouts/main/logo";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 
 const registerSchema = z
   .object({
@@ -65,8 +65,10 @@ export default function FormRegister() {
 
       toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
       router.replace("/login");
-    } catch (err: AxiosError | any) {
-      const { errorCode } = err || {};
+    } catch (err: unknown) {
+      const errorCode = isAxiosError(err)
+        ? (err.response?.data as { errorCode?: string } | undefined)?.errorCode
+        : undefined;
 
       if (
         errorCode === "USER.ALREADY_EXISTS_BY_EMAIL" ||

@@ -1,147 +1,217 @@
 "use client";
 
 import { useMemo, useCallback, useEffect } from "react";
-import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { chatService } from "@/services/chat.service";
-import { ConversationResponse, MessageResponse } from "@/types/chat";
+import {
+    InfiniteData,
+    useInfiniteQuery,
+    useQueryClient
+} from "@tanstack/react-query";
 import { produce } from "immer";
 import { useSignalR } from "@/components/providers/signalr-provider";
+import { chatService } from "@/services/chat.service";
+import {
+    ConversationResponse,
+    MessageResponse,
+} from "@/types/chat";
+import { PaginatedData } from "@/types/common/api";
 
 const MESSAGES_LIMIT = 20;
 
-export function useChatMessages(conversationId: string | null, isMinisized: boolean = false) {
+type MessagesCache = InfiniteData<
+    PaginatedData<MessageResponse>,
+    string | undefined
+>;
+
+type ConversationsCache = InfiniteData<
+    PaginatedData<ConversationResponse>,
+    string | undefined
+>;
+
+export function useChatMessages(
+    conversationId: string | null,
+    isMinimized = false
+) {
     const queryClient = useQueryClient();
     const { connection, isConnected } = useSignalR();
 
-    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuery({
-        queryKey: ["chat-messages", conversationId],
-        queryFn: ({ pageParam }) => chatService.getMessages(conversationId!, MESSAGES_LIMIT, pageParam as string | undefined),
-        initialPageParam: undefined as string | undefined,
-        getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
-        enabled: !!conversationId && !isMinisized,
-    });
+    const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+        useInfiniteQuery({
+            queryKey: ["chat-messages", conversationId],
+            queryFn: ({ pageParam }) =>
+                chatService.getMessages(
+                    conversationId!,
+                    MESSAGES_LIMIT,
+                    pageParam as string | undefined
+                ),
+            initialPageParam: undefined as string | undefined,
+            getNextPageParam: (lastPage) =>
+                lastPage.pagination?.nextCursor || undefined,
+            enabled: !!conversationId && !isMinimized,
+        });
 
     const messages = useMemo(() => {
-        return data?.pages.flatMap((page) => page?.items ?? []).reverse() ?? [];
+        return data?.pages.flatMap((page) => page.items ?? []).reverse() ?? [];
     }, [data]);
 
     const loadOlderMessages = useCallback(() => {
-        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    // CẬP NHẬT TRẠNG THÁI (Đang gửi -> Lỗi/Thành công) BẰNG IMMER
-    const updateMessageStatus = useCallback((clientMessageId: string, status: "error" | "sent") => {
-        queryClient.setQueryData(["chat-messages", conversationId], (oldData: any) => {
-            if (!oldData?.pages) return oldData;
+    const updateMessageStatus = useCallback(
+        (clientMessageId: string, status: "error" | "sent") => {
+            queryClient.setQueryData<MessagesCache>(
+                ["chat-messages", conversationId],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
 
-            return produce(oldData, (draft: any) => {
-                const currentItems = draft.pages[0]?.items;
-                if (!currentItems) return;
+                    return produce(oldData, (draft) => {
+                        const currentItems = draft.pages[0]?.items;
+                        if (!currentItems) return;
 
-                const idx = currentItems.findIndex((m: MessageResponse) => m.clientMessageId === clientMessageId);
-                if (idx > -1) {
-                    if (status === "sent") {
-                        // Nếu gửi thành công, XÓA trạng thái localStatus để UI trở về bình thường
-                        delete currentItems[idx].localStatus;
-                    } else {
-                        // Nếu lỗi, gán thành "error"
-                        currentItems[idx].localStatus = status;
-                    }
+                        const messageIndex = currentItems.findIndex(
+                            (message) =>
+                                message.clientMessageId === clientMessageId
+                        );
+
+                        if (messageIndex === -1) {
+                            return;
+                        }
+
+                        if (status === "sent") {
+                            delete currentItems[messageIndex].localStatus;
+                            return;
+                        }
+
+                        currentItems[messageIndex].localStatus = status;
+                    });
                 }
-            });
-        });
-    }, [queryClient, conversationId]);
+            );
+        },
+        [queryClient, conversationId]
+    );
 
-    // THÊM TIN NHẮN MỚI VÀO CACHE BẰNG IMMER
-    const addMessageToCache = useCallback((newMessage: MessageResponse) => {
-        // Cập nhật mảng tin nhắn của cuộc hội thoại hiện tại
-        queryClient.setQueryData(["chat-messages", conversationId], (oldData: any) => {
+    const addMessageToCache = useCallback(
+        (newMessage: MessageResponse) => {
+            queryClient.setQueryData<MessagesCache>(
+                ["chat-messages", conversationId],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
 
-            if (!oldData?.pages || oldData.pages.length === 0) {
-                return oldData;
-            }
+                    return produce(oldData, (draft) => {
+                        const currentItems = draft.pages[0]?.items;
+                        if (!currentItems) return;
 
-            return produce(oldData, (draft: any) => {
-                const currentItems = draft.pages[0]?.items;
-                if (!currentItems) return; // Bảo vệ an toàn
+                        const existingIndex = currentItems.findIndex(
+                            (message) =>
+                                message.id === newMessage.id ||
+                                (newMessage.clientMessageId
+                                    ? message.id === newMessage.clientMessageId
+                                    : false)
+                        );
 
-                const existingIndex = currentItems.findIndex(
-                    (m: MessageResponse) => m.id === newMessage.id || (newMessage.clientMessageId && m.id === newMessage.clientMessageId)
-                );
+                        if (existingIndex > -1) {
+                            currentItems[existingIndex] = newMessage;
+                            return;
+                        }
 
-                if (existingIndex > -1) {
-                    currentItems[existingIndex] = newMessage;
-                } else {
-                    currentItems.unshift(newMessage);
+                        currentItems.unshift(newMessage);
+                    });
                 }
-            });
-        });
+            );
 
-        // 2. Cập nhật Sidebar Conversations (Đẩy hội thoại lên đầu + Update tin nhắn cuối)
-        queryClient.setQueryData(["conversations"], (oldData: any) => {
-            if (!oldData?.pages) return oldData;
+            queryClient.setQueryData<ConversationsCache>(
+                ["conversations"],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
 
-            return produce(oldData, (draft: any) => {
-                let foundConv = null;
-                let pageIdx = -1;
-                let itemIdx = -1;
+                    return produce(oldData, (draft) => {
+                        let foundConversation:
+                            | ConversationResponse
+                            | undefined;
+                        let pageIndex = -1;
+                        let itemIndex = -1;
 
-                for (let i = 0; i < draft.pages.length; i++) {
-                    const idx = draft.pages[i].items?.findIndex((c: any) => c.id === conversationId);
-                    if (idx > -1) {
-                        foundConv = draft.pages[i].items[idx];
-                        pageIdx = i;
-                        itemIdx = idx;
-                        break;
-                    }
+                        for (let index = 0; index < draft.pages.length; index += 1) {
+                            const conversationIndex = draft.pages[index].items.findIndex(
+                                (conversation) => conversation.id === conversationId
+                            );
+
+                            if (conversationIndex > -1) {
+                                foundConversation =
+                                    draft.pages[index].items[conversationIndex];
+                                pageIndex = index;
+                                itemIndex = conversationIndex;
+                                break;
+                            }
+                        }
+
+                        if (!foundConversation || pageIndex === -1 || itemIndex === -1) {
+                            return;
+                        }
+
+                        foundConversation.lastMessageAt = newMessage.createdAt;
+                        foundConversation.lastMessage = { ...newMessage };
+                        foundConversation.hasUnread = isMinimized;
+
+                        draft.pages[pageIndex].items.splice(itemIndex, 1);
+                        draft.pages[0].items.unshift(foundConversation);
+                    });
                 }
+            );
+        },
+        [queryClient, conversationId, isMinimized]
+    );
 
-                if (foundConv) {
-                    foundConv.lastMessageAt = newMessage.createdAt;
-                    foundConv.lastMessage = { ...newMessage };
-                    foundConv.hasUnread = isMinisized;
-
-                    // Cắt ra khỏi vị trí cũ và đẩy lên đầu trang 1
-                    draft.pages[pageIdx].items.splice(itemIdx, 1);
-                    draft.pages[0].items.unshift(foundConv);
-                }
-            });
-        });
-    }, [queryClient, conversationId, isMinisized]);
-
-    // LẮNG NGHE TIN NHẮN MỚI VÀ TRẠNG THÁI NGƯỜI KHÁC ĐÃ ĐỌC TỪ SIGNALR
     useEffect(() => {
         if (!isConnected || !connection || !conversationId) return;
 
         const handleNewMessage = (newMessage: MessageResponse) => {
-            const targetConvId = (newMessage as any).conversationId || conversationId;
-            if (targetConvId === conversationId) {
-                addMessageToCache(newMessage);
+            const targetConversationId = newMessage.conversationId ?? conversationId;
+            if (targetConversationId !== conversationId) return;
 
-                if (!isMinisized) {
-                    chatService.markAsRead(conversationId).catch(() => { });
-                }
+            addMessageToCache(newMessage);
+
+            if (!isMinimized) {
+                chatService.markAsRead(conversationId).catch(() => undefined);
             }
         };
 
-        const handleUserRead = (convId: string, userId: string, messageId: string) => {
-            if (convId !== conversationId) return;
+        const handleUserRead = (
+            targetConversationId: string,
+            userId: string,
+            messageId: string
+        ) => {
+            if (targetConversationId !== conversationId) return;
 
-            // Dùng Immer cập nhật an toàn avatar người đã đọc (lastReadMessageId)
-            queryClient.setQueryData(["conversations"], (oldData: any) => {
-                if (!oldData?.pages) return oldData;
-                return produce(oldData, (draft: any) => {
-                    for (const page of draft.pages) {
-                        const conv = page.items?.find((c: any) => c.id === convId);
-                        if (conv && conv.participants) {
-                            const participant = conv.participants.find((p: any) => p.id === userId);
+            queryClient.setQueryData<ConversationsCache>(
+                ["conversations"],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
+
+                    return produce(oldData, (draft) => {
+                        for (const page of draft.pages) {
+                            const conversation = page.items.find(
+                                (cachedConversation) =>
+                                    cachedConversation.id === targetConversationId
+                            );
+
+                            if (!conversation) {
+                                continue;
+                            }
+
+                            const participant = conversation.participants.find(
+                                (member) => member.id === userId
+                            );
+
                             if (participant) {
                                 participant.lastReadMessageId = messageId;
                             }
                         }
-                    }
-                });
-            });
+                    });
+                }
+            );
         };
 
         connection.on("ReceiveNewMessage", handleNewMessage);
@@ -151,47 +221,59 @@ export function useChatMessages(conversationId: string | null, isMinisized: bool
             connection.off("ReceiveNewMessage", handleNewMessage);
             connection.off("UserReadMessage", handleUserRead);
         };
-    }, [connection, isConnected, conversationId, addMessageToCache, isMinisized, queryClient]);
+    }, [
+        connection,
+        isConnected,
+        conversationId,
+        addMessageToCache,
+        isMinimized,
+        queryClient
+    ]);
 
-    // TỰ ĐỘNG XÓA CHẤM ĐỎ (UNREAD) KHI VỪA MỞ MÀN HÌNH CHAT
     useEffect(() => {
-        if (conversationId && !isMinisized) {
-            let needsApiCall = false;
+        if (!conversationId || isMinimized) return;
 
-            queryClient.setQueryData(["conversations"], (oldData: any) => {
-                if (!oldData?.pages) return oldData;
+        let needsApiCall = false;
 
-                return produce(oldData, (draft: any) => {
-                    for (const page of draft.pages) {
-                        const conv = page.items?.find((c: any) => c.id === conversationId);
-                        if (conv && conv.hasUnread) {
-                            conv.hasUnread = false;
-                            needsApiCall = true;
-                        }
+        queryClient.setQueryData<ConversationsCache>(["conversations"], (oldData) => {
+            if (!oldData?.pages.length) return oldData;
+
+            return produce(oldData, (draft) => {
+                for (const page of draft.pages) {
+                    const conversation = page.items.find(
+                        (cachedConversation) =>
+                            cachedConversation.id === conversationId
+                    );
+
+                    if (conversation?.hasUnread) {
+                        conversation.hasUnread = false;
+                        needsApiCall = true;
                     }
-                });
+                }
             });
+        });
 
-            if (needsApiCall) {
-                chatService.markAsRead(conversationId).catch(() => { });
-                queryClient.setQueryData(["hasUnreadConversations"], (old: boolean) => {
-                    if (old === true) {
-                        const cachedData = queryClient.getQueryData<
-                            InfiniteData<{ items?: ConversationResponse[] }>
-                        >(["conversations"]);
+        if (!needsApiCall) return;
 
-                        const hasOtherUnread = cachedData?.pages.some((page) =>
-                            page.items?.some((c: ConversationResponse) => c.hasUnread)
-                        );
+        chatService.markAsRead(conversationId).catch(() => undefined);
+        queryClient.setQueryData<boolean>(
+            ["hasUnreadConversations"],
+            (oldValue) => {
+                if (oldValue !== true) {
+                    return oldValue;
+                }
 
-                        return hasOtherUnread ?? false;
-                    }
+                const cachedData =
+                    queryClient.getQueryData<ConversationsCache>(["conversations"]);
 
-                    return old;
-                });
+                const hasOtherUnread = cachedData?.pages.some((page) =>
+                    page.items.some((conversation) => conversation.hasUnread)
+                );
+
+                return hasOtherUnread ?? false;
             }
-        }
-    }, [conversationId, isMinisized, queryClient]);
+        );
+    }, [conversationId, isMinimized, queryClient]);
 
     return {
         messages,

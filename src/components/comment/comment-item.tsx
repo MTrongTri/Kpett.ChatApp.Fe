@@ -299,9 +299,21 @@ export const CommentItem = memo(({
 CommentItem.displayName = "CommentItem";
 
 // --- SUB COMPONENTS ---
+interface CommentNavigationProps {
+  isExpanded: boolean;
+  replyCount: number;
+  tempRepliesCount: number;
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  hasMore: boolean;
+  onExpand: () => void;
+  onCollapse: () => void;
+  onLoadMore: () => void;
+}
+
 const CommentNavigation = ({
   isExpanded, replyCount, tempRepliesCount, isLoading, isLoadingMore, hasMore, onExpand, onCollapse, onLoadMore
-}: any) => {
+}: CommentNavigationProps) => {
   const shouldShowExpand = !isExpanded && replyCount > tempRepliesCount;
 
   if (!isExpanded && !shouldShowExpand) return null;

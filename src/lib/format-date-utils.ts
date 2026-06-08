@@ -40,7 +40,7 @@ export function formatRelativeTime(
   const year = date.getFullYear();
 
   // Tạo chuỗi ngày (Date string) dựa trên config
-  let dateString =
+  const dateString =
     config.hideYearIfCurrent && year === now.getFullYear()
       ? `${day} thg ${month}`
       : `${day}/${month}/${year}`;

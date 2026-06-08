@@ -195,12 +195,12 @@ export default function SearchBar() {
                     isMobileExpanded ? "p-5 text-base" : "p-3 text-sm border-t border-border"
                   )}
                 >
-                  Xem tất cả kết quả cho "{keyword}"
+                  Xem tất cả kết quả cho &quot;{keyword}&quot;
                 </div>
               </div>
             ) : (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                Không tìm thấy ai với từ khóa "{keyword}".
+                Không tìm thấy ai với từ khóa &quot;{keyword}&quot;.
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { Menu, Plus, Search } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   Sheet,
@@ -11,7 +11,6 @@ import {
   SheetTrigger,
 } from "../../ui/sheet";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NAV_TABS } from "./nav-tab";
@@ -39,7 +38,11 @@ export default function MobileMenu() {
   };
 
   useEffect(() => {
-    setOpen(false);
+    const timer = setTimeout(() => {
+      setOpen(false);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return (

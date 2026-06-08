@@ -11,10 +11,13 @@ import {
   useEditor,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useImperativeHandle, useState } from "react";
-import tippy, { Instance as TippyInstance } from "tippy.js";
+import { useEffect, useState } from "react";
+import tippy, {
+  type GetReferenceClientRect,
+  Instance as TippyInstance,
+} from "tippy.js";
 import { UserAvatar } from "../user/user-avatar";
-import MentionList from "./mention-list";
+import MentionList, { MentionListHandle } from "./mention-list";
 
 interface CommentInputProps {
   author: BaseAuthor;
@@ -88,7 +91,7 @@ export const CommentInput = ({
           },
 
           render: () => {
-            let component: ReactRenderer;
+            let component: ReactRenderer<MentionListHandle>;
             let popup: TippyInstance[];
 
             return {
@@ -101,7 +104,8 @@ export const CommentInput = ({
                 if (!props.clientRect) return;
 
                 popup = tippy("body", {
-                  getReferenceClientRect: props.clientRect as any,
+                  getReferenceClientRect:
+                    props.clientRect as GetReferenceClientRect,
                   appendTo: () => document.body,
                   content: component.element,
                   showOnCreate: true,
@@ -123,7 +127,8 @@ export const CommentInput = ({
                 component.updateProps(props);
                 if (!props.clientRect) return;
                 popup[0]?.setProps({
-                  getReferenceClientRect: props.clientRect as any,
+                  getReferenceClientRect:
+                    props.clientRect as GetReferenceClientRect,
                 });
               },
 
@@ -132,7 +137,7 @@ export const CommentInput = ({
                   popup?.[0]?.hide();
                   return true;
                 }
-                return (component?.ref as any)?.onKeyDown(props);
+                return component.ref?.onKeyDown(props) ?? false;
               },
 
               onExit() {

@@ -1,10 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { copyToClipboard } from "@/lib/clipboard-utils";
-import { EyeOff, Flag, Link2, MoreHorizontal, Pencil, Trash2, UserMinus } from "lucide-react";
-import { toast } from "sonner";
+import { Link2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
-export const PostLightboxMenu = ({ isAuthor, onEdit, onDelete, onCopyLink }: any) => {
+interface PostLightboxMenuProps {
+    isAuthor?: boolean;
+    onEdit: () => void;
+    onDelete: () => void;
+    onCopyLink: () => void;
+}
+
+export const PostLightboxMenu = ({
+    isAuthor,
+    onEdit,
+    onDelete,
+    onCopyLink
+}: PostLightboxMenuProps) => {
 
     return (
         <DropdownMenu>

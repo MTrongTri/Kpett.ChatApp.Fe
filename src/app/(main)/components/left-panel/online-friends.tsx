@@ -1,24 +1,24 @@
 "use client";
 
-import { useSignalR } from "@/components/providers/signalr-provider";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { produce } from "immer";
+import Link from "next/link";
+import { useSelector } from "react-redux";
+
 import { UserAvatar } from "@/components/user/user-avatar";
 import { useTrackPresence } from "@/hooks/use-track-presence";
 import { cn } from "@/lib/utils";
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { RootState } from "@/store/store";
+import { PaginatedData } from "@/types/common/api";
 import { UserProfile } from "@/types/user";
-import Link from "next/link";
-import { useCallback, useMemo } from "react";
-import { useSelector } from "react-redux";
-
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { produce } from "immer";
 
 const FriendItem = ({ friend }: { friend: UserProfile }) => (
-  <Link href={friend.username}>
+  <Link href={`/${friend.username}`}>
     <button
       className="hover:bg-foreground/5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      aria-label={`Xem hồ sơ của ${friend.displayName || friend.username}`}
+      aria-label={`Xem ho so cua ${friend.displayName || friend.username}`}
     >
       <div className="shrink-0">
         <UserAvatar user={friend} isShowDotOnline={true} />
@@ -33,7 +33,7 @@ const FriendItem = ({ friend }: { friend: UserProfile }) => (
             friend.isOnline ? "text-emerald-500" : "text-foreground/40"
           )}
         >
-          {(friend.isOnline ? "Đang hoạt động" : "Ngoại tuyến")}
+          {friend.isOnline ? "Dang hoat dong" : "Ngoai tuyen"}
         </p>
       </div>
     </button>
@@ -43,7 +43,7 @@ const FriendItem = ({ friend }: { friend: UserProfile }) => (
 const FriendSkeleton = () => (
   <div className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2">
     <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-foreground/10" />
-    <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
       <div className="h-3.5 w-24 animate-pulse rounded-md bg-foreground/10" />
       <div className="h-2.5 w-16 animate-pulse rounded-md bg-foreground/10" />
     </div>
@@ -51,10 +51,11 @@ const FriendSkeleton = () => (
 );
 
 export default function OnlineFriends() {
-  const filterParams = useMemo(() => ({ search: "", cursor: null, limit: 10 }), []);
-  const { connection, isConnected } = useSignalR();
+  const filterParams = useMemo(
+    () => ({ search: "", cursor: null, limit: 10 }),
+    []
+  );
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-
   const queryClient = useQueryClient();
 
   const { data: onlineFriends, isLoading, error } = useQuery({
@@ -64,27 +65,34 @@ export default function OnlineFriends() {
     staleTime: 60 * 1000,
   });
 
-  const targetIds = useMemo(() => !onlineFriends ? [] : onlineFriends.items.map(f => f.id), [onlineFriends]);
+  const targetIds = useMemo(() => {
+    return onlineFriends ? onlineFriends.items.map((friend) => friend.id) : [];
+  }, [onlineFriends]);
 
-  // Xử lý logic Realtime bằng Immer
-  const handleStatusChange = useCallback((statusData: { userId: string; isOnline: boolean }) => {
+  const handleStatusChange = useCallback(
+    (statusData: { userId: string; isOnline: boolean }) => {
+      queryClient.setQueryData<PaginatedData<UserProfile>>(
+        ["online-friends", filterParams],
+        (oldData) => {
+          if (!oldData?.items) return oldData;
 
-    queryClient.setQueryData(["online-friends", filterParams], (oldData: any) => {
-      if (!oldData.items) return oldData;
+          return produce(oldData, (draft) => {
+            const friend = draft.items.find(
+              (item) => item.id === statusData.userId
+            );
 
-      return produce(oldData, (draft: any) => {
-        // Tìm trực tiếp và thay đổi thuộc tính, Immer sẽ tự động lo việc Immutable
-        const friend = draft.items.find((f: UserProfile) => f.id === statusData.userId);
-        if (friend) {
-          friend.isOnline = statusData.isOnline;
+            if (friend) {
+              friend.isOnline = statusData.isOnline;
+            }
+          });
         }
-      });
-    });
-  }, [queryClient, filterParams]);
+      );
+    },
+    [queryClient, filterParams]
+  );
 
   useTrackPresence(targetIds, handleStatusChange);
 
-  // Render logic
   if (isLoading) {
     return (
       <div className="space-y-0.5">
@@ -102,7 +110,7 @@ export default function OnlineFriends() {
   if (error || !onlineFriends) {
     return (
       <div className="px-2 py-4 text-xs text-destructive">
-        Không thể tải danh sách. Vui lòng thử lại.
+        Khong the tai danh sach. Vui long thu lai.
       </div>
     );
   }
@@ -110,10 +118,10 @@ export default function OnlineFriends() {
   return (
     <div className="space-y-0.5">
       <div className="text-foreground mt-5 mb-2.5 px-2.5 text-sm font-semibold first:mt-0">
-        Bạn bè online
+        Ban be online
       </div>
 
-      {onlineFriends.items.map((friend: UserProfile) => (
+      {onlineFriends.items.map((friend) => (
         <FriendItem key={friend.id} friend={friend} />
       ))}
     </div>

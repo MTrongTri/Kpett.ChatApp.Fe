@@ -9,7 +9,7 @@ export interface BaseUser {
   updatedAt: string | null;
 }
 
-export interface BaseAuthor extends BaseUser { }
+export type BaseAuthor = BaseUser;
 
 export interface SocialLink {
   platform: string;

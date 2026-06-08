@@ -122,7 +122,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             queueItem.abortController.signal
           );
           return { success: true, item: queueItem, result, canceled: false };
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Bắt lỗi hủy từ Axios chuẩn xác
           const isCanceled = axios.isCancel(error);
           return { success: false, item: queueItem, error, canceled: isCanceled };

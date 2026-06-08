@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/features/auth-slice";
 import { sessionStorage } from "@/lib/cookie-storage-utils";
 import { useAuth } from "@/components/providers/auth-provider";
+import { isAxiosError } from "axios";
 
 export default function SocialAccountSetup() {
   const [step, setStep] = useState(1);
@@ -74,7 +75,9 @@ export default function SocialAccountSetup() {
       window.location.replace("/");
     } catch (error: unknown) {
       console.error(error);
-      const { errorCode } = (error as any) || {};
+      const errorCode = isAxiosError(error)
+        ? (error.response?.data as { errorCode?: string } | undefined)?.errorCode
+        : undefined;
 
       if (errorCode === "USER.USERNAME_ALREADY_EXISTS") {
         setStep(1);

@@ -1,148 +1,139 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useSignalR } from '@/components/providers/signalr-provider';
-import { TypingEventPayload } from '@/types/chat';
-import { useAuth } from '@/components/providers/auth-provider';
+import { useCallback, useEffect, useRef } from "react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useSignalR } from "@/components/providers/signalr-provider";
+import { TypingEventPayload } from "@/types/chat";
 
-/**
- * Hook quản lý toàn bộ tính năng Typing Indicator theo tài liệu:
- * - Tự động JoinConversation khi mount / LeaveConversation khi unmount
- * - Gửi SendTyping với throttle 3s (giữ trạng thái) và debounce 1.5s (ngừng gõ)
- * - Lắng nghe sự kiện `UserTyping` từ backend
- */
 export function useTyping(
-    conversationId: string | null | undefined,
-    onTypingChange: (typers: Map<string, TypingEventPayload>) => void
+  conversationId: string | null | undefined,
+  onTypingChange: (typers: Map<string, TypingEventPayload>) => void,
 ) {
-    const { connection, isConnected } = useSignalR();
+  const { connection, isConnected } = useSignalR();
+  const { user } = useAuth();
 
-    const { user } = useAuth();
+  const typersRef = useRef<Map<string, TypingEventPayload>>(new Map());
+  const lastSentTypingRef = useRef<number>(0);
+  const stopTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isCurrentlyTypingRef = useRef(false);
 
-    // Ref lưu Map<userId, payload> của những người đang gõ
-    const typersRef = useRef<Map<string, TypingEventPayload>>(new Map());
+  useEffect(() => {
+    if (!isConnected || !connection || !conversationId) {
+      return;
+    }
 
-    // Ref để throttle: tránh gửi SendTyping(true) liên tục hơn 3s
-    const lastSentTypingRef = useRef<number>(0);
-    const throttleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    void connection.invoke("JoinConversation", conversationId).catch((error: unknown) => {
+      console.error("[useTyping] JoinConversation failed:", error);
+    });
 
-    // Ref để debounce: sau 1.5s không gõ thì gửi SendTyping(false)
-    const stopTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    return () => {
+      if (isCurrentlyTypingRef.current) {
+        void connection.invoke("SendTyping", conversationId, false).catch(() => {});
+      }
 
-    // Ref theo dõi trạng thái đang gõ hiện tại
-    const isCurrentlyTypingRef = useRef(false);
+      void connection.invoke("LeaveConversation", conversationId).catch((error: unknown) => {
+        console.error("[useTyping] LeaveConversation failed:", error);
+      });
+    };
+  }, [connection, conversationId, isConnected]);
 
-    // ---- JOIN / LEAVE CONVERSATION ----
-    useEffect(() => {
-        if (!isConnected || !connection || !conversationId) return;
+  useEffect(() => {
+    if (!isConnected || !connection || !conversationId) {
+      return;
+    }
 
-        connection.invoke('JoinConversation', conversationId).catch((err: unknown) => {
-            console.error('[useTyping] JoinConversation failed:', err);
+    const handleUserTyping = (payload: TypingEventPayload) => {
+      if (payload.conversationId !== conversationId) {
+        return;
+      }
+
+      const nextTypers = new Map(typersRef.current);
+
+      if (payload.isTyping) {
+        nextTypers.set(payload.userId, payload);
+      } else {
+        nextTypers.delete(payload.userId);
+      }
+
+      typersRef.current = nextTypers;
+      onTypingChange(new Map(nextTypers));
+    };
+
+    connection.on("UserTyping", handleUserTyping);
+
+    return () => {
+      connection.off("UserTyping", handleUserTyping);
+    };
+  }, [connection, conversationId, isConnected, onTypingChange]);
+
+  useEffect(() => {
+    typersRef.current = new Map();
+    onTypingChange(new Map());
+  }, [conversationId, onTypingChange]);
+
+  const sendTypingSignal = useCallback(
+    (isTyping: boolean) => {
+      if (!connection || !isConnected || !conversationId) {
+        return;
+      }
+
+      const typingPayload: TypingEventPayload = {
+        userId: user?.id || "",
+        displayName: user?.displayName || "",
+        username: user?.username || "",
+        avatarUrl: user?.avatarUrl || "",
+        conversationId,
+        isTyping,
+        timestamp: new Date().toISOString(),
+      };
+
+      void connection
+        .invoke("SendTyping", conversationId, typingPayload, isTyping)
+        .catch((error: unknown) => {
+          console.error("[useTyping] SendTyping failed:", error);
         });
+    },
+    [
+      connection,
+      conversationId,
+      isConnected,
+      user?.avatarUrl,
+      user?.displayName,
+      user?.id,
+      user?.username,
+    ],
+  );
 
-        return () => {
-            // Nếu đang gõ thì gửi false trước khi rời phòng
-            if (isCurrentlyTypingRef.current) {
-                connection.invoke('SendTyping', conversationId, false).catch(() => { });
-            }
-            connection.invoke('LeaveConversation', conversationId).catch((err: unknown) => {
-                console.error('[useTyping] LeaveConversation failed:', err);
-            });
-        };
-    }, [connection, isConnected, conversationId]);
+  const notifyTyping = useCallback(() => {
+    const now = Date.now();
 
-    // ---- LẮNG NGHE UserTyping TỪ BACKEND ----
-    useEffect(() => {
-        if (!isConnected || !connection || !conversationId) return;
+    if (stopTypingTimerRef.current) {
+      clearTimeout(stopTypingTimerRef.current);
+    }
 
-        const handleUserTyping = (payload: TypingEventPayload) => {
-            // Chỉ xử lý event thuộc conversation hiện tại
-            if (payload.conversationId !== conversationId) return;
+    if (
+      !isCurrentlyTypingRef.current ||
+      now - lastSentTypingRef.current > 3000
+    ) {
+      isCurrentlyTypingRef.current = true;
+      lastSentTypingRef.current = now;
+      sendTypingSignal(true);
+    }
 
-            const newTypers = new Map(typersRef.current);
+    stopTypingTimerRef.current = setTimeout(() => {
+      isCurrentlyTypingRef.current = false;
+      sendTypingSignal(false);
+    }, 1500);
+  }, [sendTypingSignal]);
 
-            if (payload.isTyping) {
-                newTypers.set(payload.userId, payload);
-            } else {
-                newTypers.delete(payload.userId);
-            }
+  const notifyStopTyping = useCallback(() => {
+    if (stopTypingTimerRef.current) {
+      clearTimeout(stopTypingTimerRef.current);
+    }
 
-            typersRef.current = newTypers;
-            onTypingChange(new Map(newTypers));
-        };
+    if (isCurrentlyTypingRef.current) {
+      isCurrentlyTypingRef.current = false;
+      sendTypingSignal(false);
+    }
+  }, [sendTypingSignal]);
 
-        connection.on('UserTyping', handleUserTyping);
-
-        return () => {
-            connection.off('UserTyping', handleUserTyping);
-        };
-    }, [connection, isConnected, conversationId, onTypingChange]);
-
-    // ---- CLEAR TYPERS KHI ĐỔI CONVERSATION ----
-    useEffect(() => {
-        typersRef.current = new Map();
-        onTypingChange(new Map());
-    }, [conversationId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // ---- HÀM GỬI TYPING ----
-    const sendTypingSignal = useCallback(
-        (isTyping: boolean) => {
-            if (!connection || !isConnected || !conversationId) return;
-
-            const userTyped: TypingEventPayload = {
-                userId: user?.id || '',
-                displayName: user?.displayName || '',
-                username: user?.username || '',
-                avatarUrl: user?.avatarUrl || '',
-                conversationId: conversationId,
-                isTyping: isTyping,
-                timestamp: new Date().toISOString(),
-            }
-
-            connection.invoke('SendTyping', conversationId, userTyped, isTyping).catch((err: unknown) => {
-                console.error('[useTyping] SendTyping failed:', err);
-            });
-        },
-        [connection, isConnected, conversationId]
-    );
-
-    /**
-     * Gọi hàm này mỗi khi user gõ phím trong ô input.
-     * - Gửi SendTyping(true) ngay lần đầu và throttle lại mỗi 3s
-     * - Debounce 1.5s sau lần gõ cuối để gửi SendTyping(false)
-     */
-    const notifyTyping = useCallback(() => {
-        const now = Date.now();
-
-        // Hủy timer ngừng gõ cũ
-        if (stopTypingTimerRef.current) {
-            clearTimeout(stopTypingTimerRef.current);
-        }
-
-        // Gửi SendTyping(true) nếu chưa gửi hoặc đã >3s kể từ lần gửi cuối
-        if (!isCurrentlyTypingRef.current || now - lastSentTypingRef.current > 3000) {
-            isCurrentlyTypingRef.current = true;
-            lastSentTypingRef.current = now;
-            sendTypingSignal(true);
-        }
-
-        // Debounce: sau 1.5s không gõ → gửi false
-        stopTypingTimerRef.current = setTimeout(() => {
-            isCurrentlyTypingRef.current = false;
-            sendTypingSignal(false);
-        }, 1500);
-    }, [sendTypingSignal]);
-
-    /**
-     * Gọi hàm này khi blur khỏi ô input để ngay lập tức dừng typing.
-     */
-    const notifyStopTyping = useCallback(() => {
-        if (stopTypingTimerRef.current) {
-            clearTimeout(stopTypingTimerRef.current);
-        }
-        if (isCurrentlyTypingRef.current) {
-            isCurrentlyTypingRef.current = false;
-            sendTypingSignal(false);
-        }
-    }, [sendTypingSignal]);
-
-    return { notifyTyping, notifyStopTyping };
+  return { notifyTyping, notifyStopTyping };
 }

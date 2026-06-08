@@ -11,30 +11,26 @@ export const friendRequest = async (receiverId: string): Promise<FriendRequestRe
     return response.data;
 };
 
-export const friendRequestCancel = async (requestId: string): Promise<any> => {
-    const response = await http.post(`/relationships/friend-requests/${requestId}/cancel`, {
+export const friendRequestCancel = async (requestId: string): Promise<void> => {
+    await http.post(`/relationships/friend-requests/${requestId}/cancel`, {
         requestId
     });
-    return response.data;
 };
 
-export const friendRequestDecline = async (requestId: string): Promise<any> => {
-    const response = await http.post(`/relationships/friend-requests/${requestId}/decline`, {
+export const friendRequestDecline = async (requestId: string): Promise<void> => {
+    await http.post(`/relationships/friend-requests/${requestId}/decline`, {
         requestId
     });
-    return response.data;
 };
 
-export const friendRequestAccept = async (requestId: string): Promise<any> => {
-    const response = await http.post(`/relationships/friend-requests/${requestId}/accept`, {
+export const friendRequestAccept = async (requestId: string): Promise<void> => {
+    await http.post(`/relationships/friend-requests/${requestId}/accept`, {
         requestId
     });
-    return response.data;
 };
 
-export const unFriend = async (targetUserId: string): Promise<any> => {
-    const response = await http.delete(`/relationships/${targetUserId}`);
-    return response.data;
+export const unFriend = async (targetUserId: string): Promise<void> => {
+    await http.delete(`/relationships/${targetUserId}`);
 };
 
 export const getFriendsWithFilter = async (

@@ -54,14 +54,12 @@ export const deletePost = async (postId: string): Promise<Post> => {
   return response.data;
 };
 
-export const addReaction = async (postId: string): Promise<any> => {
-  const response = await http.put(`/posts/${postId}/reactions`, {
+export const addReaction = async (postId: string): Promise<void> => {
+  await http.put(`/posts/${postId}/reactions`, {
     reactionType: 1
   });
-  return response.data;
 };
 
-export const removeReaction = async (postId: string): Promise<any> => {
-  const response = await http.delete(`/posts/${postId}/reactions`);
-  return response.data;
+export const removeReaction = async (postId: string): Promise<void> => {
+  await http.delete(`/posts/${postId}/reactions`);
 };

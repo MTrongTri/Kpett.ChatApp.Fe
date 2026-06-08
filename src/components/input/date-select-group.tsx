@@ -16,7 +16,7 @@ interface DateSelectGroupProps {
 }
 
 export function DateSelectGroup({ value, onChange, hasError, className }: DateSelectGroupProps) {
-    const parseDateSafe = (val: any) => {
+    const parseDateSafe = (val: Date | string | null | undefined) => {
         if (!val) return null;
         const d = val instanceof Date ? val : new Date(val);
         return !isNaN(d.getTime()) ? d : null;
@@ -40,20 +40,24 @@ export function DateSelectGroup({ value, onChange, hasError, className }: DateSe
     }, [month, year]);
 
     useEffect(() => {
-        if (!value) {
-            setDay("");
-            setMonth("");
-            setYear("");
-            return;
-        }
+        const timer = setTimeout(() => {
+            if (!value) {
+                setDay("");
+                setMonth("");
+                setYear("");
+                return;
+            }
 
-        const dateObj = parseDateSafe(value);
+            const dateObj = parseDateSafe(value);
 
-        if (dateObj) {
-            setDay(dateObj.getDate().toString());
-            setMonth((dateObj.getMonth() + 1).toString());
-            setYear(dateObj.getFullYear().toString());
-        }
+            if (dateObj) {
+                setDay(dateObj.getDate().toString());
+                setMonth((dateObj.getMonth() + 1).toString());
+                setYear(dateObj.getFullYear().toString());
+            }
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, [value]);
 
     const triggerChange = (newDay: string, newMonth: string, newYear: string) => {

@@ -6,9 +6,9 @@
 @theme inline {
 
   /* --- FONTS --- */
-  --font-roboto: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+  --font-roboto: "Roboto", "Helvetica Neue", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 
-  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace;
 
   /* Ánh xạ biến CSS vào class Tailwind */
   --color-primary: hsl(var(--primary));

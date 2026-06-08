@@ -1,0 +1,140 @@
+Complete API Call Inventory for Kpett.ChatApp.Fe
+================================================
+
+Base URL: Configurable via NEXT_PUBLIC_API_URL env var
+Axios instances: http (baseURL: {NEXT_PUBLIC_API_URL}/api), authHttp (baseURL: /api/auth, proxied via Next.js)
+
+--- AUTH ENDPOINTS (via authHttp - proxied via Next.js /api/auth/*) ---
+
+1.  POST /api/auth/login              -> src/services/auth.service.ts:8          - Login
+2.  POST /api/auth/logout             -> src/services/auth.service.ts:26         - Logout
+                                       -> src/components/providers/auth-provider.tsx:60
+3.  POST /api/auth/refresh            -> src/lib/axios.ts:84                     - Refresh token
+                                       -> src/services/auth.service.ts:44
+4.  GET  /api/auth/session            -> src/lib/axios.ts:68                     - Restore access token from HttpOnly cookie
+5.  POST /api/auth/forgot-password    -> src/services/auth.service.ts:54         - Forgot password (send OTP)
+                                       -> src/components/auth/form-forgot-password.tsx:49
+6.  POST /api/auth/reset-password     -> src/services/auth.service.ts:64         - Reset password with OTP
+                                       -> src/components/auth/form-reset-password.tsx:75
+
+--- AUTH ENDPOINTS (via http - direct to backend) ---
+
+7.  POST auth/register                 -> src/services/auth.service.ts:18         - Register new user
+
+--- USER ENDPOINTS (via http) ---
+
+8.  GET  users/me                     -> src/services/user.service.ts:14          - Get current user profile
+9.  GET  users/profile/{username}     -> src/services/user.service.ts:21          - Get user profile by username
+                                       -> src/app/(main)/[username]/page.tsx:28
+10. GET  users/check-username         -> src/services/user.service.ts:29          - Check username availability
+11. POST users/account-setup          -> src/services/user.service.ts:47          - Complete account setup
+12. GET  users/me/stats               -> src/services/user.service.ts:58          - Get current user stats
+13. PUT  users/me                     -> src/services/user.service.ts:65          - Update user general info
+14. PUT  users/me/media?mediaType=X   -> src/services/user.service.ts:70          - Update avatar/cover media
+15. DELETE users/me/media/primary?mediaType=X -> src/services/user.service.ts:75   - Delete avatar/cover media
+16. GET  users/search                 -> src/services/user.service.ts:84          - Search users
+                                       -> src/app/sitemap.ts:123
+
+--- POST ENDPOINTS (via http) ---
+
+17. GET  /posts                       -> src/services/post.service.ts:10          - Get home feed (cursor pagination)
+                                       -> src/app/sitemap.ts:182
+18. GET  /posts/users/{userId}        -> src/services/post.service.ts:25          - Get posts by user ID
+19. GET  /posts/{postId}              -> src/services/post.service.ts:38          - Get single post by ID
+                                       -> src/app/(main)/post/[id]/page.tsx:58
+20. POST /posts                       -> src/services/post.service.ts:43          - Create new post
+21. PUT  /posts/{postId}              -> src/services/post.service.ts:48          - Update post
+22. DELETE /posts/{postId}            -> src/services/post.service.ts:53          - Delete post
+23. PUT  /posts/{postId}/reactions    -> src/services/post.service.ts:58          - Add reaction/like
+24. DELETE /posts/{postId}/reactions  -> src/services/post.service.ts:64          - Remove reaction/like
+
+--- COMMENT ENDPOINTS (via http) ---
+
+25. POST /comments/posts/{postId}     -> src/services/comment.service.ts:11       - Add comment to post
+26. PUT  /comments/posts/{commentId}  -> src/services/comment.service.ts:22       - Update comment
+27. DELETE /comments/posts/{commentId} -> src/services/comment.service.ts:29      - Delete comment
+28. GET  /comments/posts/{postId}     -> src/services/comment.service.ts:39       - Get comments by post ID
+
+--- RELATIONSHIP / FRIEND ENDPOINTS (via http) ---
+
+29. POST /relationships/friend-requests                    -> src/services/friend.service.ts:8   - Send friend request
+30. POST /relationships/friend-requests/{id}/cancel        -> src/services/friend.service.ts:15  - Cancel friend request
+31. POST /relationships/friend-requests/{id}/decline       -> src/services/friend.service.ts:21  - Decline friend request
+32. POST /relationships/friend-requests/{id}/accept        -> src/services/friend.service.ts:27  - Accept friend request
+33. DELETE /relationships/{targetUserId}                   -> src/services/friend.service.ts:33  - Unfriend/remove friend
+34. GET  /relationships/friends                            -> src/services/friend.service.ts:39  - Get friends list
+35. GET  /relationships/friends/suggestions                -> src/services/friend.service.ts:50  - Get friend suggestions
+
+--- CONVERSATION / CHAT ENDPOINTS (via http) ---
+
+36. GET  /conversations/has-unread                                          -> src/services/chat.service.ts:14  - Check unread conversations
+37. GET  /conversations                                                     -> src/services/chat.service.ts:20  - Get conversations list
+38. GET  /conversations/{conversationId}/messages                           -> src/services/chat.service.ts:28  - Get messages in conversation
+39. POST /conversations/{conversationId}/messages                           -> src/services/chat.service.ts:42  - Send message
+40. POST /conversations/{conversationId}/members                            -> src/services/chat.service.ts:48  - Add members to group
+41. DELETE /conversations/{conversationId}/members/{userId}                 -> src/services/chat.service.ts:53  - Remove member from group
+42. PUT  /conversations/{conversationId}/read                               -> src/services/chat.service.ts:58  - Mark conversation as read
+43. GET  /conversations/{conversationId}                                    -> src/services/chat.service.ts:63  - Get conversation details
+44. GET  /conversations/direct/{userId}                                     -> src/services/chat.service.ts:69  - Get/create direct conversation
+45. POST /conversations                                                     -> src/services/chat.service.ts:76  - Create group conversation
+46. GET  /conversations/{conversationId}/friends-not-in-group               -> src/services/chat.service.ts:87  - Get friends not in group
+47. GET  /conversations/{conversationId}/members                            -> src/services/chat.service.ts:98  - Get conversation members
+
+--- NOTIFICATION ENDPOINTS (via http) ---
+
+48. GET  notifications                          -> src/services/notification.service.ts:10  - Get notifications
+49. GET  notifications/unread-count             -> src/services/notification.service.ts:18  - Get unread count
+50. PUT  notifications/{notificationId}/read    -> src/services/notification.service.ts:23  - Mark notification as read
+51. PUT  notifications/read-all                 -> src/services/notification.service.ts:27  - Mark all as read
+
+--- MEDIA ENDPOINTS (via http) ---
+
+52. GET    /media/generate-signature            -> src/services/media.service.ts:13         - Generate Cloudinary upload signature
+53. DELETE /media/delete                        -> src/services/media.service.ts:71         - Delete file from Cloudinary
+
+--- EXTERNAL CLOUDINARY UPLOAD ---
+
+54. POST {uploadUrl} (from signature response)  -> src/services/media.service.ts:29         - Upload file to Cloudinary
+
+--- SIGNALR / WEBSOCKET HUB ---
+
+55. WebSocket {NEXT_PUBLIC_API_URL}/hubs/app    -> src/components/providers/signalr-provider.tsx:47  - Real-time hub connection
+
+Server-invoked events listened to:
+    - "UserStatusChanged"            -> src/hooks/use-track-presence.ts:22
+    - "ReceiveNewMessage"            -> src/hooks/chat/use-chat-messages.ts:217
+                                       src/hooks/chat/use-chat-realtime.ts:218
+    - "UserReadMessage"              -> src/hooks/chat/use-chat-messages.ts:218
+    - "NewConversationCreated"       -> src/hooks/chat/use-chat-realtime.ts:219
+    - "RemovedFromConversation"      -> src/hooks/chat/use-chat-realtime.ts:220
+    - "UserTyping"                   -> src/hooks/chat/use-typing.ts:60
+    - "ReceiveNotification"          -> src/hooks/notification/use-notifications.tsx:81
+
+Client-invoked hub methods:
+    - "SubscribeToPresence"          -> src/hooks/use-track-presence.ts:37
+    - "UnsubscribeFromPresence"      -> src/hooks/use-track-presence.ts:44
+    - "JoinConversation"             -> src/hooks/chat/use-typing.ts:23
+    - "LeaveConversation"            -> src/hooks/chat/use-typing.ts:32
+    - "SendTyping"                   -> src/hooks/chat/use-typing.ts:89
+
+--- DIRECT SSR fetch() CALLS ---
+
+56. GET {NEXT_PUBLIC_API_URL}/api/posts/{postId}              -> src/app/(main)/post/[id]/page.tsx:58   - SSR post data
+57. GET {NEXT_PUBLIC_API_URL}/api/users/profile/{username}    -> src/app/(main)/[username]/page.tsx:27  - SSR user profile
+58. GET {apiUrl}/api/users/search                             -> src/app/sitemap.ts:123                 - SSG sitemap users
+59. GET {apiUrl}/api/posts                                    -> src/app/sitemap.ts:182                 - SSG sitemap posts
+
+--- NEXT.JS API ROUTE HANDLERS (proxy to backend) ---
+
+60. POST /api/auth/login    -> proxies to {NEXT_PUBLIC_API_URL}/api/auth/login       -> src/app/api/auth/login/route.ts:7
+61. POST /api/auth/refresh  -> proxies to {NEXT_PUBLIC_API_URL}/api/auth/refresh-token -> src/app/api/auth/refresh/route.ts:10
+62. POST /api/auth/logout   -> proxies to {NEXT_PUBLIC_API_URL}/api/auth/logout      -> src/app/api/auth/logout/route.ts:11
+
+--- SUMMARY ---
+- Total unique REST API endpoints: 53
+- Total WebSocket hub endpoints: 1
+- Service files: 8 (auth, user, post, comment, friend, chat, notification, media)
+- Axios instances: 3 (http, authHttp, cloudinaryClient)
+- Direct fetch() calls: 6 (4 SSR + 2 in route handlers)
+- SignalR events listened to: 7
+- SignalR hub methods invoked: 5

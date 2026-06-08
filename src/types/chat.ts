@@ -1,3 +1,5 @@
+import type { BaseUser } from "./user";
+
 export interface SystemMessageMetadata {
   actionType: string;
   actor?: { id: string; name: string };
@@ -32,6 +34,11 @@ export interface ParticipantResponse {
   isFriend: boolean;
   lastReadMessageId?: string;
 }
+
+export type ConversationFriendCandidate = Pick<
+  BaseUser,
+  "id" | "username" | "displayName" | "avatarUrl"
+>;
 
 export interface ConversationResponse {
   id: string;

@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { checkUsername, getMyProfile, updateUserGeneralInfo } from "@/services/user.service";
 import { ProfileGeneralFormSkeleton } from "./profile-general-form-skeleton";
 import { toast } from "sonner";
+import { UserGeneralInfo } from "@/types/user";
 
 // Định nghĩa schema validation cho form
 const profileFormSchema = z.object({
@@ -59,7 +60,7 @@ export default function ProfileGeneralForm() {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
   const queryClient = useQueryClient();
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: userProfile, isLoading, error } = useQuery({
     queryKey: ["my-profile"],
@@ -97,7 +98,7 @@ export default function ProfileGeneralForm() {
   // Xử lý onChange riêng cho Username để Debounce mà không làm re-render toàn bộ form
   const handleUsernameChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    onChange: (...event: any[]) => void
+    onChange: (value: string) => void
   ) => {
     const value = e.target.value;
 
@@ -140,8 +141,8 @@ export default function ProfileGeneralForm() {
 
   // Xử lý API bằng useMutation
   const updateMutation = useMutation({
-    mutationFn: (formattedData: any) => updateUserGeneralInfo(formattedData),
-    onSuccess: (res) => {
+    mutationFn: (formattedData: Partial<UserGeneralInfo>) => updateUserGeneralInfo(formattedData),
+    onSuccess: () => {
       toast.success("Cập nhật thông tin thành công!");
       queryClient.invalidateQueries({ queryKey: ["my-profile"] });
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });

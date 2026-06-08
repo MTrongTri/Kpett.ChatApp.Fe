@@ -1,13 +1,38 @@
 import { useEffect, useRef } from 'react';
-import { useSignalR } from '@/components/providers/signalr-provider';
-import { MessageResponse, ConversationResponse } from '@/types/chat';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeChatPopup, openChatPopupSilent } from '@/store/features/chat-slice';
-import { useAuth } from '@/components/providers/auth-provider';
-import { chatService } from '@/services/chat.service';
-import { RootState } from '@/store/store';
-import { useQueryClient } from '@tanstack/react-query';
 import { produce } from 'immer';
+import { useAuth } from '@/components/providers/auth-provider';
+import { useSignalR } from '@/components/providers/signalr-provider';
+import { chatService } from '@/services/chat.service';
+import {
+    closeChatPopup,
+    openChatPopupSilent
+} from '@/store/features/chat-slice';
+import { RootState } from '@/store/store';
+import { ConversationResponse, MessageResponse } from '@/types/chat';
+import { PaginatedData } from '@/types/common/api';
+
+type ConversationsCache = InfiniteData<
+    PaginatedData<ConversationResponse>,
+    string | undefined
+>;
+
+const createConversationCache = (
+    items: ConversationResponse[]
+): ConversationsCache => ({
+    pages: [
+        {
+            items,
+            pagination: {
+                nextCursor: null,
+                hasMore: false,
+                limit: items.length || 1,
+            },
+        },
+    ],
+    pageParams: [undefined],
+});
 
 export const useChatRealtime = (currentConversationId?: string | null) => {
     const { connection, isConnected } = useSignalR();
@@ -26,110 +51,184 @@ export const useChatRealtime = (currentConversationId?: string | null) => {
         if (!isConnected || !connection) return;
 
         const handleNewMessage = async (newMessage: MessageResponse) => {
-            const targetConvId = newMessage.conversationId || currentConversationId;
-            if (!targetConvId) return;
+            const targetConversationId =
+                newMessage.conversationId ?? currentConversationId;
+            if (!targetConversationId) return;
 
             const isMyMessage = newMessage.senderId === user?.id;
-            const isViewingInPopup = openPopupsRef.current.some(p => p.conversationId === targetConvId && !p.isMinimized);
-            const isViewingInFullPage = typeof window !== 'undefined' && window.location.pathname.includes(`/chat/${targetConvId}`);
-            const isViewing = currentConversationId === targetConvId || isViewingInPopup || isViewingInFullPage;
+            const isViewingInPopup = openPopupsRef.current.some(
+                (popup) =>
+                    popup.conversationId === targetConversationId &&
+                    !popup.isMinimized
+            );
+            const isViewingInFullPage =
+                typeof window !== 'undefined' &&
+                window.location.pathname.includes(`/chat/${targetConversationId}`);
+            const isViewing =
+                currentConversationId === targetConversationId ||
+                isViewingInPopup ||
+                isViewingInFullPage;
 
             let isFoundInCache = false;
 
-            // A. CẬP NHẬT CACHE HIỆN TẠI VỚI IMMER
-            queryClient.setQueryData(["conversations"], (oldData: any) => {
-                if (!oldData?.pages) return oldData;
+            queryClient.setQueryData<ConversationsCache>(
+                ['conversations'],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
 
-                return produce(oldData, (draft: any) => {
-                    let foundConv = null;
-                    let pageIdx = -1;
-                    let itemIdx = -1;
+                    return produce(oldData, (draft) => {
+                        let foundConversation:
+                            | ConversationResponse
+                            | undefined;
+                        let pageIndex = -1;
+                        let itemIndex = -1;
 
-                    for (let i = 0; i < draft.pages.length; i++) {
-                        const idx = draft.pages[i].items?.findIndex((c: any) => c.id === targetConvId);
-                        if (idx > -1) {
-                            foundConv = draft.pages[i].items[idx];
-                            pageIdx = i;
-                            itemIdx = idx;
-                            break;
+                        for (let index = 0; index < draft.pages.length; index += 1) {
+                            const conversationIndex = draft.pages[index].items.findIndex(
+                                (conversation) =>
+                                    conversation.id === targetConversationId
+                            );
+
+                            if (conversationIndex > -1) {
+                                foundConversation =
+                                    draft.pages[index].items[conversationIndex];
+                                pageIndex = index;
+                                itemIndex = conversationIndex;
+                                break;
+                            }
                         }
-                    }
 
-                    if (foundConv) {
+                        if (!foundConversation || pageIndex === -1 || itemIndex === -1) {
+                            return;
+                        }
+
                         isFoundInCache = true;
-                        foundConv.lastMessageAt = newMessage.createdAt;
-                        foundConv.lastMessage = { ...newMessage };
-                        foundConv.hasUnread = (!isMyMessage && !isViewing);
+                        foundConversation.lastMessageAt = newMessage.createdAt;
+                        foundConversation.lastMessage = { ...newMessage };
+                        foundConversation.hasUnread = !isMyMessage && !isViewing;
 
-                        draft.pages[pageIdx].items.splice(itemIdx, 1);
-                        draft.pages[0].items.unshift(foundConv);
-                    }
-                });
-            });
+                        draft.pages[pageIndex].items.splice(itemIndex, 1);
+                        draft.pages[0].items.unshift(foundConversation);
+                    });
+                }
+            );
 
-            // B. FETCH BÙ NẾU KHÔNG CÓ TRONG CACHE
             if (!isFoundInCache) {
                 try {
-                    const missingConv = await chatService.getConversationById(targetConvId);
-                    queryClient.setQueryData(["conversations"], (oldData: any) => {
-                        if (!oldData?.pages) return { pages: [{ items: [missingConv] }], pageParams: [undefined] };
+                    const missingConversation =
+                        await chatService.getConversationById(targetConversationId);
 
-                        return produce(oldData, (draft: any) => {
-                            const alreadyExists = draft.pages[0].items.some((c: any) => c.id === missingConv.id);
-                            if (!alreadyExists) {
-                                missingConv.hasUnread = (!isMyMessage && !isViewing);
-                                missingConv.lastMessageAt = newMessage.createdAt;
-                                missingConv.lastMessage = { ...newMessage };
-                                draft.pages[0].items.unshift(missingConv);
+                    queryClient.setQueryData<ConversationsCache>(
+                        ['conversations'],
+                        (oldData) => {
+                            if (!oldData?.pages.length) {
+                                missingConversation.hasUnread =
+                                    !isMyMessage && !isViewing;
+                                missingConversation.lastMessageAt =
+                                    newMessage.createdAt;
+                                missingConversation.lastMessage = { ...newMessage };
+
+                                return createConversationCache([missingConversation]);
                             }
-                        });
-                    });
+
+                            return produce(oldData, (draft) => {
+                                const alreadyExists = draft.pages.some((page) =>
+                                    page.items.some(
+                                        (conversation) =>
+                                            conversation.id === missingConversation.id
+                                    )
+                                );
+
+                                if (alreadyExists) {
+                                    return;
+                                }
+
+                                missingConversation.hasUnread =
+                                    !isMyMessage && !isViewing;
+                                missingConversation.lastMessageAt =
+                                    newMessage.createdAt;
+                                missingConversation.lastMessage = { ...newMessage };
+                                draft.pages[0].items.unshift(missingConversation);
+                            });
+                        }
+                    );
                 } catch (error) {
-                    console.error("Lỗi khi fetch bù thông tin hội thoại:", error);
-                    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+                    console.error(
+                        'Loi khi fetch bu thong tin hoi thoai:',
+                        error
+                    );
+                    queryClient.invalidateQueries({ queryKey: ['conversations'] });
                 }
             }
 
-
-            // C. MỞ BONG BÓNG CHAT NGẦM
             if (!isMyMessage && !isViewing) {
-                queryClient.setQueryData(["hasUnreadConversations"], true);
-                dispatch(openChatPopupSilent({ conversationId: targetConvId, newMessage }));
+                queryClient.setQueryData(['hasUnreadConversations'], true);
+                dispatch(
+                    openChatPopupSilent({
+                        conversationId: targetConversationId,
+                        newMessage,
+                    })
+                );
             }
         };
 
         const handleNewConversation = (conversation: ConversationResponse) => {
-            queryClient.setQueryData(["conversations"], (oldData: any) => {
-                if (!oldData?.pages) return oldData;
-                return produce(oldData, (draft: any) => {
-                    const exists = draft.pages.some((page: any) => page.items?.some((c: any) => c.id === conversation.id));
-                    if (!exists) {
-                        draft.pages[0].items.unshift(conversation);
+            queryClient.setQueryData<ConversationsCache>(
+                ['conversations'],
+                (oldData) => {
+                    if (!oldData?.pages.length) {
+                        return createConversationCache([conversation]);
                     }
-                });
-            });
+
+                    return produce(oldData, (draft) => {
+                        const exists = draft.pages.some((page) =>
+                            page.items.some(
+                                (cachedConversation) =>
+                                    cachedConversation.id === conversation.id
+                            )
+                        );
+
+                        if (!exists) {
+                            draft.pages[0].items.unshift(conversation);
+                        }
+                    });
+                }
+            );
         };
 
-        const handleRemovedFromConversation = (convId: string) => {
-            queryClient.setQueryData(["conversations"], (oldData: any) => {
-                if (!oldData?.pages) return oldData;
-                return produce(oldData, (draft: any) => {
-                    for (const page of draft.pages) {
-                        page.items = page.items.filter((c: any) => c.id !== convId);
-                    }
-                });
-            });
-            dispatch(closeChatPopup(convId));
+        const handleRemovedFromConversation = (conversationId: string) => {
+            queryClient.setQueryData<ConversationsCache>(
+                ['conversations'],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
+
+                    return produce(oldData, (draft) => {
+                        for (const page of draft.pages) {
+                            page.items = page.items.filter(
+                                (conversation) => conversation.id !== conversationId
+                            );
+                        }
+                    });
+                }
+            );
+
+            dispatch(closeChatPopup(conversationId));
         };
 
-        connection.on("ReceiveNewMessage", handleNewMessage);
-        connection.on("NewConversationCreated", handleNewConversation);
-        connection.on("RemovedFromConversation", handleRemovedFromConversation);
+        connection.on('ReceiveNewMessage', handleNewMessage);
+        connection.on('NewConversationCreated', handleNewConversation);
+        connection.on(
+            'RemovedFromConversation',
+            handleRemovedFromConversation
+        );
 
         return () => {
-            connection.off("ReceiveNewMessage", handleNewMessage);
-            connection.off("NewConversationCreated", handleNewConversation);
-            connection.off("RemovedFromConversation", handleRemovedFromConversation);
+            connection.off('ReceiveNewMessage', handleNewMessage);
+            connection.off('NewConversationCreated', handleNewConversation);
+            connection.off(
+                'RemovedFromConversation',
+                handleRemovedFromConversation
+            );
         };
     }, [connection, isConnected, currentConversationId, queryClient, dispatch, user?.id]);
 };

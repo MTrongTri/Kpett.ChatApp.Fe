@@ -16,7 +16,6 @@ import { chatService } from "@/services/chat.service";
 import { toast } from "sonner";
 import { UserProfile } from "@/types/user";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useRouter } from "next/navigation";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -53,7 +52,7 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
         setIsSearching(true);
         const data = await getFriendsWithFilter({ search: debouncedSearch, limit: 20, cursor: null });
         if (data && data.items) {
-          setFriends(data.items as any[]);
+          setFriends(data.items);
         }
       } catch (error) {
         console.error(error);

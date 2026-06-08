@@ -3,7 +3,7 @@ import { BaseAuthor } from "./user";
 
 export type PrivacyLevel = "public" | "friends" | "private";
 
-export interface PostAuthor extends BaseAuthor { }
+export type PostAuthor = BaseAuthor;
 
 export interface PostMetrics {
   likeCount: number;

@@ -6,7 +6,7 @@ import { Comment } from "@/types/comment";
 import { Post } from "@/types/post";
 
 interface UseCreateCommentProps {
-    post: { id: string;[key: string]: any } | null;
+    post: Pick<Post, "id"> | null;
     onSuccess?: () => void;
 }
 

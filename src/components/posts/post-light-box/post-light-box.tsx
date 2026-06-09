@@ -1,9 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useSelector } from "react-redux";
 
-import { RootState } from "@/store/store";
 import { Post } from "@/types/post";
 
 import { Button } from "@/components/ui/button";
@@ -89,7 +87,7 @@ export default function PostLightbox({
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent
-          className="bg-card border-border flex max-w-screen h-screen md:max-h-[94vh] md:w-[92vw] flex-col gap-0 overflow-hidden rounded-lg md:max-w-235 md:rounded-2xl py-4 px-2 pt-8 md:p-0"
+          className="bg-card border-border flex h-[100dvh] max-h-[100dvh] max-w-screen flex-col gap-0 overflow-hidden rounded-lg px-2 pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] md:h-auto md:max-h-[94dvh] md:w-[92vw] md:max-w-235 md:rounded-2xl md:p-0"
           aria-describedby={undefined}
         >
           <DialogTitle className="sr-only">Chi tiết bài viết</DialogTitle>
@@ -99,7 +97,7 @@ export default function PostLightbox({
           ) : (
             <div className="flex flex-col h-full px-0 md:px-6 overflow-hidden">
               {/* ── HEADER BÀI VIẾT ── */}
-              <DialogHeader className="hidden md:block px-4 py-2 shrink-0">
+              <DialogHeader className="hidden md:block px-4 pr-6 py-2 shrink-0">
                 <div className="flex w-full items-center justify-between border-b border-border">
                   <PostHeader
                     author={post.author}

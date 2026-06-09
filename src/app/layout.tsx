@@ -51,7 +51,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-background font-roboto text-foreground antialiased">
+      <body className="bg-background font-roboto text-foreground antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: searchStructuredDataScript }}

@@ -60,9 +60,6 @@ export default function PostDetailComments({ post }: { post: Post }) {
                     <h2 className="text-card-foreground text-sm font-semibold">
                         Bình luận
                     </h2>
-                    <p className="text-muted-foreground mt-0.5 text-xs">
-                        Tham gia thảo luận cùng cộng đồng.
-                    </p>
                 </div>
 
                 {post && (

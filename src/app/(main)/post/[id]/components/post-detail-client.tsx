@@ -26,6 +26,9 @@ import type { Post } from "@/types/post";
 import { PostCardSkeleton } from "../../../components/posts/post-card-skeleton";
 import PostDetailComments from "./post-detail-comment";
 import PostDetailError from "./post-detail-error";
+import { DialogHeader } from "@/components/ui/dialog";
+import { usePostMenuActions } from "@/hooks/post/use-post-menu-actions";
+import { PostLightboxMenu } from "@/components/posts/post-light-box/post-lightbox-menu";
 
 type PostDetailClientProps = {
   initialPost: Post | null;
@@ -61,44 +64,32 @@ export default function PostDetailClient({
     return <PostDetailError />;
   }
 
+  const {
+    handleEditClick,
+    handleDelete,
+    handleCopyLink
+  } = usePostMenuActions(post || null);
+
+  const isAuthor = post?.viewerContext.isOwner
+
   return (
     <div className="bg-background min-h-screen pt-14.5">
-      <div className="mx-auto w-full max-w-240 px-0 py-0 md:px-4 md:py-5">
-        <article className="bg-card border-border rounded-xl border transition-all duration-200">
-          <div className="flex items-center justify-between gap-3 pt-1 pr-4">
-            <div className="min-w-0 flex-1 px-3">
-              <PostHeader author={post.author} postCreatedAt={post.createdAt} />
+      <div className="mx-auto w-full h-screen max-w-240 px-0 py-0 md:px-4 md:py-5">
+        <article className="h-screen bg-card border-border rounded-xl border transition-all duration-200">
+          <DialogHeader className="px-4 pr-6 py-2 shrink-0">
+            <div className="flex w-full items-center justify-between border-b border-border">
+              <PostHeader
+                author={post.author}
+                postCreatedAt={post.createdAt}
+              />
+              <PostLightboxMenu
+                isAuthor={isAuthor}
+                onEdit={handleEditClick}
+                onDelete={handleDelete}
+                onCopyLink={handleCopyLink}
+              />
             </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-foreground/40 hover:text-foreground hover:bg-foreground/8 h-8 w-8 shrink-0 rounded-lg"
-                >
-                  <MoreHorizontal size={15} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-card border-border text-card-foreground w-44 rounded-lg text-sm"
-              >
-                <DropdownMenuItem className="hover:text-primary focus:text-primary cursor-pointer gap-2">
-                  <Link2 size={13} /> Sao chép liên kết
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2">
-                  <EyeOff size={13} /> Ẩn bài viết này
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2">
-                  <UserMinus size={13} /> Bỏ theo dõi
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer gap-2">
-                  <Flag size={13} /> Báo cáo
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          </DialogHeader>
 
           <div className="px-4 pb-3">
             <PostContent content={post.content} tags={post.hashtags} />

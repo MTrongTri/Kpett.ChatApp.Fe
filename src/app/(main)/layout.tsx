@@ -8,7 +8,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="mx-auto max-w-360">
+    <main className="h-full mx-auto max-w-360">
       <Header />
       {children}
     </main>

@@ -2,6 +2,7 @@
 
 import { openPostLightBox } from "@/store/features/modal-slice";
 import { PostThumbnail } from "@/types/post";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import ProfilePostItem from "./profile-post-item";
 
@@ -12,8 +13,14 @@ interface ProfilePostsProps {
 export default function ProfilePosts({ posts }: ProfilePostsProps) {
 
   const dispatch = useDispatch();
+  const router = useRouter();
 
-  const handleOpenComments = (postId: string) => {
+  const handleOpenPost = (postId: string) => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      router.push(`/post/${postId}`);
+      return;
+    }
+
     dispatch(openPostLightBox({ postId }));
   };
 
@@ -35,7 +42,7 @@ export default function ProfilePosts({ posts }: ProfilePostsProps) {
           <ProfilePostItem
             key={post.id}
             post={post}
-            onClick={() => handleOpenComments(post.id)}
+            onClick={() => handleOpenPost(post.id)}
           />
         ))}
       </div>

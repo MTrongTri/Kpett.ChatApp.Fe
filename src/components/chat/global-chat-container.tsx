@@ -18,10 +18,10 @@ export default function GlobalChatContainer() {
     const expandedPopups = openPopups.filter(p => !p.isMinimized);
 
     return (
-        <div className="fixed bottom-0 right-4 z-50 flex flex-row-reverse items-end pointer-events-none gap-4">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-end justify-end gap-3 px-2 pb-[env(safe-area-inset-bottom)] sm:right-4 sm:left-auto sm:flex-row-reverse sm:items-end sm:justify-start sm:gap-4 sm:px-0 sm:pb-0">
 
             {/* NHÓM 1: BONG BÓNG CHAT - Xếp chồng theo chiều dọc ở sát mép phải */}
-            <div className="flex flex-col-reverse items-center gap-3 mb-4">
+            <div className="mb-4 flex flex-col-reverse items-center gap-3">
                 {minimizedPopups.map((popup) => (
                     <div key={popup.conversationId} className="pointer-events-auto">
                         <ChatPopup
@@ -34,7 +34,7 @@ export default function GlobalChatContainer() {
             </div>
 
             {/* NHÓM 2: CỬA SỔ CHAT - Xếp hàng ngang sang bên trái của nhóm bong bóng */}
-            <div className="flex flex-row-reverse items-end gap-3">
+            <div className="flex w-full flex-col-reverse items-stretch gap-3 sm:w-auto sm:flex-row-reverse sm:items-end">
                 {expandedPopups.map((popup) => (
                     <div key={popup.conversationId} className="pointer-events-auto">
                         <ChatPopup

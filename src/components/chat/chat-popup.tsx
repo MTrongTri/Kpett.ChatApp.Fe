@@ -259,9 +259,9 @@ export default function ChatPopup({
     }
 
     return (
-        <div className="w-82.5 h-115 bg-background border border-border shadow-2xl rounded-t-xl flex flex-col pointer-events-auto overflow-hidden outline-none! ring-0!">
+        <div className="bg-background border-border pointer-events-auto flex h-[calc(100dvh-5rem)] max-h-[720px] w-full flex-col overflow-hidden rounded-t-2xl border shadow-2xl outline-none! ring-0! sm:h-115 sm:w-82.5 sm:rounded-t-xl">
             <div
-                className="h-12.5 px-3 bg-card border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors select-none outline-none!"
+                className="bg-card border-border flex h-14 shrink-0 cursor-pointer items-center justify-between border-b px-3 transition-colors select-none hover:bg-muted/50 outline-none! sm:h-12.5"
                 onClick={() => {
                     if (document.activeElement instanceof HTMLElement) {
                         document.activeElement.blur();
@@ -353,7 +353,7 @@ export default function ChatPopup({
             <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar scrollbar-thin bg-muted/10 outline-none!"
+                className="custom-scrollbar scrollbar-thin min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/10 p-3 outline-none!"
             >
                 {hasMore && (
                     <div

@@ -35,11 +35,11 @@ import { toast } from "sonner";
 
 function StatButton({ value, label }: { value: number; label: string }) {
   return (
-    <button className="group hover:bg-background/80 flex w-full cursor-pointer flex-col items-center gap-1 rounded-2xl border-none bg-transparent px-2 py-3 transition-all md:px-4">
-      <span className="text-foreground group-hover:text-primary text-xl font-bold tracking-tight transition-colors md:text-[22px]">
+    <button className="group hover:bg-background/80 flex min-h-20 w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-none bg-transparent px-2 py-3 transition-all sm:min-h-0 md:px-4">
+      <span className="text-foreground group-hover:text-primary text-xl leading-none font-bold tracking-tight transition-colors md:text-[22px]">
         {formatCompactNumber(value)}
       </span>
-      <span className="text-foreground/50 text-[10px] font-medium tracking-wider uppercase md:text-[11px]">
+      <span className="text-foreground/50 text-center text-[11px] leading-tight font-medium tracking-normal sm:text-[10px] sm:tracking-wider sm:uppercase md:text-[11px]">
         {label}
       </span>
     </button>
@@ -347,14 +347,14 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           </div>
 
           {/* Stats row */}
-          <div className="bg-muted/40 border-border/50 mx-auto my-7 flex max-w-[90%] items-center justify-between rounded-3xl border p-2 shadow-sm backdrop-blur-sm md:max-w-[70%]">
+          <div className="bg-muted/40 border-border/50 mx-auto my-6 grid w-full max-w-sm grid-cols-2 gap-1 rounded-2xl border p-1.5 shadow-sm backdrop-blur-sm sm:max-w-xl sm:grid-cols-4 sm:rounded-3xl sm:p-2 md:my-7 md:max-w-[70%]">
             {[
               { value: profile.stats.totalPosts, label: "Bài viết" },
               { value: profile.stats.friends, label: "Bạn bè" },
               { value: profile.stats.followers, label: "Người theo dõi" },
               { value: profile.stats.following, label: "Đang theo dõi" },
             ].map((s) => (
-              <div key={s.label} className="flex-1">
+              <div key={s.label} className="min-w-0">
                 <StatButton value={s.value} label={s.label} />
               </div>
             ))}

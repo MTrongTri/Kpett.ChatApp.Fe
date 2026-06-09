@@ -51,7 +51,7 @@ const refreshTokenMethod = async (): Promise<{
 const forgotPassword = async (
   forgotPasswordRequest: ForgotPasswordRequest,
 ): Promise<unknown> => {
-  const response = await authHttp.post("/forgot-password", forgotPasswordRequest);
+  const response = await http.post("auth/forgot-password", forgotPasswordRequest);
   return response.data;
 };
 
@@ -61,7 +61,7 @@ const forgotPassword = async (
 const resetPassword = async (
   resetPasswordRequest: ResetPasswordRequest,
 ): Promise<unknown> => {
-  const response = await authHttp.post("/reset-password", resetPasswordRequest);
+  const response = await http.post("auth/reset-password", resetPasswordRequest);
   return response.data;
 };
 

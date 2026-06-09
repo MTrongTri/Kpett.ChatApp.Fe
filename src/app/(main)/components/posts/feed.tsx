@@ -9,6 +9,7 @@ import { PostCardSkeleton } from "./post-card-skeleton";
 export default function Feed() {
   const {
     posts,
+    error,
     loadMore,
     isLoadingInitialData,
     hasMore: hasMoreFeed,
@@ -27,7 +28,7 @@ export default function Feed() {
   }, [inView, hasMoreFeed, isFeedLoadingMore, loadMore]);
 
   return (
-    <section className="">
+    <section>
       <div className="space-y-4">
         {isLoadingInitialData ? (
           <>
@@ -35,8 +36,27 @@ export default function Feed() {
             <PostCardSkeleton />
             <PostCardSkeleton />
           </>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center rounded-xl bg-destructive/10 px-4 py-20 text-center">
+            <h3 className="text-base font-semibold text-destructive">
+              Không thể tải bài viết
+            </h3>
+
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              Đã có lỗi xảy ra trong quá trình tải bảng tin. Vui lòng thử lại
+              sau.
+            </p>
+          </div>
         ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-xl bg-muted/20">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-muted/20 px-4 py-20 text-center">
+            <h3 className="text-base font-semibold">
+              Chưa có bài viết nào
+            </h3>
+
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              Hiện tại bảng tin của bạn chưa có nội dung. Hãy theo dõi thêm
+              người dùng khác hoặc quay lại sau.
+            </p>
           </div>
         ) : (
           posts.map((post) => (
@@ -47,14 +67,18 @@ export default function Feed() {
         )}
       </div>
 
-      {hasMoreFeed && posts.length > 0 && (
+      {!error && hasMoreFeed && posts.length > 0 && (
         <>
           <div className="mt-4">
             {isFeedLoadingMore && <PostCardSkeleton />}
           </div>
-          <div ref={loadMoreRef} className="flex w-full items-center justify-center py-6">
+
+          <div
+            ref={loadMoreRef}
+            className="flex w-full items-center justify-center py-6"
+          >
             {!isFeedLoadingMore && (
-              <span className="text-muted-foreground/50 text-xs">
+              <span className="text-xs text-muted-foreground/50">
                 Cuộn để xem thêm
               </span>
             )}

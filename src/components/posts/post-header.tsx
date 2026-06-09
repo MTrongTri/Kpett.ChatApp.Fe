@@ -12,9 +12,10 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ author, postCreatedAt }: PostHeaderProps) {
+  console.log("Rendering PostHeader for author:", author);
   return (
     <div className="flex shrink-0 items-center gap-2.5 py-3">
-      <Link href={author.username}>
+      <Link href={`/${author.username}`} className="shrink-0">
         <UserAvatar user={author} />
       </Link>
 
@@ -22,7 +23,7 @@ export function PostHeader({ author, postCreatedAt }: PostHeaderProps) {
         <div className="gap-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-card-foreground truncate text-[13px] font-semibold">
-              <Link href={author.username}>
+              <Link href={`/${author.username}`} className="shrink-0">
                 {author.displayName}
               </Link>
             </span>

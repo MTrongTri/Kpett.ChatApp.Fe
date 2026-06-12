@@ -70,6 +70,9 @@ export const restoreAccessTokenFromCookie = async (): Promise<string> => {
     });
 
     const accessToken = res.data.data.accessToken;
+    if (!accessToken) {
+        throw new Error('No access token in session');
+    }
     store.dispatch(setAccessToken(accessToken));
     return accessToken;
 };

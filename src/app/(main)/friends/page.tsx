@@ -353,9 +353,15 @@ export default function FriendsPage() {
             ? "Đã chấp nhận lời mời kết bạn."
             : "Đã từ chối lời mời kết bạn.",
         );
-      } catch (error) {
-        console.error(`[FriendsPage] ${action} friend request:`, error);
-        toast.error("Không thể xử lý lời mời này.");
+      } catch (error: any) {
+        const errorCode = error?.response?.data?.errorCode;
+        if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
+          toast.error("Lời mời này không còn tồn tại hoặc đã được xử lý.");
+          await refreshRelationshipState();
+        } else {
+          console.error(`[FriendsPage] ${action} friend request:`, error);
+          toast.error("Không thể xử lý lời mời này.");
+        }
       }
     });
   };

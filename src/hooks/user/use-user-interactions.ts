@@ -89,8 +89,15 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-    } catch (error) {
-      console.error("[handleCancelRequest] Error:", error);
+    } catch (error: any) {
+      const errorCode = error?.response?.data?.errorCode;
+      if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
+        toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
+        refreshCache();
+      } else {
+        toast.error("Đã có lỗi xảy ra");
+        console.error("[handleCancelRequest] Error:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -115,9 +122,15 @@ export function useUserInteractions(
 
       refreshCache();
       void queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
-    } catch (error) {
-      toast.error("Da co loi xay ra");
-      console.error("[handleAcceptRequest] Error:", error);
+    } catch (error: any) {
+      const errorCode = error?.response?.data?.errorCode;
+      if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
+        toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
+        refreshCache();
+      } else {
+        toast.error("Đã có lỗi xảy ra");
+        console.error("[handleAcceptRequest] Error:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -140,8 +153,15 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-    } catch (error) {
-      console.error("[handleDeclineRequest] Error:", error);
+    } catch (error: any) {
+      const errorCode = error?.response?.data?.errorCode;
+      if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
+        toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
+        refreshCache();
+      } else {
+        toast.error("Đã có lỗi xảy ra");
+        console.error("[handleDeclineRequest] Error:", error);
+      }
     } finally {
       setIsLoading(false);
     }

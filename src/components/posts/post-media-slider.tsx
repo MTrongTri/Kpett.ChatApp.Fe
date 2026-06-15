@@ -3,7 +3,7 @@
 import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -17,6 +17,7 @@ interface PostMediaSliderProps {
 export default function PostMediaSlider({ media }: PostMediaSliderProps) {
     const [prevEl, setPrevEl] = useState<HTMLButtonElement | null>(null);
     const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
+    const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
     const dispatch = useDispatch();
 
@@ -32,6 +33,7 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
                         prevEl: prevEl,
                         nextEl: nextEl,
                     }}
+                    onSlideChange={() => setPlayingIndex(null)}
                     onBeforeInit={(swiper) => {
                         if (
                             swiper.params.navigation &&
@@ -62,10 +64,30 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
                                             className="object-cover cursor-pointer"
                                             onClick={() => dispatch(openMediaLightBox({ media, index }))}
                                         />
+                                    ) : playingIndex === index ? (
+                                        <>
+                                            <video
+                                                src={optimizedUrl}
+                                                className="h-full w-full bg-black object-contain"
+                                                controls
+                                                autoPlay
+                                                playsInline
+                                            />
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    dispatch(openMediaLightBox({ media, index }));
+                                                }}
+                                                className="absolute top-3 right-3 z-10 rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                                title="Mở hộp thoại toàn màn hình"
+                                            >
+                                                <Maximize2 className="h-5 w-5" />
+                                            </button>
+                                        </>
                                     ) : (
                                         <div
                                             className="group/video relative h-full w-full cursor-pointer"
-                                            onClick={() => dispatch(openMediaLightBox({ media, index }))}
+                                            onClick={() => setPlayingIndex(index)}
                                         >
                                             <video
                                                 src={optimizedUrl}
@@ -77,6 +99,16 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                                                 <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                                             </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    dispatch(openMediaLightBox({ media, index }));
+                                                }}
+                                                className="absolute top-3 right-3 z-10 rounded-lg bg-black/40 p-1.5 text-white opacity-0 backdrop-blur-sm transition-all hover:bg-black/70 group-hover/video:opacity-100 md:opacity-0"
+                                                title="Mở hộp thoại toàn màn hình"
+                                            >
+                                                <Maximize2 className="h-5 w-5" />
+                                            </button>
                                         </div>
                                     )}
                                 </div>

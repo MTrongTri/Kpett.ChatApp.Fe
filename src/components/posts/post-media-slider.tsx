@@ -71,6 +71,7 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
                                                 className="h-full w-full bg-black object-contain"
                                                 controls
                                                 autoPlay
+                                                loop
                                                 playsInline
                                             />
                                             <button

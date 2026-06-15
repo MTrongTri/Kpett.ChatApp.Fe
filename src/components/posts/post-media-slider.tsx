@@ -5,7 +5,8 @@ import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
 import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
 import { useDispatch } from "react-redux";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -19,12 +20,22 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
     const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
+    const { ref, inView } = useInView({
+        threshold: 0,
+    });
+
+    useEffect(() => {
+        if (!inView && playingIndex !== null) {
+            setPlayingIndex(null);
+        }
+    }, [inView, playingIndex]);
+
     const dispatch = useDispatch();
 
     if (!media || media.length === 0) return null;
 
     return (
-        <div className="md:mx-4 md:mb-3">
+        <div ref={ref} className="md:mx-4 md:mb-3">
             <div className="border-border group relative h-100 w-full overflow-hidden md:rounded-xl border">
                 <Swiper
                     modules={[Navigation, Pagination]}
@@ -73,6 +84,14 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
                                                 autoPlay
                                                 loop
                                                 playsInline
+                                                onPlay={(e) => {
+                                                    const videos = document.querySelectorAll("video");
+                                                    videos.forEach((vid) => {
+                                                        if (vid !== e.currentTarget) {
+                                                            vid.pause();
+                                                        }
+                                                    });
+                                                }}
                                             />
                                             <button
                                                 onClick={(e) => {

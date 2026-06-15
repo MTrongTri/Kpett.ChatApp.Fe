@@ -44,7 +44,30 @@ export const CommentText = ({ content, mentions = [] }: CommentTextProps) => {
           }
         }
 
-        return <React.Fragment key={index}>{part}</React.Fragment>;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const subParts = part.split(urlRegex);
+
+        return (
+          <React.Fragment key={index}>
+            {subParts.map((subPart, subIndex) => {
+              if (subPart.match(urlRegex)) {
+                return (
+                  <a
+                    key={`${index}-${subIndex}`}
+                    href={subPart}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {subPart}
+                  </a>
+                );
+              }
+              return <React.Fragment key={`${index}-${subIndex}`}>{subPart}</React.Fragment>;
+            })}
+          </React.Fragment>
+        );
       })}
     </span>
   );

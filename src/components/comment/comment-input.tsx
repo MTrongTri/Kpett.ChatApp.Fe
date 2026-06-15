@@ -11,6 +11,7 @@ import {
   useEditor,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 import { useEffect, useState } from "react";
 import tippy, {
   type GetReferenceClientRect,
@@ -18,6 +19,14 @@ import tippy, {
 } from "tippy.js";
 import { UserAvatar } from "../user/user-avatar";
 import MentionList, { MentionListHandle } from "./mention-list";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { useTheme } from "next-themes";
+import { Smile } from "lucide-react";
 
 interface CommentInputProps {
   author: BaseAuthor;
@@ -41,6 +50,11 @@ const parseInitialContent = (text?: string, mentionsArray: MentionComment[] = []
     return match;
   });
 
+  // Convert URLs to link tags
+  parsedText = parsedText.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+
   parsedText = parsedText.replace(/\n/g, '<br>');
 
   return parsedText;
@@ -58,8 +72,19 @@ export const CommentInput = ({
 }: CommentInputProps) => {
   const [hasContent, setHasContent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   const isEditing = !!defaultValue;
+
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
+    if (editor) {
+      editor.commands.insertContent(emojiData.emoji);
+      setHasContent(true);
+    }
+  };
+
+  const emojiTheme = resolvedTheme === "dark" ? Theme.DARK : Theme.LIGHT;
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -69,6 +94,14 @@ export const CommentInput = ({
         heading: false,
         horizontalRule: false,
         codeBlock: false,
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: "text-blue-500 hover:underline cursor-pointer",
+        },
       }),
       Placeholder.configure({
         placeholder: isEditing ? "Sửa bình luận..." : "Thêm bình luận...",
@@ -245,15 +278,50 @@ export const CommentInput = ({
             <EditorContent editor={editor} />
           </div>
 
-          <button
-            onClick={handlePublish}
-            disabled={isButtonDisabled}
-            className="text-primary hover:text-primary/80 mb-0.5 cursor-pointer text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSubmitting
-              ? (isEditing ? "Đang lưu..." : "Đang gửi...")
-              : (isEditing ? "Lưu" : "Đăng")}
-          </button>
+          <div className="flex items-center gap-3 mb-0.5">
+            <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="hover:bg-background/50 rounded-full transition outline-none"
+                >
+                  <Smile size={18} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                side="top"
+                align="end"
+                sideOffset={10}
+                className="w-auto border-none bg-transparent p-0 shadow-2xl"
+              >
+                {isEmojiOpen && (
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiSelect}
+                    autoFocusSearch={false}
+                    theme={emojiTheme}
+                    searchPlaceHolder="Tìm kiếm emoji..."
+                    width={320}
+                    height={400}
+                    lazyLoadEmojis
+                    previewConfig={{
+                      showPreview: false,
+                    }}
+                  />
+                )}
+              </PopoverContent>
+            </Popover>
+
+            <button
+              onClick={handlePublish}
+              disabled={isButtonDisabled}
+              className="text-primary hover:text-primary/80 cursor-pointer text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting
+                ? (isEditing ? "Đang lưu..." : "Đang gửi...")
+                : (isEditing ? "Lưu" : "Đăng")}
+            </button>
+          </div>
         </div>
 
         {onCancel && (

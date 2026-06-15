@@ -12,21 +12,15 @@ export const friendRequest = async (receiverId: string): Promise<FriendRequestRe
 };
 
 export const friendRequestCancel = async (requestId: string): Promise<void> => {
-    await http.post(`/relationships/friend-requests/${requestId}/cancel`, {
-        requestId
-    });
+    await http.post(`/relationships/friend-requests/${requestId}/cancel`);
 };
 
 export const friendRequestDecline = async (requestId: string): Promise<void> => {
-    await http.post(`/relationships/friend-requests/${requestId}/decline`, {
-        requestId
-    });
+    await http.post(`/relationships/friend-requests/${requestId}/decline`);
 };
 
 export const friendRequestAccept = async (requestId: string): Promise<void> => {
-    await http.post(`/relationships/friend-requests/${requestId}/accept`, {
-        requestId
-    });
+    await http.post(`/relationships/friend-requests/${requestId}/accept`);
 };
 
 export const unFriend = async (targetUserId: string): Promise<void> => {

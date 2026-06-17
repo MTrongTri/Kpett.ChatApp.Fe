@@ -37,6 +37,8 @@ export function useUserInteractions(
 
   const refreshCache = () => {
     void queryClient.invalidateQueries({ queryKey: ["user-profile", username] });
+    void queryClient.invalidateQueries({ queryKey: ["online-friends"] });
+    void queryClient.invalidateQueries({ queryKey: ["friend-suggestions"] });
     router.refresh();
   };
 
@@ -64,9 +66,19 @@ export function useUserInteractions(
 
       refreshCache();
       toast.success("Da gui loi moi ket ban");
-    } catch (error) {
-      toast.error("Da co loi xay ra trong qua trinh gui yeu cau");
-      console.error("[handleAddFriend] Error:", error);
+    } catch (error: any) {
+      const errorCode = error?.response?.data?.errorCode;
+      if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
+        toast.info("Người này đã gửi lời mời kết bạn cho bạn. Hãy kiểm tra và chấp nhận.");
+        setCtx((previous) => ({
+          ...previous,
+          hasReceivedFriendRequest: true,
+        }));
+        refreshCache();
+      } else {
+        toast.error("Da co loi xay ra trong qua trinh gui yeu cau");
+        console.error("[handleAddFriend] Error:", error);
+      }
     } finally {
       setIsLoading(false);
     }

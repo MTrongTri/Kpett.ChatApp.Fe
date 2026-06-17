@@ -270,6 +270,7 @@ export default function FriendsPage() {
       queryClient.invalidateQueries({ queryKey: ["notifications-unread"] }),
       queryClient.invalidateQueries({ queryKey: ["user-stats"] }),
       queryClient.invalidateQueries({ queryKey: ["user-profile"] }),
+      queryClient.invalidateQueries({ queryKey: ["online-friends"] }),
     ]);
   };
 
@@ -284,9 +285,15 @@ export default function FriendsPage() {
         await friendRequest(person.id);
         toast.success(`Đã gửi lời mời cho ${person.displayName || person.username}.`);
         await refreshRelationshipState();
-      } catch (error) {
-        console.error("[FriendsPage] friendRequest:", error);
-        toast.error("Không thể gửi lời mời kết bạn lúc này.");
+      } catch (error: any) {
+        const errorCode = error?.response?.data?.errorCode;
+        if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
+          toast.info("Người này đã gửi lời mời kết bạn cho bạn.");
+          await refreshRelationshipState();
+        } else {
+          console.error("[FriendsPage] friendRequest:", error);
+          toast.error("Không thể gửi lời mời kết bạn lúc này.");
+        }
       }
     });
   };

@@ -40,8 +40,13 @@ export function FriendSuggestions() {
             toast.success("Đã gửi lời mời kết bạn");
             // Xóa khỏi danh sách gợi ý sau khi gửi
             setSuggestions(prev => prev.filter(u => u.id !== targetId));
-        } catch (error) {
-            toast.error("Không thể gửi lời mời kết bạn");
+        } catch (error: any) {
+            const errorCode = error?.response?.data?.errorCode;
+            if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
+                toast.info("Người này đã gửi lời mời kết bạn cho bạn.");
+            } else {
+                toast.error("Không thể gửi lời mời kết bạn");
+            }
         } finally {
             setIsAdding(prev => ({ ...prev, [targetId]: false }));
         }

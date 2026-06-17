@@ -14,6 +14,7 @@ import {
   friendRequestDecline,
   unFriend,
 } from "@/services/friend.service";
+import { getUserProfile } from "@/services/user.service";
 import { chatService } from "@/services/chat.service";
 import { openChatPopup } from "@/store/features/chat-slice";
 
@@ -67,10 +68,17 @@ export function useUserInteractions(
       const errorCode = error?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
         toast.info("Người này đã gửi lời mời kết bạn cho bạn. Hãy kiểm tra và chấp nhận.");
-        setCtx((previous) => ({
-          ...previous,
-          hasReceivedFriendRequest: true,
-        }));
+        try {
+          const freshProfile = await getUserProfile(username);
+          if (freshProfile?.viewerContext) {
+            setCtx(freshProfile.viewerContext);
+          }
+        } catch {
+          setCtx((previous) => ({
+            ...previous,
+            hasReceivedFriendRequest: true,
+          }));
+        }
         refreshCache();
       } else {
         toast.error("Đã có lỗi xảy ra trong quá trình gửi yêu cầu");
@@ -134,7 +142,17 @@ export function useUserInteractions(
     } catch (error: any) {
       const errorCode = error?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
-        toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
+        try {
+          const freshProfile = await getUserProfile(username);
+          if (freshProfile?.viewerContext) {
+            setCtx(freshProfile.viewerContext);
+          }
+        } catch {
+          setCtx((previous) => ({
+            ...previous,
+            hasReceivedFriendRequest: false,
+          }));
+        }
         refreshCache();
       } else {
         toast.error("Đã có lỗi xảy ra");

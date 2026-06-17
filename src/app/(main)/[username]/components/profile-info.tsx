@@ -39,7 +39,7 @@ function StatButton({ value, label }: { value: number; label: string }) {
       <span className="text-foreground group-hover:text-primary text-xl leading-none font-bold tracking-tight transition-colors md:text-[22px]">
         {formatCompactNumber(value)}
       </span>
-      <span className="text-foreground/50 text-center text-[11px] leading-tight font-medium tracking-normal sm:text-[10px] sm:tracking-wider sm:uppercase md:text-[11px]">
+      <span className="text-foreground/50 text-center text-[11px] leading-tight font-medium tracking-normal sm:text-[10px] sm:tracking-wider md:text-[11px]">
         {label}
       </span>
     </button>
@@ -52,7 +52,7 @@ interface ProfileInfoProps {
 }
 
 export default function ProfileInfo({ profile }: ProfileInfoProps) {
-  const { ctx, isLoading, isMessageLoading, actions } = useUserInteractions(
+  const { ctx, loadingAction, actions } = useUserInteractions(
     profile.id,
     profile.username,
     profile.viewerContext,
@@ -105,16 +105,16 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
       return (
         <Button
           size="sm"
-          disabled={isLoading}
+          disabled={loadingAction === "remove"}
           onClick={actions.handleUnfriend}
-          className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
+          className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide  shadow-sm transition-all duration-200"
         >
-          {isLoading ? (
+          {loadingAction === "remove" ? (
             <Loader2 size={14} className="animate-spin" />
           ) : (
             <UserCheck size={14} className="group-hover:hidden" />
           )}
-          {!isLoading && (
+          {!loadingAction && (
             <UserMinus size={14} className="hidden group-hover:block" />
           )}
           <span className="group-hover:hidden">Bạn bè</span>
@@ -127,11 +127,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
       return (
         <Button
           size="sm"
-          disabled={isLoading}
+          disabled={loadingAction === "cancel"}
           onClick={actions.handleCancelRequest}
-          className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
+          className="border-border text-foreground bg-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive group h-10 cursor-pointer gap-2 rounded-full border px-6! text-[14px] font-bold tracking-wide  shadow-sm transition-all duration-200"
         >
-          {isLoading ? (
+          {loadingAction === "cancel" ? (
             <Loader2 size={14} className="animate-spin" />
           ) : (
             <UserMinus
@@ -150,11 +150,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            disabled={isLoading}
+            disabled={loadingAction === "accept"}
             onClick={actions.handleAcceptRequest}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[14px] font-bold tracking-wide  shadow-sm transition-all duration-200"
           >
-            {isLoading ? (
+            {loadingAction === "accept" ? (
               <Loader2 size={14} className="animate-spin" />
             ) : (
               <Check size={14} />
@@ -164,12 +164,12 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           <Button
             size="sm"
             variant="outline"
-            disabled={isLoading}
+            disabled={loadingAction === "decline"}
             onClick={actions.handleDeclineRequest}
-            className="border-border hover:bg-muted text-foreground flex h-10 cursor-pointer items-center gap-2 rounded-full px-4! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200"
+            className="border-border hover:bg-muted text-foreground flex h-10 cursor-pointer items-center gap-2 rounded-full px-4! text-[14px] font-bold tracking-wide  shadow-sm transition-all duration-200"
             title="Xóa lời mời"
           >
-            {isLoading ? (
+            {loadingAction === "decline" ? (
               <Loader2 size={14} className="animate-spin" />
             ) : (
               <X size={14} />
@@ -184,11 +184,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
     return (
       <Button
         size="sm"
-        disabled={isLoading}
+        disabled={loadingAction === "add"}
         onClick={actions.handleAddFriend}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase shadow-sm transition-all duration-200 hover:scale-105"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 cursor-pointer gap-2 rounded-full px-6! text-[14px] font-bold tracking-wide shadow-sm transition-all duration-200"
       >
-        {isLoading ? (
+        {loadingAction === "add" ? (
           <Loader2 size={14} className="animate-spin" />
         ) : (
           <UserPlus size={14} />
@@ -282,7 +282,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
               <>
                 <Link
                   href="/account/general"
-                  className="border-border text-foreground hover:bg-muted inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                  className="border-border bg-primary text-primary-foreground hover:bg-primary/80 inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border px-6! text-[14px] font-bold tracking-wide  transition-all"
                 >
                   <Pencil size={14} />
                   <span>Chỉnh sửa</span>
@@ -291,7 +291,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                   variant="outline"
                   size="sm"
                   onClick={handleShareProfile}
-                  className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                  className="text-foreground border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[14px] font-bold tracking-wide  transition-all"
                 >
                   <Share2 size={14} /> Chia sẻ
                 </Button>
@@ -305,11 +305,11 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={isMessageLoading}
+                    disabled={loadingAction === "message"}
                     onClick={actions.handleMessageClick}
-                    className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[12px] font-bold tracking-wide uppercase transition-all"
+                    className="border-border hover:bg-muted h-10 cursor-pointer gap-2 rounded-full px-6! text-[14px] font-bold tracking-widetransition-all"
                   >
-                    {isMessageLoading ? (
+                    {loadingAction === "message" ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <MessageSquare size={14} />

@@ -32,7 +32,7 @@ async function getUserProfile(username: string): Promise<UserProfile | null> {
         ...(authToken && { Authorization: `Bearer ${authToken}` }),
       },
       next: {
-        revalidate: 300
+        revalidate: 0
       }
     }
   );

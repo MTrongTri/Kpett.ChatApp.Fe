@@ -25,8 +25,6 @@ export const useCreateCommentReply = ({
                 const newReply = response;
                 const isDirectChild = commentId === submitParentId;
 
-                toast.success("Câu trả lời đã được gửi");
-
                 // Tự động fetch lại danh sách replies của nhánh bình luận hiện tại
                 // Dùng exact: false (mặc định) sẽ làm mới tất cả các page của danh sách replies này
                 queryClient.invalidateQueries({

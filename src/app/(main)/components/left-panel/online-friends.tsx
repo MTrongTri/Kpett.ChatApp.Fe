@@ -118,7 +118,7 @@ export default function OnlineFriends() {
   return (
     <div className="space-y-0.5">
       <div className="text-foreground mt-5 mb-2.5 px-2.5 text-sm font-semibold first:mt-0">
-        Ban be online
+        Bạn bè online
       </div>
 
       {onlineFriends.items.map((friend) => (

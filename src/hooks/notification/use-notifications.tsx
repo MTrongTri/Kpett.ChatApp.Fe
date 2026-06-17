@@ -18,13 +18,13 @@ export function useNotifications(isFetch: boolean = false) {
   const getNotificationText = useCallback((notification: NotificationResponse) => {
     switch (notification.type) {
       case "FriendRequestReceived":
-        return "da gui cho ban mot loi moi ket ban.";
+        return "Đã gửi cho bạn một lời mời kết bạn.";
       case "FriendRequestAccepted":
-        return "da chap nhan loi moi ket ban cua ban.";
+        return "đã chấp nhận lời mời kết bạn của bạn.";
       case "CommentMention":
-        return "da nhac den ban trong mot binh luan.";
+        return "đã nhắc đến bạn trong một bình luận.";
       default:
-        return "da tuong tac voi ban.";
+        return "đã tương tác với bạn.";
     }
   }, []);
 

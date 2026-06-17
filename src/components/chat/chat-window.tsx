@@ -21,6 +21,8 @@ import { ChatMessageListSkeleton } from './chat-message-list-skeleton';
 import { TypingIndicator } from './typing-indicator';
 import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 import { shouldShowDotOnline } from '@/lib/conversation-utils';
+import { ChatEmptyState } from './chat-empty-state';
+import { ChatMessageList } from './chat-message-list';
 interface ChatWindowProps {
     conversationId: string;
     toggleInfo: () => void;
@@ -174,45 +176,18 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
                             </div>
                         )}
 
-                        {messages.map((msg, index) => {
-                            const isMine = msg.senderId === user?.id;
-                            const prevMsg = index > 0 ? messages[index - 1] : null;
-                            const isConsecutive = prevMsg?.senderId === msg.senderId && msg.type !== "System";
-
-                            // --- LOGIC PHÂN CHIA NGÀY ---
-                            const currentDateLabel = formatMessageDateHeader(msg.createdAt);
-                            const prevDateLabel = prevMsg ? formatMessageDateHeader(prevMsg.createdAt) : null;
-                            const showDateDivider = currentDateLabel !== prevDateLabel;
-
-                            const readers = currentConversation?.participants?.filter(
-                                (p) => p.id !== user?.id && p.lastReadMessageId === msg.id
-                            ) || [];
-
-                            const isLastMessage = index === messages.length - 1;
-
-                            return (
-                                <React.Fragment key={msg.id}>
-                                    {/* Dòng phân chia ngày */}
-                                    {showDateDivider && (
-                                        <div className="flex justify-center my-6">
-                                            <span className="px-3 py-1 bg-background border border-border rounded-full text-[11px] font-medium text-muted-foreground shadow-sm">
-                                                {currentDateLabel}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} mb-4`}>
-                                        <ChatMessageBubble
-                                            msg={msg}
-                                            isMine={isMine}
-                                            isConsecutive={isConsecutive}
-                                            readers={readers}
-                                            isLastMessage={isLastMessage}
-                                        />
-                                    </div>
-                                </React.Fragment>
-                            );
-                        })}
+                        {messages.length === 0 && currentConversation ? (
+                            <ChatEmptyState
+                                conversation={currentConversation}
+                                onSend={handleSend}
+                            />
+                        ) : (
+                            <ChatMessageList
+                                messages={messages}
+                                currentUserId={user?.id}
+                                conversation={currentConversation}
+                            />
+                        )}
                     </>
                 )}
                 {!isInitialChatLoading && <div ref={messagesEndRef} />}

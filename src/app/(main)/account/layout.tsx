@@ -31,7 +31,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
           {/* Cột Nội dung chính */}
           <div className="flex w-full min-w-0 flex-1 flex-col gap-6">
             {/* Khung chứa các Form (Tab Edit, Account...) */}
-            <div className="border-border bg-card rounded-xl border p-6 shadow-sm">
+            <div className="md:border-border md:bg-card rounded-xl md:border md:p-6 shadow-sm">
               {children}
             </div>
           </div>

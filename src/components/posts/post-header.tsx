@@ -12,7 +12,6 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ author, postCreatedAt }: PostHeaderProps) {
-  console.log("Rendering PostHeader for author:", author);
   return (
     <div className="flex shrink-0 items-center gap-2.5 py-3">
       <Link href={`/${author.username}`} className="shrink-0">

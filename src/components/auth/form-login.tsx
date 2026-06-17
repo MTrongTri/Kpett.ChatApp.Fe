@@ -122,7 +122,7 @@ export default function FormLogin() {
                 type="email"
                 placeholder="name@example.com"
                 {...register("email")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.email ? "border-red-500 dark:border-red-500" : ""
+                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 focus-visible:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-primary/60 ${errors.email ? "border-red-500 dark:border-red-500" : ""
                   }`}
               />
               {errors.email && (
@@ -155,7 +155,7 @@ export default function FormLogin() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("password")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.password ? "border-red-500 dark:border-red-500" : ""
+                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 focus-visible:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-primary/60 ${errors.password ? "border-red-500 dark:border-red-500" : ""
                     }`}
                 />
                 <button
@@ -192,7 +192,7 @@ export default function FormLogin() {
             Chưa có tài khoản?{" "}
             <Link
               href="/register"
-              className="cursor-pointer font-black text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50"
+              className="cursor-pointer font-black text-zinc-950 underline-offset-4 dark:text-zinc-50"
             >
               Đăng ký ngay
             </Link>

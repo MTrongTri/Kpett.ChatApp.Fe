@@ -17,7 +17,6 @@ export const useManageComment = ({ postId, commentId, onSuccess, onDeleteSuccess
         mutationFn: (newContent: string) => updateComment(commentId, newContent),
         onSuccess: (response) => {
             if (response) {
-                toast.success("Đã cập nhật bình luận");
                 // Invalidate để tự đồng bộ lại ngầm cả danh sách comment & replies
                 queryClient.invalidateQueries({ queryKey: ["comments", postId] });
                 queryClient.invalidateQueries({ queryKey: ["replies", postId] });
@@ -32,7 +31,6 @@ export const useManageComment = ({ postId, commentId, onSuccess, onDeleteSuccess
         mutationFn: () => deleteComment(commentId),
         onSuccess: (response) => {
             if (response) {
-                toast.success("Đã xóa bình luận");
                 queryClient.invalidateQueries({ queryKey: ["comments", postId] });
                 queryClient.invalidateQueries({ queryKey: ["replies", postId] });
                 if (onDeleteSuccess) onDeleteSuccess();

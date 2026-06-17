@@ -121,8 +121,7 @@ export default function ProfileGeneralForm() {
         setIsCheckingUsername(true);
         try {
           const { isAvailable } = await checkUsername(value);
-
-          if (isAvailable) {
+          if (!isAvailable) {
             form.setError("username", {
               type: "manual",
               message: "Username này đã được người khác sử dụng.",
@@ -189,7 +188,7 @@ export default function ProfileGeneralForm() {
       {/* --- PHẦN 2: THÔNG TIN CHI TIẾT (FORM) --- */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 gap-x-6 px-4 md:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 gap-x-6">
 
             <FormField
               control={form.control}

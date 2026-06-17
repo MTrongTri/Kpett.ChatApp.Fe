@@ -1,4 +1,3 @@
-// hooks/comment/use-comment-replies.ts
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getCommentsByPostId } from "@/services/comment.service";
 

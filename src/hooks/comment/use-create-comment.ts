@@ -62,7 +62,6 @@ export default function useCreateComment({ post, onSuccess }: UseCreateCommentPr
             // Vẫn nên invalidate list comment để hiển thị comment mới vừa thêm
             queryClient.invalidateQueries({ queryKey: ["comments", postId] });
 
-            toast.success("Thêm bình luận thành công");
             if (onSuccess) onSuccess();
         },
         onError: (error) => {

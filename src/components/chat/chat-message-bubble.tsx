@@ -5,6 +5,8 @@ import { UserAvatar } from '@/components/user/user-avatar';
 import { AlertCircle, CheckCircle2, Circle } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { formatSystemMessage } from '@/lib/message-utils';
+import { formatRelativeTime } from '@/lib/format-date-utils';
+import { cn } from '@/lib/utils';
 
 interface BubbleProps {
     msg: MessageResponse;
@@ -17,7 +19,6 @@ interface BubbleProps {
 export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers = [], isLastMessage = false }: BubbleProps) {
     const { user } = useAuth();
     const currentUserId = user?.id;
-
 
     if (msg.type === "System") {
         return (
@@ -52,7 +53,13 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                         </div>
                     )}
 
-                    <div className="max-w-[65%] group flex items-center gap-2">
+                    <div className="relative max-w-[65%] group flex items-center gap-2 group">
+                        <span className={cn(
+                            "absolute top-1/2 -translate-y-1/2 hidden group-hover:block whitespace-nowrap text-[10px] text-muted-foreground",
+                            isMine ? "right-full mr-2" : "left-full ml-2"
+                        )}>
+                            {formatRelativeTime(msg.createdAt)}
+                        </span>
                         <div className={`px-4 py-2 text-[15px] shadow-sm ${borderRadiusClass} ${isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border"
                             } ${msg.localStatus === "sending" ? "opacity-70" : ""}`}>
                             {msg.content}

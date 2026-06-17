@@ -17,14 +17,15 @@ import {
 import { chatService } from "@/services/chat.service";
 import { openChatPopup } from "@/store/features/chat-slice";
 
+type ActionType = "add" | "cancel" | "accept" | "decline" | "remove" | "block" | "unblock" | "message";
+
 export function useUserInteractions(
   userId: string,
   username: string,
   initialContext: ProfileViewerContext,
 ) {
   const [ctx, setCtx] = useState<ProfileViewerContext>(initialContext);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isMessageLoading, setIsMessageLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<ActionType | null>(null);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -36,24 +37,21 @@ export function useUserInteractions(
   }, [initialContext]);
 
   const refreshCache = () => {
-    void queryClient.invalidateQueries({ queryKey: ["user-profile", username] });
-    void queryClient.invalidateQueries({ queryKey: ["online-friends"] });
-    void queryClient.invalidateQueries({ queryKey: ["friend-suggestions"] });
     router.refresh();
   };
 
   const handleAddFriend = async () => {
     if (!currentUser) {
-      toast.warning("Ban can dang nhap de gui loi moi ket ban");
+      toast.warning("Bạn cần đăng nhập để gửi lời mời kết bạn");
       return;
     }
 
     try {
-      setIsLoading(true);
+      setLoadingAction("add");
       const data = await friendRequest(userId);
 
       if (!data) {
-        toast.error("Da co loi xay ra, khong nhan duoc phan hoi");
+        toast.error("Đã có lỗi xảy ra, không nhận được phản hồi từ máy chủ");
         return;
       }
 
@@ -65,7 +63,6 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-      toast.success("Da gui loi moi ket ban");
     } catch (error: any) {
       const errorCode = error?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
@@ -76,20 +73,20 @@ export function useUserInteractions(
         }));
         refreshCache();
       } else {
-        toast.error("Da co loi xay ra trong qua trinh gui yeu cau");
+        toast.error("Đã có lỗi xảy ra trong quá trình gửi yêu cầu");
         console.error("[handleAddFriend] Error:", error);
       }
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
 
   const handleCancelRequest = async () => {
-    setIsLoading(true);
+    setLoadingAction("cancel");
 
     try {
       if (!ctx.relationshipRequestId) {
-        toast.error("Da co loi xay ra");
+        toast.error("Đã có lỗi xảy ra");
         return;
       }
 
@@ -111,16 +108,16 @@ export function useUserInteractions(
         console.error("[handleCancelRequest] Error:", error);
       }
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
 
   const handleAcceptRequest = async () => {
-    setIsLoading(true);
+    setLoadingAction("accept");
 
     try {
       if (!ctx.relationshipRequestId) {
-        toast.error("Da co loi xay ra");
+        toast.error("Đã có lỗi xảy ra");
         return;
       }
 
@@ -144,16 +141,16 @@ export function useUserInteractions(
         console.error("[handleAcceptRequest] Error:", error);
       }
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
 
   const handleDeclineRequest = async () => {
-    setIsLoading(true);
+    setLoadingAction("decline");
 
     try {
       if (!ctx.relationshipRequestId) {
-        toast.error("Da co loi xay ra");
+        toast.error("Đã có lỗi xảy ra");
         return;
       }
 
@@ -175,12 +172,12 @@ export function useUserInteractions(
         console.error("[handleDeclineRequest] Error:", error);
       }
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
 
   const handleUnfriend = async () => {
-    setIsLoading(true);
+    setLoadingAction("remove");
 
     try {
       await unFriend(userId);
@@ -192,51 +189,50 @@ export function useUserInteractions(
 
       refreshCache();
     } catch (error) {
-      toast.error("Da co loi xay ra");
+      toast.error("Đã có lỗi xảy ra");
       console.error("[handleUnfriend] Error:", error);
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
 
   const handleBlockUser = async () => {
     setCtx((previous) => ({ ...previous, isBlocked: true }));
     refreshCache();
-    toast.success("Da chan nguoi dung");
+    toast.success("Đã chặn người dùng");
   };
 
   const handleUnblockUser = async () => {
     setCtx((previous) => ({ ...previous, isBlocked: false }));
-    toast.success("Da bo chan nguoi dung");
+    toast.success("Đã bỏ chặn người dùng");
   };
 
   const handleMessageClick = async () => {
     if (!currentUser) {
-      toast.warning("Ban can dang nhap de nhan tin");
+      toast.warning("Bạn cần đăng nhập để gửi tin nhắn");
       return;
     }
 
     try {
-      setIsMessageLoading(true);
+      setLoadingAction("message");
       const data = await chatService.getOrCreateDirectConversation(userId);
 
       if (data && data.id) {
         dispatch(openChatPopup(data.id));
       } else {
-        toast.error("Khong the tao cuoc hoi thoai");
+        toast.error("Không thể tạo cuộc trò chuyện");
       }
     } catch (error) {
-      toast.error("Da co loi xay ra khi tao cuoc hoi thoai");
+      toast.error("Đã có lỗi xảy ra khi tạo cuộc trò chuyện");
       console.error("[handleMessageClick] Error:", error);
     } finally {
-      setIsMessageLoading(false);
+      setLoadingAction(null);
     }
   };
 
   return {
     ctx,
-    isLoading,
-    isMessageLoading,
+    loadingAction,
     actions: {
       handleAddFriend,
       handleCancelRequest,

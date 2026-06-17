@@ -6,7 +6,7 @@ import { useChatMessages } from '@/hooks/chat/use-chat-messages';
 import { chatService } from '@/services/chat.service';
 import { closeChatPopup, toggleMinimizePopup } from '@/store/features/chat-slice';
 import { MessageResponse, TypingEventPayload } from '@/types/chat';
-import { Maximize2, Minus, X, Loader2, ArrowDown } from 'lucide-react';
+import { Maximize2, Minus, X, Loader2, ArrowDown, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -21,12 +21,21 @@ import { formatMessageDateHeader } from '@/lib/format-date-utils';
 import { TypingIndicator } from './typing-indicator';
 import { useConversationPresenceSync } from '@/hooks/chat/use-conversation-presence-sync';
 import { shouldShowDotOnline } from '@/lib/conversation-utils';
+import { ChatEmptyState } from './chat-empty-state';
+import { ChatMessageList } from './chat-message-list';
 
 interface ChatPopupProps {
     conversationId: string;
     isMinimized: boolean;
     newMessage?: MessageResponse | null;
 }
+
+const suggestedMessages = [
+    "Xin chào 👋",
+    "Hi 👋",
+    "Ê",
+    "Làm quen nhé",
+];
 
 export default function ChatPopup({
     conversationId,
@@ -59,7 +68,7 @@ export default function ChatPopup({
     const isOnline = participants
         .filter((participant) => participant.id !== user?.id)
         .some((participant) => participant.isOnline);
-    const chatName = currentConversation?.name || "Nguoi dung";
+    const chatName = currentConversation?.name || "Người dùng";
 
     const {
         messages,
@@ -236,7 +245,7 @@ export default function ChatPopup({
                         dispatch(toggleMinimizePopup(conversationId));
                     }}
                     className="relative bg-transparent p-0 hover:-translate-y-1 transition-transform rounded-full cursor-pointer select-none [-webkit-tap-highlight-color:transparent] outline-none!"
-                    title={`Tro chuyen voi ${chatName}`}
+                    title={`Trò chuyện với ${chatName}`}
                 >
                     {currentConversation ? (
                         <>
@@ -286,11 +295,11 @@ export default function ChatPopup({
                                 {isShowDotOnline &&
                                     (isOnline ? (
                                         <span className="text-[10px] text-emerald-500 font-medium leading-none">
-                                            Dang hoat dong
+                                            Đang hoạt động
                                         </span>
                                     ) : (
                                         <span className="text-[10px] text-muted-foreground font-medium leading-none">
-                                            Ngoai tuyen
+                                            Ngoại tuyến
                                         </span>
                                     ))}
                             </div>
@@ -367,53 +376,19 @@ export default function ChatPopup({
                     </div>
                 )}
 
-                {messages.map((message, index) => {
-                    const isMine = message.senderId === user?.id;
-                    const previousMessage = index > 0 ? messages[index - 1] : null;
-                    const isConsecutive =
-                        previousMessage?.senderId === message.senderId &&
-                        message.type !== "System";
-                    const readers =
-                        currentConversation?.participants.filter(
-                            (participant) =>
-                                participant.id !== user?.id &&
-                                participant.lastReadMessageId === message.id
-                        ) ?? [];
-                    const isLastMessage = index === messages.length - 1;
+                {messages.length === 0 && currentConversation ? (
+                    <ChatEmptyState
+                        conversation={currentConversation}
+                        onSend={handleSend}
+                    />
+                ) : (
+                    <ChatMessageList
+                        messages={messages}
+                        currentUserId={user?.id}
+                        conversation={currentConversation}
+                    />
+                )}
 
-                    const currentDateLabel = formatMessageDateHeader(
-                        message.createdAt
-                    );
-                    const previousDateLabel = previousMessage
-                        ? formatMessageDateHeader(previousMessage.createdAt)
-                        : null;
-                    const showDateDivider =
-                        currentDateLabel !== previousDateLabel;
-
-                    return (
-                        <React.Fragment key={message.id}>
-                            {showDateDivider && (
-                                <div className="flex justify-center my-6">
-                                    <span className="px-3 py-1 bg-background border border-border rounded-full text-[11px] font-medium text-muted-foreground shadow-sm">
-                                        {currentDateLabel}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div
-                                className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} mb-1`}
-                            >
-                                <ChatMessageBubble
-                                    msg={message}
-                                    isMine={isMine}
-                                    isConsecutive={isConsecutive}
-                                    readers={readers}
-                                    isLastMessage={isLastMessage}
-                                />
-                            </div>
-                        </React.Fragment>
-                    );
-                })}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -423,7 +398,7 @@ export default function ChatPopup({
                     className="absolute bottom-17.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
                 >
                     <ArrowDown size={14} />
-                    Tin nhan moi
+                    Tin nhắn mới
                 </button>
             )}
 

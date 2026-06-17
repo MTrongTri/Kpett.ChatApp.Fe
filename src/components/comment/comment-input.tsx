@@ -293,6 +293,7 @@ export const CommentInput = ({
                 side="top"
                 align="end"
                 sideOffset={10}
+                onWheel={(e) => e.stopPropagation()}
                 className="w-auto border-none bg-transparent p-0 shadow-2xl"
               >
                 {isEmojiOpen && (

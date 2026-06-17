@@ -7,6 +7,7 @@ import { ConversationResponse, ParticipantResponse } from "@/types/chat";
 import Image from "next/image";
 import { useAuth } from "../providers/auth-provider";
 import { UserAvatar } from "../user/user-avatar";
+import Link from "next/link";
 
 interface ConversationAvatarProps {
     conversation: ConversationResponse;
@@ -53,23 +54,6 @@ export function ConversationAvatar({
 
     const participants = conversation.participants || [];
 
-    // Nếu Group có set ảnh đại diện riêng -> Dùng ảnh đó luôn
-    if (conversation.avatarUrl) {
-        return (
-            <UserAvatar
-                user={{
-                    id: conversation.id,
-                    displayName: conversation.name || "Group",
-                    avatarUrl: conversation.avatarUrl,
-                    isOnline: participants.filter((p) => p.id != user?.id).some(p => p.isOnline)
-                }}
-                isShowDotOnline={isShowDotOnline}
-                className={className}
-                dotClassName={dotClassName}
-            />
-        );
-    }
-
     // Nếu là Chat 1-1 (Direct) hoặc Group rỗng/chỉ có 1 người
     if (conversation.type === "Direct") {
         const displayUser = participants.find(p => p.id != user?.id);
@@ -82,6 +66,23 @@ export function ConversationAvatar({
                     displayName: displayUser.displayName || displayUser.username,
                     avatarUrl: displayUser.avatarUrl,
                     isOnline: displayUser.isOnline
+                }}
+                isShowDotOnline={isShowDotOnline}
+                className={className}
+                dotClassName={dotClassName}
+            />
+        );
+    }
+
+    // Nếu Group có set ảnh đại diện riêng -> Dùng ảnh đó luôn
+    if (conversation.avatarUrl) {
+        return (
+            <UserAvatar
+                user={{
+                    id: conversation.id,
+                    displayName: conversation.name || "Group",
+                    avatarUrl: conversation.avatarUrl,
+                    isOnline: participants.filter((p) => p.id != user?.id).some(p => p.isOnline)
                 }}
                 isShowDotOnline={isShowDotOnline}
                 className={className}

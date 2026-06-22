@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Monitor, Smartphone, Image as ImageIcon, UserPlus, Smile, Globe2, Lock } from 'lucide-react';
+import { Monitor, Smartphone, Image as ImageIcon, UserPlus, Smile, Globe2, Lock, X, Loader2 } from 'lucide-react';
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/use-debounce";
+import { getFriendsWithFilter } from "@/services/friend.service";
+import { UserProfile } from "@/types/user";
+import { UserAvatar } from "@/components/user/user-avatar";
 
 export default function GroupsPage() {
     const [groupName, setGroupName] = useState('');
@@ -9,6 +14,18 @@ export default function GroupsPage() {
     const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
     const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
     const privacyDropdownRef = useRef<HTMLDivElement>(null);
+
+    const [friendSearch, setFriendSearch] = useState('');
+    const debouncedFriendSearch = useDebounce(friendSearch, 300);
+    const [selectedFriends, setSelectedFriends] = useState<UserProfile[]>([]);
+    const [isFriendInputFocused, setIsFriendInputFocused] = useState(false);
+
+    const { data: friendsData, isLoading: isSearchingFriends } = useQuery({
+        queryKey: ['friends-search', debouncedFriendSearch],
+        queryFn: () => getFriendsWithFilter({ search: debouncedFriendSearch, cursor: null, limit: 10 }),
+    });
+
+    const friendSuggestions = friendsData?.items?.filter(friend => !selectedFriends.some(selected => selected.id === friend.id)) || [];
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -71,7 +88,7 @@ export default function GroupsPage() {
 
                         {/* Quyền riêng tư */}
                         <div className="relative" ref={privacyDropdownRef}>
-                            <div 
+                            <div
                                 onClick={() => setIsPrivacyDropdownOpen(!isPrivacyDropdownOpen)}
                                 className={`w-full px-4 py-2 border rounded-lg cursor-pointer flex items-center justify-between bg-white transition-all ${isPrivacyDropdownOpen ? 'ring-2 ring-blue-100 border-blue-500' : 'border-gray-300'}`}
                             >
@@ -97,7 +114,7 @@ export default function GroupsPage() {
                             {isPrivacyDropdownOpen && (
                                 <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-gray-200 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] z-50 py-2">
                                     {/* Option Công khai */}
-                                    <div 
+                                    <div
                                         onClick={() => { setPrivacy('public'); setIsPrivacyDropdownOpen(false); }}
                                         className={`flex items-start gap-3 p-3 cursor-pointer mx-2 rounded-md ${privacy === 'public' ? 'bg-[#f0f2f5]' : 'hover:bg-[#f2f2f2]'}`}
                                     >
@@ -121,7 +138,7 @@ export default function GroupsPage() {
                                     </div>
 
                                     {/* Option Riêng tư */}
-                                    <div 
+                                    <div
                                         onClick={() => { setPrivacy('private'); setIsPrivacyDropdownOpen(false); }}
                                         className={`flex items-start gap-3 p-3 cursor-pointer mx-2 rounded-md ${privacy === 'private' ? 'bg-[#f0f2f5]' : 'hover:bg-[#f2f2f2]'}`}
                                     >
@@ -149,14 +166,75 @@ export default function GroupsPage() {
 
                         {/* Mời bạn bè */}
                         <div className="relative mt-2">
-                            <input
-                                type="text"
-                                className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black"
-                                placeholder="Mời bạn bè (không bắt buộc)"
-                            />
-                            <div className="mt-2 text-[12px] text-gray-500">
-                                Gợi ý: <span className="font-medium text-black">Quang Du, Trọng Trí, test dev</span>
+                            {/* Selected Friends Chips */}
+                            {selectedFriends.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-[#f0f2f5] rounded-lg border border-gray-200">
+                                    {selectedFriends.map(friend => (
+                                        <div key={friend.id} className="flex items-center gap-1.5 bg-white border border-gray-200 px-2 py-1 rounded-full text-[13px] font-medium text-black shadow-sm">
+                                            <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-5 h-5" />
+                                            <span>{friend.displayName || friend.username}</span>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedFriends(prev => prev.filter(p => p.id !== friend.id));
+                                                }}
+                                                className="text-gray-500 hover:text-black hover:bg-gray-100 rounded-full p-0.5 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={friendSearch}
+                                    onChange={(e) => setFriendSearch(e.target.value)}
+                                    onFocus={() => setIsFriendInputFocused(true)}
+                                    onBlur={() => setTimeout(() => setIsFriendInputFocused(false), 200)}
+                                    className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black"
+                                    placeholder={selectedFriends.length > 0 ? "Tìm thêm bạn bè..." : "Mời bạn bè (không bắt buộc)"}
+                                />
+                                {isSearchingFriends && (
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <Loader2 size={16} className="animate-spin text-gray-500" />
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Dropdown Suggestions */}
+                            {isFriendInputFocused && (
+                                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[250px] overflow-y-auto">
+                                    {friendSuggestions.length > 0 ? (
+                                        friendSuggestions.map(friend => (
+                                            <div
+                                                key={friend.id}
+                                                onClick={() => {
+                                                    setSelectedFriends(prev => [...prev, friend]);
+                                                    setFriendSearch('');
+                                                }}
+                                                className="flex items-center gap-3 p-3 hover:bg-[#f0f2f5] cursor-pointer"
+                                            >
+                                                <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-8 h-8" />
+                                                <span className="text-[14px] font-medium text-black">{friend.displayName || friend.username}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="p-3 text-[14px] text-gray-500 text-center">
+                                            {isSearchingFriends ? "Đang tìm kiếm..." : "Không tìm thấy bạn bè"}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {!friendSearch && selectedFriends.length === 0 && (
+                                <div className="mt-2 text-[12px] text-gray-500">
+                                    Tìm kiếm và chọn bạn bè để mời vào nhóm
+                                </div>
+                            )}
                         </div>
                     </form>
                 </div>

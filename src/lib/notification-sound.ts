@@ -1,9 +1,9 @@
 const SOUND_ASSETS: Record<string, string> = {
-  friend_request: "/sounds/friend-request.mp3",
-  friend_accept: "/sounds/friend-accept.mp3",
-  comment_mention: "/sounds/comment-mention.mp3",
-  chat_message: "/sounds/notification-default.mp3",
-  notification_default: "/sounds/notification-default.mp3",
+  friend_request: "/sounds/notification.mp3",
+  friend_accept: "/sounds/notification.mp3",
+  comment_mention: "/sounds/notification.mp3",
+  chat_message: "/sounds/notification.mp3",
+  notification_default: "/sounds/notification.mp3",
 };
 
 const audioCache = new Map<string, HTMLAudioElement>();

@@ -7,7 +7,7 @@ export interface CreateGroupRequest {
     avatarUrl?: string;
     coverImageUrl?: string;
     language: string;
-    rules: string;
+    rules?: string[];
 }
 
 
@@ -28,7 +28,7 @@ export interface UpdateGroupRequest {
     avatarUrl?: string;
     coverImageUrl?: string;
     language?: string;
-    rules?: string;
+    rules?: string[];
 }
 
 export interface UpdateGroupResponse {

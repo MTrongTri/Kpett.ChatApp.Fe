@@ -1,14 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Monitor, Smartphone, Image as ImageIcon, UserPlus, Smile, Globe2, Lock, X, Loader2 } from 'lucide-react';
-import { useQuery } from "@tanstack/react-query";
+import { Monitor, Smartphone, Image as ImageIcon, UserPlus, Smile, Globe2, Lock, X, Loader2, Users, Sparkles } from 'lucide-react';
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getFriendsWithFilter } from "@/services/friend.service";
+import { createGroup } from "@/services/group.service";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { UserProfile } from "@/types/user";
 import { UserAvatar } from "@/components/user/user-avatar";
 
 export default function GroupsPage() {
+    const router = useRouter();
     const [groupName, setGroupName] = useState('');
     const [privacy, setPrivacy] = useState('');
     const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -27,7 +31,30 @@ export default function GroupsPage() {
 
     const friendSuggestions = friendsData?.items?.filter(friend => !selectedFriends.some(selected => selected.id === friend.id)) || [];
 
+    const { mutate: createGroupMutation, isPending: isCreatingGroup } = useMutation({
+        mutationFn: (data: any) => createGroup(data),
+        onSuccess: (data) => {
+            toast.success("Tạo nhóm thành công!");
+            router.push(`/groups/${data.id}`);
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Đã có lỗi xảy ra khi tạo nhóm");
+        }
+    });
+
+    const handleCreateGroup = () => {
+        if (!groupName || !privacy || isCreatingGroup) return;
+
+        createGroupMutation({
+            name: groupName,
+            type: privacy,
+            language: "vi",
+            rules: []
+        });
+    };
+
     useEffect(() => {
+
         function handleClickOutside(event: MouseEvent) {
             if (privacyDropdownRef.current && !privacyDropdownRef.current.contains(event.target as Node)) {
                 setIsPrivacyDropdownOpen(false);
@@ -47,92 +74,92 @@ export default function GroupsPage() {
     };
 
     return (
-        <div className="flex h-screen w-full bg-[#f0f2f5] overflow-hidden text-sm pt-[58px]">
+        <div className="flex h-screen w-full bg-[#fafafa] overflow-hidden font-sans pt-[58px]">
             {/* CỘT BÊN TRÁI - FORM TẠO NHÓM */}
-            <div className="w-[360px] bg-white border-r border-gray-200 flex flex-col h-full shadow-sm z-10 flex-shrink-0">
-                <div className="p-4 border-b border-gray-200">
-                    <div className="text-[13px] text-gray-500 mb-2 flex items-center gap-1 font-medium">
-                        <span className="hover:underline cursor-pointer">Nhóm</span>
-                        <span>›</span>
-                        <span>Tạo nhóm</span>
+            <div className="w-[380px] bg-white border-r border-indigo-50 flex flex-col h-full shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex-shrink-0">
+                {/* Header */}
+                <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-2 text-indigo-600 mb-3">
+                        <div className="p-2 bg-indigo-50 rounded-xl">
+                            <Users size={20} className="text-indigo-600" />
+                        </div>
+                        <span className="text-sm font-semibold tracking-wide uppercase">Cộng đồng Kpett</span>
                     </div>
-                    <h1 className="text-[24px] font-bold text-black">Tạo nhóm</h1>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Tạo nhóm mới</h1>
+                    <p className="text-sm text-gray-500 mt-2">Xây dựng cộng đồng của riêng bạn trên Kpett.</p>
                 </div>
 
-                <div className="p-4 flex-1 overflow-y-auto">
+                <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
                     {/* User Info */}
-                    <div className="flex items-center gap-3 mb-6">
-                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200" />
+                    <div className="flex items-center gap-4 mb-8 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm" />
                         <div>
-                            <div className="font-semibold text-black text-[15px]">{currentUser.name}</div>
-                            <div className="text-[13px] text-gray-500">{currentUser.role}</div>
+                            <div className="font-bold text-gray-900 text-[15px]">{currentUser.name}</div>
+                            <div className="text-[13px] text-gray-500 font-medium">Quản trị viên nhóm</div>
                         </div>
                     </div>
 
                     {/* Form */}
-                    <form className="space-y-4">
+                    <form className="space-y-6">
                         {/* Tên nhóm */}
-                        <div className="relative">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-bold text-gray-700 ml-1">Tên nhóm</label>
                             <input
                                 type="text"
                                 value={groupName}
                                 onChange={(e) => setGroupName(e.target.value)}
-                                className={`peer w-full px-4 pt-5 pb-2 border rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors ${groupName ? 'border-blue-500' : 'border-gray-300'}`}
-                                placeholder=" "
+                                className={`w-full px-4 py-3.5 bg-gray-50/50 border rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${groupName ? 'border-indigo-500' : 'border-gray-200'}`}
+                                placeholder="Nhập tên nhóm của bạn..."
                                 required
                             />
-                            <label className={`absolute left-4 transition-all duration-200 pointer-events-none ${groupName ? 'text-[11px] top-1.5 text-blue-500' : 'text-[15px] top-3.5 text-gray-500'}`}>
-                                Tên nhóm
-                            </label>
                         </div>
 
                         {/* Quyền riêng tư */}
-                        <div className="relative" ref={privacyDropdownRef}>
+                        <div className="space-y-1.5 relative" ref={privacyDropdownRef}>
+                            <label className="text-sm font-bold text-gray-700 ml-1">Quyền riêng tư</label>
                             <div
                                 onClick={() => setIsPrivacyDropdownOpen(!isPrivacyDropdownOpen)}
-                                className={`w-full px-4 py-2 border rounded-lg cursor-pointer flex items-center justify-between bg-white transition-all ${isPrivacyDropdownOpen ? 'ring-2 ring-blue-100 border-blue-500' : 'border-gray-300'}`}
+                                className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl cursor-pointer flex items-center justify-between transition-all ${isPrivacyDropdownOpen ? 'ring-2 ring-indigo-500/20 border-indigo-500 bg-white' : 'border-gray-200 hover:border-indigo-300'}`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-[#e4e6eb] flex items-center justify-center shrink-0">
-                                        {privacy === 'public' ? <Globe2 size={20} className="text-black fill-current" /> : privacy === 'private' ? <Lock size={20} className="text-black fill-current" /> : <Globe2 size={20} className="text-gray-500" />}
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${privacy ? 'bg-indigo-100' : 'bg-gray-200'}`}>
+                                        {privacy === 'public' ? <Globe2 size={20} className="text-indigo-600" /> : privacy === 'private' ? <Lock size={20} className="text-indigo-600" /> : <Globe2 size={20} className="text-gray-400" />}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className={`text-[13px] ${privacy ? 'text-[#0866ff]' : 'text-gray-500'} ${privacy ? 'mb-[-2px]' : 'py-2'}`}>
-                                            Chọn quyền riêng tư
-                                        </span>
-                                        {privacy && (
-                                            <span className="text-[15px] font-medium text-black">
+                                        {!privacy ? (
+                                            <span className="text-[14px] text-gray-500 font-medium">
+                                                Chọn quyền riêng tư
+                                            </span>
+                                        ) : (
+                                            <span className="text-[15px] font-bold text-gray-900">
                                                 {privacy === 'public' ? 'Công khai' : 'Riêng tư'}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="m6 9 6 6 6-6" /></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isPrivacyDropdownOpen ? 'rotate-180 text-indigo-500' : 'text-gray-400'}`}><path d="m6 9 6 6 6-6" /></svg>
                             </div>
 
                             {/* Dropdown Menu */}
                             {isPrivacyDropdownOpen && (
-                                <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-gray-200 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.1)] z-50 py-2">
+                                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] z-50 py-2 overflow-hidden">
                                     {/* Option Công khai */}
                                     <div
                                         onClick={() => { setPrivacy('public'); setIsPrivacyDropdownOpen(false); }}
-                                        className={`flex items-start gap-3 p-3 cursor-pointer mx-2 rounded-md ${privacy === 'public' ? 'bg-[#f0f2f5]' : 'hover:bg-[#f2f2f2]'}`}
+                                        className={`flex items-start gap-4 p-3.5 cursor-pointer mx-2 rounded-xl transition-all ${privacy === 'public' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-[#e4e6eb] flex items-center justify-center shrink-0 mt-1">
-                                            <Globe2 size={20} className="text-black fill-current" />
+                                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-0.5 border border-gray-100">
+                                            <Globe2 size={20} className="text-indigo-600" />
                                         </div>
                                         <div className="flex-1">
-                                            <div className="font-semibold text-[15px] text-black">Công khai</div>
-                                            <div className="text-[13px] text-black mt-0.5">
-                                                Bất kỳ ai cũng có thể nhìn thấy mọi người trong nhóm và những gì họ đăng.
-                                            </div>
-                                            <div className="text-[13px] text-gray-500 mt-1">
-                                                Tùy theo quy mô và độ tuổi của nhóm, bạn có thể chuyển sang chế độ riêng tư vào lúc khác.
+                                            <div className="font-bold text-[15px] text-gray-900">Công khai</div>
+                                            <div className="text-[13px] text-gray-500 mt-1 leading-relaxed">
+                                                Bất kỳ ai cũng có thể tìm thấy và xem nội dung trong nhóm.
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-center mt-2 shrink-0">
-                                            <div className={`w-5 h-5 rounded-full border-[2px] flex items-center justify-center ${privacy === 'public' ? 'border-[#0866ff]' : 'border-gray-400'}`}>
-                                                {privacy === 'public' && <div className="w-2.5 h-2.5 rounded-full bg-[#0866ff]"></div>}
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${privacy === 'public' ? 'border-indigo-600' : 'border-gray-300'}`}>
+                                                {privacy === 'public' && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
                                             </div>
                                         </div>
                                     </div>
@@ -140,23 +167,20 @@ export default function GroupsPage() {
                                     {/* Option Riêng tư */}
                                     <div
                                         onClick={() => { setPrivacy('private'); setIsPrivacyDropdownOpen(false); }}
-                                        className={`flex items-start gap-3 p-3 cursor-pointer mx-2 rounded-md ${privacy === 'private' ? 'bg-[#f0f2f5]' : 'hover:bg-[#f2f2f2]'}`}
+                                        className={`flex items-start gap-4 p-3.5 cursor-pointer mx-2 rounded-xl transition-all ${privacy === 'private' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-[#e4e6eb] flex items-center justify-center shrink-0 mt-1">
-                                            <Lock size={20} className="text-black fill-current" />
+                                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-0.5 border border-gray-100">
+                                            <Lock size={20} className="text-indigo-600" />
                                         </div>
                                         <div className="flex-1">
-                                            <div className="font-semibold text-[15px] text-black">Riêng tư</div>
-                                            <div className="text-[13px] text-black mt-0.5">
-                                                Chỉ thành viên mới nhìn thấy mọi người trong nhóm và những gì họ đăng.
-                                            </div>
-                                            <div className="text-[13px] text-gray-500 mt-1">
-                                                Bạn có thể chuyển sang chế độ công khai vào lúc khác.
+                                            <div className="font-bold text-[15px] text-gray-900">Riêng tư</div>
+                                            <div className="text-[13px] text-gray-500 mt-1 leading-relaxed">
+                                                Chỉ thành viên mới có thể xem nội dung và những người trong nhóm.
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-center mt-2 shrink-0">
-                                            <div className={`w-5 h-5 rounded-full border-[2px] flex items-center justify-center ${privacy === 'private' ? 'border-[#0866ff]' : 'border-gray-400'}`}>
-                                                {privacy === 'private' && <div className="w-2.5 h-2.5 rounded-full bg-[#0866ff]"></div>}
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${privacy === 'private' ? 'border-indigo-600' : 'border-gray-300'}`}>
+                                                {privacy === 'private' && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
                                             </div>
                                         </div>
                                     </div>
@@ -165,13 +189,15 @@ export default function GroupsPage() {
                         </div>
 
                         {/* Mời bạn bè */}
-                        <div className="relative mt-2">
+                        <div className="space-y-1.5 relative">
+                            <label className="text-sm font-bold text-gray-700 ml-1">Mời bạn bè (Tùy chọn)</label>
+
                             {/* Selected Friends Chips */}
                             {selectedFriends.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-[#f0f2f5] rounded-lg border border-gray-200">
+                                <div className="flex flex-wrap gap-2 mb-3">
                                     {selectedFriends.map(friend => (
-                                        <div key={friend.id} className="flex items-center gap-1.5 bg-white border border-gray-200 px-2 py-1 rounded-full text-[13px] font-medium text-black shadow-sm">
-                                            <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-5 h-5" />
+                                        <div key={friend.id} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 pl-1.5 pr-2.5 py-1.5 rounded-full text-[13px] font-semibold text-indigo-700 animate-in fade-in zoom-in duration-200">
+                                            <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-6 h-6 border border-white shadow-sm" />
                                             <span>{friend.displayName || friend.username}</span>
                                             <button
                                                 type="button"
@@ -179,9 +205,9 @@ export default function GroupsPage() {
                                                     e.stopPropagation();
                                                     setSelectedFriends(prev => prev.filter(p => p.id !== friend.id));
                                                 }}
-                                                className="text-gray-500 hover:text-black hover:bg-gray-100 rounded-full p-0.5 transition-colors"
+                                                className="text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100/50 rounded-full p-0.5 transition-colors"
                                             >
-                                                <X size={14} />
+                                                <X size={14} strokeWidth={3} />
                                             </button>
                                         </div>
                                     ))}
@@ -195,19 +221,19 @@ export default function GroupsPage() {
                                     onChange={(e) => setFriendSearch(e.target.value)}
                                     onFocus={() => setIsFriendInputFocused(true)}
                                     onBlur={() => setTimeout(() => setIsFriendInputFocused(false), 200)}
-                                    className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-black"
-                                    placeholder={selectedFriends.length > 0 ? "Tìm thêm bạn bè..." : "Mời bạn bè (không bắt buộc)"}
+                                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 transition-all placeholder:text-gray-400"
+                                    placeholder="Tìm kiếm bạn bè..."
                                 />
                                 {isSearchingFriends && (
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <Loader2 size={16} className="animate-spin text-gray-500" />
+                                        <Loader2 size={18} className="animate-spin text-indigo-500" />
                                     </div>
                                 )}
                             </div>
 
                             {/* Dropdown Suggestions */}
                             {isFriendInputFocused && (
-                                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[250px] overflow-y-auto">
+                                <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] z-50 max-h-[250px] overflow-y-auto py-2">
                                     {friendSuggestions.length > 0 ? (
                                         friendSuggestions.map(friend => (
                                             <div
@@ -216,23 +242,17 @@ export default function GroupsPage() {
                                                     setSelectedFriends(prev => [...prev, friend]);
                                                     setFriendSearch('');
                                                 }}
-                                                className="flex items-center gap-3 p-3 hover:bg-[#f0f2f5] cursor-pointer"
+                                                className="flex items-center gap-3 p-2.5 mx-2 hover:bg-indigo-50 rounded-xl cursor-pointer transition-colors"
                                             >
-                                                <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-8 h-8" />
-                                                <span className="text-[14px] font-medium text-black">{friend.displayName || friend.username}</span>
+                                                <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-9 h-9 shadow-sm border border-gray-100" />
+                                                <span className="text-[14px] font-bold text-gray-800">{friend.displayName || friend.username}</span>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="p-3 text-[14px] text-gray-500 text-center">
+                                        <div className="p-4 text-[14px] text-gray-500 text-center font-medium">
                                             {isSearchingFriends ? "Đang tìm kiếm..." : "Không tìm thấy bạn bè"}
                                         </div>
                                     )}
-                                </div>
-                            )}
-
-                            {!friendSearch && selectedFriends.length === 0 && (
-                                <div className="mt-2 text-[12px] text-gray-500">
-                                    Tìm kiếm và chọn bạn bè để mời vào nhóm
                                 </div>
                             )}
                         </div>
@@ -240,36 +260,45 @@ export default function GroupsPage() {
                 </div>
 
                 {/* Footer Button */}
-                <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+                <div className="p-6 border-t border-gray-100 bg-white/80 backdrop-blur-md shrink-0">
                     <button
-                        disabled={!groupName || !privacy}
-                        className={`w-full py-2.5 rounded-md font-semibold transition-colors flex justify-center items-center ${(!groupName || !privacy)
-                            ? 'bg-[#e4e6eb] text-[#bcc0c4] cursor-not-allowed'
-                            : 'bg-[#0866ff] text-white hover:bg-[#1877f2]'
+                        onClick={handleCreateGroup}
+                        disabled={!groupName || !privacy || isCreatingGroup}
+                        className={`w-full py-3.5 rounded-2xl font-bold text-[15px] transition-all duration-300 flex justify-center items-center shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${(!groupName || !privacy || isCreatingGroup)
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none hover:shadow-none hover:translate-y-0'
+                            : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-indigo-500/30'
                             }`}
                     >
-                        Tạo
+                        {isCreatingGroup ? (
+                            <Loader2 size={18} className="animate-spin mr-2" />
+                        ) : (
+                            <Sparkles size={18} className="mr-2" />
+                        )}
+                        {isCreatingGroup ? 'Đang tạo...' : 'Tạo Nhóm Kpett'}
                     </button>
                 </div>
             </div>
 
             {/* CỘT BÊN PHẢI - LIVE PREVIEW */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-indigo-50/30">
                 {/* Header Preview */}
-                <div className="flex items-center justify-between p-4 bg-white shadow-sm z-0 shrink-0">
-                    <div className="font-semibold text-[15px] text-black">Xem trước trên máy tính</div>
-                    <div className="flex items-center gap-1 bg-[#f0f2f5] rounded-lg p-1">
+                <div className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-lg border-b border-white shadow-sm z-0 shrink-0">
+                    <div className="font-bold text-[15px] text-indigo-900 flex items-center gap-2">
+                        <Monitor size={18} className="text-indigo-500" />
+                        Giao diện xem trước
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl shadow-sm border border-indigo-100">
                         <button
                             onClick={() => setViewMode('desktop')}
-                            className={`p-1.5 rounded-md transition-colors ${viewMode === 'desktop' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:bg-gray-200'}`}
+                            className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'desktop' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
                         >
-                            <Monitor size={20} />
+                            <Monitor size={18} />
                         </button>
                         <button
                             onClick={() => setViewMode('mobile')}
-                            className={`p-1.5 rounded-md transition-colors ${viewMode === 'mobile' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:bg-gray-200'}`}
+                            className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'mobile' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
                         >
-                            <Smartphone size={20} />
+                            <Smartphone size={18} />
                         </button>
                     </div>
                 </div>
@@ -277,77 +306,97 @@ export default function GroupsPage() {
                 {/* Preview Content Area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start custom-scrollbar">
                     {/* Preview Card */}
-                    <div className={`bg-white rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.2)] border border-gray-200 overflow-hidden transition-all duration-300 ${viewMode === 'desktop' ? 'w-full max-w-[1050px]' : 'w-[400px]'}`}>
+                    <div className={`bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white overflow-hidden transition-all duration-500 ease-out flex flex-col ${viewMode === 'desktop' ? 'w-full max-w-[1000px]' : 'w-[400px]'}`}>
 
                         {/* Cover Image Placeholder */}
-                        <div className="h-[350px] bg-gradient-to-b from-gray-200 to-gray-300 relative overflow-hidden flex flex-col items-center justify-center">
-                            {/* SVG Pattern to mimic the illustration */}
-                            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                            <ImageIcon className="text-gray-400 w-24 h-24 mb-4" />
-                            <p className="text-gray-500 font-medium">Ảnh bìa nhóm</p>
+                        <div className="h-[280px] md:h-[320px] bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 relative overflow-hidden flex flex-col items-center justify-center m-3 md:m-4 rounded-[1.5rem] shadow-inner">
+                            {/* Decorative elements */}
+                            <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+                                <div className="absolute -top-24 -right-24 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                                <div className="absolute bottom-10 -left-10 w-48 h-48 bg-white rounded-full blur-2xl"></div>
+                            </div>
+                            <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 mb-4 z-10">
+                                <ImageIcon className="text-white w-12 h-12" />
+                            </div>
+                            <p className="text-white/90 font-bold text-lg tracking-wide shadow-sm z-10">Ảnh bìa nhóm (Tùy chỉnh sau)</p>
                         </div>
 
                         {/* Group Header Info */}
-                        <div className="px-8 pt-6 pb-0 border-b border-gray-200">
-                            <h2 className="text-[28px] font-bold text-black mb-1 leading-tight">
-                                {groupName || 'Tên nhóm'}
+                        <div className="px-6 md:px-10 pt-2 pb-6 border-b border-gray-100">
+                            <h2 className="text-[32px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 mb-2 leading-tight">
+                                {groupName || 'Tên nhóm của bạn'}
                             </h2>
-                            <div className="flex items-center text-[#65676b] text-[15px] gap-1 mb-4">
-                                {privacy === 'public' ? <Globe2 size={16} /> : privacy === 'private' ? <Lock size={16} /> : null}
-                                <span className="font-medium">{privacy === 'public' ? 'Nhóm công khai' : privacy === 'private' ? 'Nhóm riêng tư' : 'Quyền riêng tư của nhóm'}</span>
-                                <span className="mx-1">·</span>
-                                <span className="font-semibold text-black">1 thành viên</span>
+                            <div className="flex items-center text-gray-500 text-[15px] gap-2 mb-6 font-medium">
+                                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-gray-700">
+                                    {privacy === 'public' ? <Globe2 size={16} className="text-indigo-500" /> : privacy === 'private' ? <Lock size={16} className="text-purple-500" /> : <Lock size={16} className="text-gray-400" />}
+                                    {privacy === 'public' ? 'Công khai' : privacy === 'private' ? 'Riêng tư' : 'Chưa thiết lập'}
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                <span className="text-gray-700 font-bold">1 thành viên</span>
                             </div>
 
                             {/* Navigation Tabs */}
-                            <div className="flex gap-1">
-                                {['Giới thiệu', 'Bài viết', 'Thành viên', 'Sự kiện'].map((tab, idx) => (
-                                    <button key={tab} className={`px-4 py-3.5 font-semibold text-[15px] relative ${idx === 0 ? 'text-gray-500 hover:bg-gray-100 rounded-md' : idx === 1 ? 'text-[#0866ff]' : 'text-gray-500 hover:bg-gray-100 rounded-md'}`}>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                                {['Trang chủ', 'Giới thiệu', 'Thảo luận', 'Thành viên'].map((tab, idx) => (
+                                    <button key={tab} className={`px-5 py-2.5 font-bold text-[14px] rounded-xl whitespace-nowrap transition-all ${idx === 0 ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>
                                         {tab}
-                                        {idx === 1 && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#0866ff]"></div>}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
                         {/* Content Body */}
-                        <div className="bg-[#f0f2f5] p-4 min-h-[400px] flex gap-4 flex-col md:flex-row justify-center">
+                        <div className="bg-gray-50/50 p-6 md:p-8 flex-1 flex gap-6 flex-col md:flex-row justify-center">
 
                             {/* Left Col (Post Composer) */}
-                            <div className="flex-1 max-w-[680px] flex flex-col gap-4">
-                                <div className="bg-white rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
-                                    <div className="flex gap-2 mb-3">
-                                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
-                                        <div className="flex-1 bg-[#f0f2f5] hover:bg-[#e4e6eb] transition-colors rounded-full px-4 py-2 text-[#65676b] text-[15px] cursor-pointer flex items-center">
-                                            Bạn đang nghĩ gì?
+                            <div className="flex-1 max-w-[600px] flex flex-col gap-6">
+                                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100">
+                                    <div className="flex gap-3 mb-4">
+                                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white" />
+                                        <div className="flex-1 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors rounded-2xl px-5 py-3 text-gray-500 text-[15px] cursor-pointer flex items-center font-medium">
+                                            Chia sẻ điều gì đó với nhóm...
                                         </div>
                                     </div>
-                                    <div className="border-t border-gray-100 pt-2 flex justify-between px-2">
-                                        <button className="flex-1 flex items-center justify-center gap-2 text-[#65676b] font-semibold text-[15px] py-2 hover:bg-[#f0f2f5] rounded-lg transition-colors">
-                                            <ImageIcon size={24} className="text-[#45bd62]" /> Ảnh/video
+                                    <div className="border-t border-gray-100 pt-3 flex justify-between px-1">
+                                        <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 font-bold text-[14px] py-2 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors">
+                                            <ImageIcon size={20} className="text-green-500" /> Ảnh/Video
                                         </button>
-                                        <button className="flex-1 flex items-center justify-center gap-2 text-[#65676b] font-semibold text-[15px] py-2 hover:bg-[#f0f2f5] rounded-lg transition-colors">
-                                            <UserPlus size={24} className="text-[#1877f2]" /> Gắn thẻ người khác
-                                        </button>
-                                        <button className="flex-1 flex items-center justify-center gap-2 text-[#65676b] font-semibold text-[15px] py-2 hover:bg-[#f0f2f5] rounded-lg transition-colors">
-                                            <Smile size={24} className="text-[#f7b928]" /> Cảm xúc/Hoạt động
+                                        <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 font-bold text-[14px] py-2 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors">
+                                            <Smile size={20} className="text-yellow-500" /> Cảm xúc
                                         </button>
                                     </div>
+                                </div>
+
+                                {/* Dummy Post */}
+                                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 opacity-60">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+                                        <div className="space-y-2">
+                                            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                            <div className="h-2 w-16 bg-gray-100 rounded animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="h-3 w-full bg-gray-100 rounded animate-pulse"></div>
+                                        <div className="h-3 w-4/5 bg-gray-100 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="h-40 w-full bg-gray-50 rounded-xl animate-pulse"></div>
                                 </div>
                             </div>
 
                             {/* Right Col (About Widget) */}
                             {viewMode === 'desktop' && (
-                                <div className="w-[360px] hidden lg:block">
-                                    <div className="bg-white rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
-                                        <h3 className="font-bold text-[17px] mb-3 text-black">Giới thiệu</h3>
-                                        <div className="text-[15px] text-black">
-                                            {privacy === 'public' ? 'Bất kỳ ai cũng có thể tìm thấy nhóm này và xem những gì mọi người đăng.' : privacy === 'private' ? 'Chỉ thành viên mới có thể xem mọi người đăng gì.' : 'Bạn chưa chọn quyền riêng tư cho nhóm.'}
+                                <div className="w-[320px] hidden lg:block space-y-6">
+                                    <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100">
+                                        <h3 className="font-extrabold text-[16px] mb-4 text-gray-900 flex items-center gap-2">
+                                            Về nhóm này
+                                        </h3>
+                                        <div className="text-[14px] text-gray-600 leading-relaxed font-medium bg-gray-50 p-4 rounded-xl">
+                                            {privacy === 'public' ? 'Mọi người đều có thể tham gia và xem các cuộc thảo luận sôi nổi tại đây.' : privacy === 'private' ? 'Không gian kín đáo, chỉ dành cho các thành viên được phê duyệt.' : 'Hãy chọn quyền riêng tư để thiết lập không gian cho nhóm.'}
                                         </div>
                                     </div>
                                 </div>
                             )}
-
                         </div>
                     </div>
                 </div>

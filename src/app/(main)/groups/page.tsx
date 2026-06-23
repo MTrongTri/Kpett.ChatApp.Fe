@@ -1,406 +1,442 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Monitor, Smartphone, Image as ImageIcon, UserPlus, Smile, Globe2, Lock, X, Loader2, Users, Sparkles } from 'lucide-react';
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Globe2,
+  Lock,
+  Loader2,
+  Users,
+  Plus,
+  Search,
+  Crown,
+  Shield,
+  UserCheck,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
-import { getFriendsWithFilter } from "@/services/friend.service";
-import { createGroup } from "@/services/group.service";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { UserProfile } from "@/types/user";
-import { UserAvatar } from "@/components/user/user-avatar";
+import { formatCompactNumber } from "@/lib/format-number-utils";
+import { cn } from "@/lib/utils";
+import { getMyGroups, searchGroups } from "@/services/group.service";
+import type { MyGroupItem, SearchGroupItem } from "@/types/group";
+
+// ── Helpers ──
+
+function getPrivacyLabel(privacy: number | string) {
+  if (privacy === 0 || privacy === "public") return "Công khai";
+  if (privacy === 1 || privacy === "private") return "Riêng tư";
+  return "Ẩn";
+}
+
+function PrivacyIcon({ privacy, className }: { privacy: number | string; className?: string }) {
+  if (privacy === 0 || privacy === "public") {
+    return <Globe2 size={14} className={cn("text-emerald-500", className)} />;
+  }
+  return <Lock size={14} className={cn("text-amber-500", className)} />;
+}
+
+function getRoleBadge(role: number) {
+  switch (role) {
+    case 2:
+      return { label: "Quản trị", icon: Crown, color: "text-amber-600 bg-amber-50 border-amber-100" };
+    case 1:
+      return { label: "Kiểm duyệt", icon: Shield, color: "text-blue-600 bg-blue-50 border-blue-100" };
+    default:
+      return { label: "Thành viên", icon: UserCheck, color: "text-gray-600 bg-gray-50 border-gray-100" };
+  }
+}
+
+function GroupAvatar({ name, avatarUrl, className }: { name: string | null; avatarUrl: string | null; className?: string }) {
+  if (avatarUrl) {
+    return (
+      <div className={cn("shrink-0 overflow-hidden rounded-2xl", className)}>
+        <img src={avatarUrl} alt={name || "Group"} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+
+  const initial = (name || "G").charAt(0).toUpperCase();
+  return (
+    <div
+      className={cn(
+        "shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold shadow-sm",
+        className,
+      )}
+    >
+      <span className="text-lg">{initial}</span>
+    </div>
+  );
+}
+
+// ── Stat Card ──
+
+function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent: string }) {
+  return (
+    <div className="border-border bg-card flex flex-col justify-between rounded-3xl border p-5 shadow-sm min-h-[7rem]">
+      <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", accent)}>
+        {icon}
+      </div>
+      <div className="mt-3 space-y-0.5">
+        <div className="text-2xl font-bold tracking-tight text-foreground">
+          {formatCompactNumber(value)}
+        </div>
+        <div className="text-sm font-semibold text-foreground">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── My Group Card ──
+
+function MyGroupCard({ group }: { group: MyGroupItem }) {
+  const role = getRoleBadge(group.myRole);
+  const RoleIcon = role.icon;
+
+  return (
+    <Link
+      href={`/groups/${group.id}`}
+      className="group border-border hover:bg-muted/30 flex items-center gap-4 rounded-3xl border p-4 transition-all hover:shadow-sm"
+    >
+      <GroupAvatar name={group.name} avatarUrl={group.avatarUrl} className="h-14 w-14" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold text-foreground group-hover:text-primary transition-colors">
+          {group.name || "Nhóm không tên"}
+        </p>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Users size={12} />
+            {formatCompactNumber(group.memberCount)} thành viên
+          </span>
+          {group.unreadPostCount > 0 && (
+            <>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+              <span className="font-medium text-primary">
+                {group.unreadPostCount} bài mới
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold", role.color)}>
+          <RoleIcon size={12} />
+          {role.label}
+        </span>
+        <ArrowRight size={16} className="text-muted-foreground/40 group-hover:text-primary transition-colors" />
+      </div>
+    </Link>
+  );
+}
+
+// ── Search Group Card ──
+
+function SearchGroupCard({ group }: { group: SearchGroupItem }) {
+  return (
+    <Link
+      href={`/groups/${group.id}`}
+      className="group border-border hover:bg-muted/30 flex items-center gap-4 rounded-3xl border p-4 transition-all hover:shadow-sm"
+    >
+      <GroupAvatar name={group.name} avatarUrl={group.avatarUrl} className="h-12 w-12" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+          {group.name || "Nhóm không tên"}
+        </p>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <PrivacyIcon privacy={group.privacy} />
+          <span>{getPrivacyLabel(group.privacy)}</span>
+          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+          <span>{formatCompactNumber(group.memberCount)} thành viên</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {group.isMember ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            <UserCheck size={12} />
+            Đã tham gia
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary">
+            Xem nhóm
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+// ── Skeleton ──
+
+function GroupCardSkeleton() {
+  return (
+    <div className="border-border flex items-center gap-4 rounded-3xl border p-4 animate-pulse">
+      <div className="h-14 w-14 rounded-2xl bg-muted" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="h-4 w-40 rounded bg-muted" />
+        <div className="h-3 w-28 rounded bg-muted" />
+      </div>
+      <div className="h-7 w-20 rounded-full bg-muted" />
+    </div>
+  );
+}
+
+// ── Main Page ──
 
 export default function GroupsPage() {
-    const router = useRouter();
-    const [groupName, setGroupName] = useState('');
-    const [privacy, setPrivacy] = useState('');
-    const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
-    const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
-    const privacyDropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const [keyword, setKeyword] = useState("");
+  const debouncedKeyword = useDebounce(keyword, 350);
 
-    const [friendSearch, setFriendSearch] = useState('');
-    const debouncedFriendSearch = useDebounce(friendSearch, 300);
-    const [selectedFriends, setSelectedFriends] = useState<UserProfile[]>([]);
-    const [isFriendInputFocused, setIsFriendInputFocused] = useState(false);
+  // ── Fetch my groups ──
+  const {
+    data: myGroupsData,
+    isLoading: isMyGroupsLoading,
+  } = useQuery({
+    queryKey: ["my-groups"],
+    queryFn: () => getMyGroups(),
+    enabled: !!user,
+    staleTime: 60 * 1000,
+  });
 
-    const { data: friendsData, isLoading: isSearchingFriends } = useQuery({
-        queryKey: ['friends-search', debouncedFriendSearch],
-        queryFn: () => getFriendsWithFilter({ search: debouncedFriendSearch, cursor: null, limit: 10 }),
-    });
+  const myGroups: MyGroupItem[] = myGroupsData?.items ?? [];
 
-    const friendSuggestions = friendsData?.items?.filter(friend => !selectedFriends.some(selected => selected.id === friend.id)) || [];
+  // ── Fetch search results ──
+  const {
+    data: searchData,
+    isLoading: isSearching,
+  } = useQuery({
+    queryKey: ["groups-search", debouncedKeyword],
+    queryFn: () => searchGroups({ keyword: debouncedKeyword, pageSize: 12 }),
+    enabled: debouncedKeyword.trim().length >= 2,
+    staleTime: 60 * 1000,
+  });
 
-    const { mutate: createGroupMutation, isPending: isCreatingGroup } = useMutation({
-        mutationFn: (data: any) => createGroup(data),
-        onSuccess: (data) => {
-            toast.success("Tạo nhóm thành công!");
-            router.push(`/groups/${data.id}`);
-        },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Đã có lỗi xảy ra khi tạo nhóm");
-        }
-    });
+  const searchResults: SearchGroupItem[] = searchData?.items ?? [];
 
-    const handleCreateGroup = () => {
-        if (!groupName || !privacy || isCreatingGroup) return;
+  // ── Stats ──
+  const adminGroups = myGroups.filter((g) => g.myRole === 2).length;
+  const totalGroups = myGroups.length;
 
-        createGroupMutation({
-            name: groupName,
-            type: privacy,
-            language: "vi",
-            rules: []
-        });
-    };
-
-    useEffect(() => {
-
-        function handleClickOutside(event: MouseEvent) {
-            if (privacyDropdownRef.current && !privacyDropdownRef.current.contains(event.target as Node)) {
-                setIsPrivacyDropdownOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
-    // moc data user
-    const currentUser = {
-        name: "Quang Du",
-        role: "Quản trị viên",
-        avatarUrl: "https://github.com/shadcn.png" // placeholder avatar
-    };
-
+  if (!user) {
     return (
-        <div className="flex h-screen w-full bg-[#fafafa] overflow-hidden font-sans pt-[58px]">
-            {/* CỘT BÊN TRÁI - FORM TẠO NHÓM */}
-            <div className="w-[380px] bg-white border-r border-indigo-50 flex flex-col h-full shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex-shrink-0">
-                {/* Header */}
-                <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center gap-2 text-indigo-600 mb-3">
-                        <div className="p-2 bg-indigo-50 rounded-xl">
-                            <Users size={20} className="text-indigo-600" />
-                        </div>
-                        <span className="text-sm font-semibold tracking-wide uppercase">Cộng đồng Kpett</span>
-                    </div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Tạo nhóm mới</h1>
-                    <p className="text-sm text-gray-500 mt-2">Xây dựng cộng đồng của riêng bạn trên Kpett.</p>
-                </div>
-
-                <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                    {/* User Info */}
-                    <div className="flex items-center gap-4 mb-8 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm" />
-                        <div>
-                            <div className="font-bold text-gray-900 text-[15px]">{currentUser.name}</div>
-                            <div className="text-[13px] text-gray-500 font-medium">Quản trị viên nhóm</div>
-                        </div>
-                    </div>
-
-                    {/* Form */}
-                    <form className="space-y-6">
-                        {/* Tên nhóm */}
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Tên nhóm</label>
-                            <input
-                                type="text"
-                                value={groupName}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                className={`w-full px-4 py-3.5 bg-gray-50/50 border rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${groupName ? 'border-indigo-500' : 'border-gray-200'}`}
-                                placeholder="Nhập tên nhóm của bạn..."
-                                required
-                            />
-                        </div>
-
-                        {/* Quyền riêng tư */}
-                        <div className="space-y-1.5 relative" ref={privacyDropdownRef}>
-                            <label className="text-sm font-bold text-gray-700 ml-1">Quyền riêng tư</label>
-                            <div
-                                onClick={() => setIsPrivacyDropdownOpen(!isPrivacyDropdownOpen)}
-                                className={`w-full px-4 py-3 bg-gray-50/50 border rounded-2xl cursor-pointer flex items-center justify-between transition-all ${isPrivacyDropdownOpen ? 'ring-2 ring-indigo-500/20 border-indigo-500 bg-white' : 'border-gray-200 hover:border-indigo-300'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${privacy ? 'bg-indigo-100' : 'bg-gray-200'}`}>
-                                        {privacy === 'public' ? <Globe2 size={20} className="text-indigo-600" /> : privacy === 'private' ? <Lock size={20} className="text-indigo-600" /> : <Globe2 size={20} className="text-gray-400" />}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        {!privacy ? (
-                                            <span className="text-[14px] text-gray-500 font-medium">
-                                                Chọn quyền riêng tư
-                                            </span>
-                                        ) : (
-                                            <span className="text-[15px] font-bold text-gray-900">
-                                                {privacy === 'public' ? 'Công khai' : 'Riêng tư'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isPrivacyDropdownOpen ? 'rotate-180 text-indigo-500' : 'text-gray-400'}`}><path d="m6 9 6 6 6-6" /></svg>
-                            </div>
-
-                            {/* Dropdown Menu */}
-                            {isPrivacyDropdownOpen && (
-                                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] z-50 py-2 overflow-hidden">
-                                    {/* Option Công khai */}
-                                    <div
-                                        onClick={() => { setPrivacy('public'); setIsPrivacyDropdownOpen(false); }}
-                                        className={`flex items-start gap-4 p-3.5 cursor-pointer mx-2 rounded-xl transition-all ${privacy === 'public' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
-                                    >
-                                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-0.5 border border-gray-100">
-                                            <Globe2 size={20} className="text-indigo-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-bold text-[15px] text-gray-900">Công khai</div>
-                                            <div className="text-[13px] text-gray-500 mt-1 leading-relaxed">
-                                                Bất kỳ ai cũng có thể tìm thấy và xem nội dung trong nhóm.
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-center mt-2 shrink-0">
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${privacy === 'public' ? 'border-indigo-600' : 'border-gray-300'}`}>
-                                                {privacy === 'public' && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Option Riêng tư */}
-                                    <div
-                                        onClick={() => { setPrivacy('private'); setIsPrivacyDropdownOpen(false); }}
-                                        className={`flex items-start gap-4 p-3.5 cursor-pointer mx-2 rounded-xl transition-all ${privacy === 'private' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
-                                    >
-                                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-0.5 border border-gray-100">
-                                            <Lock size={20} className="text-indigo-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-bold text-[15px] text-gray-900">Riêng tư</div>
-                                            <div className="text-[13px] text-gray-500 mt-1 leading-relaxed">
-                                                Chỉ thành viên mới có thể xem nội dung và những người trong nhóm.
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-center mt-2 shrink-0">
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${privacy === 'private' ? 'border-indigo-600' : 'border-gray-300'}`}>
-                                                {privacy === 'private' && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Mời bạn bè */}
-                        <div className="space-y-1.5 relative">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Mời bạn bè (Tùy chọn)</label>
-
-                            {/* Selected Friends Chips */}
-                            {selectedFriends.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {selectedFriends.map(friend => (
-                                        <div key={friend.id} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 pl-1.5 pr-2.5 py-1.5 rounded-full text-[13px] font-semibold text-indigo-700 animate-in fade-in zoom-in duration-200">
-                                            <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-6 h-6 border border-white shadow-sm" />
-                                            <span>{friend.displayName || friend.username}</span>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedFriends(prev => prev.filter(p => p.id !== friend.id));
-                                                }}
-                                                className="text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100/50 rounded-full p-0.5 transition-colors"
-                                            >
-                                                <X size={14} strokeWidth={3} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={friendSearch}
-                                    onChange={(e) => setFriendSearch(e.target.value)}
-                                    onFocus={() => setIsFriendInputFocused(true)}
-                                    onBlur={() => setTimeout(() => setIsFriendInputFocused(false), 200)}
-                                    className="w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-900 transition-all placeholder:text-gray-400"
-                                    placeholder="Tìm kiếm bạn bè..."
-                                />
-                                {isSearchingFriends && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <Loader2 size={18} className="animate-spin text-indigo-500" />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Dropdown Suggestions */}
-                            {isFriendInputFocused && (
-                                <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.08)] z-50 max-h-[250px] overflow-y-auto py-2">
-                                    {friendSuggestions.length > 0 ? (
-                                        friendSuggestions.map(friend => (
-                                            <div
-                                                key={friend.id}
-                                                onClick={() => {
-                                                    setSelectedFriends(prev => [...prev, friend]);
-                                                    setFriendSearch('');
-                                                }}
-                                                className="flex items-center gap-3 p-2.5 mx-2 hover:bg-indigo-50 rounded-xl cursor-pointer transition-colors"
-                                            >
-                                                <UserAvatar user={{ ...friend, id: friend.id, username: friend.username, displayName: friend.displayName, avatarUrl: friend.avatarUrl }} className="w-9 h-9 shadow-sm border border-gray-100" />
-                                                <span className="text-[14px] font-bold text-gray-800">{friend.displayName || friend.username}</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="p-4 text-[14px] text-gray-500 text-center font-medium">
-                                            {isSearchingFriends ? "Đang tìm kiếm..." : "Không tìm thấy bạn bè"}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </form>
-                </div>
-
-                {/* Footer Button */}
-                <div className="p-6 border-t border-gray-100 bg-white/80 backdrop-blur-md shrink-0">
-                    <button
-                        onClick={handleCreateGroup}
-                        disabled={!groupName || !privacy || isCreatingGroup}
-                        className={`w-full py-3.5 rounded-2xl font-bold text-[15px] transition-all duration-300 flex justify-center items-center shadow-lg hover:shadow-xl hover:-translate-y-0.5 ${(!groupName || !privacy || isCreatingGroup)
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none hover:shadow-none hover:translate-y-0'
-                            : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-indigo-500/30'
-                            }`}
-                    >
-                        {isCreatingGroup ? (
-                            <Loader2 size={18} className="animate-spin mr-2" />
-                        ) : (
-                            <Sparkles size={18} className="mr-2" />
-                        )}
-                        {isCreatingGroup ? 'Đang tạo...' : 'Tạo Nhóm Kpett'}
-                    </button>
-                </div>
-            </div>
-
-            {/* CỘT BÊN PHẢI - LIVE PREVIEW */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-indigo-50/30">
-                {/* Header Preview */}
-                <div className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-lg border-b border-white shadow-sm z-0 shrink-0">
-                    <div className="font-bold text-[15px] text-indigo-900 flex items-center gap-2">
-                        <Monitor size={18} className="text-indigo-500" />
-                        Giao diện xem trước
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl shadow-sm border border-indigo-100">
-                        <button
-                            onClick={() => setViewMode('desktop')}
-                            className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'desktop' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <Monitor size={18} />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('mobile')}
-                            className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'mobile' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <Smartphone size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Preview Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start custom-scrollbar">
-                    {/* Preview Card */}
-                    <div className={`bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white overflow-hidden transition-all duration-500 ease-out flex flex-col ${viewMode === 'desktop' ? 'w-full max-w-[1000px]' : 'w-[400px]'}`}>
-
-                        {/* Cover Image Placeholder */}
-                        <div className="h-[280px] md:h-[320px] bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 relative overflow-hidden flex flex-col items-center justify-center m-3 md:m-4 rounded-[1.5rem] shadow-inner">
-                            {/* Decorative elements */}
-                            <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
-                                <div className="absolute -top-24 -right-24 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-                                <div className="absolute bottom-10 -left-10 w-48 h-48 bg-white rounded-full blur-2xl"></div>
-                            </div>
-                            <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 mb-4 z-10">
-                                <ImageIcon className="text-white w-12 h-12" />
-                            </div>
-                            <p className="text-white/90 font-bold text-lg tracking-wide shadow-sm z-10">Ảnh bìa nhóm (Tùy chỉnh sau)</p>
-                        </div>
-
-                        {/* Group Header Info */}
-                        <div className="px-6 md:px-10 pt-2 pb-6 border-b border-gray-100">
-                            <h2 className="text-[32px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-700 mb-2 leading-tight">
-                                {groupName || 'Tên nhóm của bạn'}
-                            </h2>
-                            <div className="flex items-center text-gray-500 text-[15px] gap-2 mb-6 font-medium">
-                                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-gray-700">
-                                    {privacy === 'public' ? <Globe2 size={16} className="text-indigo-500" /> : privacy === 'private' ? <Lock size={16} className="text-purple-500" /> : <Lock size={16} className="text-gray-400" />}
-                                    {privacy === 'public' ? 'Công khai' : privacy === 'private' ? 'Riêng tư' : 'Chưa thiết lập'}
-                                </span>
-                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                <span className="text-gray-700 font-bold">1 thành viên</span>
-                            </div>
-
-                            {/* Navigation Tabs */}
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                {['Trang chủ', 'Giới thiệu', 'Thảo luận', 'Thành viên'].map((tab, idx) => (
-                                    <button key={tab} className={`px-5 py-2.5 font-bold text-[14px] rounded-xl whitespace-nowrap transition-all ${idx === 0 ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Content Body */}
-                        <div className="bg-gray-50/50 p-6 md:p-8 flex-1 flex gap-6 flex-col md:flex-row justify-center">
-
-                            {/* Left Col (Post Composer) */}
-                            <div className="flex-1 max-w-[600px] flex flex-col gap-6">
-                                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100">
-                                    <div className="flex gap-3 mb-4">
-                                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white" />
-                                        <div className="flex-1 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors rounded-2xl px-5 py-3 text-gray-500 text-[15px] cursor-pointer flex items-center font-medium">
-                                            Chia sẻ điều gì đó với nhóm...
-                                        </div>
-                                    </div>
-                                    <div className="border-t border-gray-100 pt-3 flex justify-between px-1">
-                                        <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 font-bold text-[14px] py-2 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors">
-                                            <ImageIcon size={20} className="text-green-500" /> Ảnh/Video
-                                        </button>
-                                        <button className="flex-1 flex items-center justify-center gap-2 text-gray-600 font-bold text-[14px] py-2 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors">
-                                            <Smile size={20} className="text-yellow-500" /> Cảm xúc
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Dummy Post */}
-                                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 opacity-60">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
-                                        <div className="space-y-2">
-                                            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
-                                            <div className="h-2 w-16 bg-gray-100 rounded animate-pulse"></div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 mb-4">
-                                        <div className="h-3 w-full bg-gray-100 rounded animate-pulse"></div>
-                                        <div className="h-3 w-4/5 bg-gray-100 rounded animate-pulse"></div>
-                                    </div>
-                                    <div className="h-40 w-full bg-gray-50 rounded-xl animate-pulse"></div>
-                                </div>
-                            </div>
-
-                            {/* Right Col (About Widget) */}
-                            {viewMode === 'desktop' && (
-                                <div className="w-[320px] hidden lg:block space-y-6">
-                                    <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100">
-                                        <h3 className="font-extrabold text-[16px] mb-4 text-gray-900 flex items-center gap-2">
-                                            Về nhóm này
-                                        </h3>
-                                        <div className="text-[14px] text-gray-600 leading-relaxed font-medium bg-gray-50 p-4 rounded-xl">
-                                            {privacy === 'public' ? 'Mọi người đều có thể tham gia và xem các cuộc thảo luận sôi nổi tại đây.' : privacy === 'private' ? 'Không gian kín đáo, chỉ dành cho các thành viên được phê duyệt.' : 'Hãy chọn quyền riêng tư để thiết lập không gian cho nhóm.'}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div className="mt-14.5 flex min-h-[calc(100vh-5rem)] items-center justify-center px-4">
+        <div className="border-border bg-card max-w-md rounded-3xl border p-8 text-center shadow-sm">
+          <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <Users size={26} />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Nhóm cộng đồng</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Đăng nhập để xem nhóm của bạn, tham gia các cộng đồng mới và tạo
+            nhóm riêng.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <Button asChild className="rounded-full px-6">
+              <Link href="/login">Đăng nhập</Link>
+            </Button>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="mt-14.5 min-h-[calc(100vh-5rem)] bg-background">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6">
+
+        {/* ── Hero Header ── */}
+        <section className="space-y-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+                <Users size={14} />
+                Groups Hub
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                Nhóm cộng đồng của bạn
+              </h1>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                Quản lý nhóm hiện tại, khám phá cộng đồng mới hoặc tạo nhóm
+                riêng để kết nối mọi người trên Kpett.
+              </p>
+            </div>
+
+            <Button asChild className="rounded-full px-6 gap-2 shadow-sm">
+              <Link href="/groups/create">
+                <Plus size={18} />
+                Tạo nhóm mới
+              </Link>
+            </Button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <StatCard
+              icon={<Users size={20} />}
+              label="Tổng nhóm"
+              value={totalGroups}
+              accent="bg-primary/10 text-primary"
+            />
+            <StatCard
+              icon={<Crown size={20} />}
+              label="Nhóm quản trị"
+              value={adminGroups}
+              accent="bg-amber-100 text-amber-600"
+            />
+            <StatCard
+              icon={<TrendingUp size={20} />}
+              label="Bài mới"
+              value={myGroups.reduce((sum, g) => sum + g.unreadPostCount, 0)}
+              accent="bg-emerald-100 text-emerald-600"
+            />
+          </div>
+        </section>
+
+        {/* ── Content Grid ── */}
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
+
+          {/* ── Left Column: My Groups ── */}
+          <div className="space-y-6">
+            <div className="border-border bg-card rounded-3xl border p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    Nhóm của tôi
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tất cả nhóm mà bạn đang tham gia hoặc quản trị.
+                  </p>
+                </div>
+                <div className="relative w-full lg:max-w-sm">
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="Tìm nhóm..."
+                    className="h-11 rounded-full pl-10 pr-4"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {isMyGroupsLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <GroupCardSkeleton key={i} />
+                  ))
+                ) : myGroups.length === 0 ? (
+                  <div className="border-border bg-muted/20 rounded-3xl border border-dashed px-5 py-10 text-center">
+                    <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
+                      <Users size={24} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Bạn chưa tham gia nhóm nào
+                    </h3>
+                    <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                      Hãy khám phá các cộng đồng bên phải hoặc tạo nhóm mới để
+                      bắt đầu kết nối.
+                    </p>
+                    <Button asChild className="mt-4 rounded-full px-6 gap-2">
+                      <Link href="/groups/create">
+                        <Plus size={16} />
+                        Tạo nhóm đầu tiên
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  myGroups.map((group) => (
+                    <MyGroupCard key={group.id} group={group} />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right Column: Search / Discover ── */}
+          <div className="space-y-6">
+            {/* Quick Create Card */}
+            <div className="overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/5 via-card to-card p-5 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Sparkles size={22} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-bold text-foreground">
+                    Tạo nhóm Kpett
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Xây dựng cộng đồng của riêng bạn, mời bạn bè và chia sẻ
+                    nội dung cùng nhau.
+                  </p>
+                  <Button asChild variant="outline" className="mt-3 rounded-full px-5 gap-2" size="sm">
+                    <Link href="/groups/create">
+                      <Plus size={14} />
+                      Bắt đầu tạo
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Search / Discover Section */}
+            <div className="border-border bg-card rounded-3xl border p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    Khám phá nhóm
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tìm kiếm và tham gia cộng đồng trên toàn hệ thống.
+                  </p>
+                </div>
+                {debouncedKeyword.trim().length >= 2 && (
+                  <div className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground shrink-0">
+                    Từ khóa: {debouncedKeyword}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {debouncedKeyword.trim().length < 2 ? (
+                  <div className="border-border bg-muted/20 rounded-3xl border border-dashed px-5 py-8 text-center">
+                    <div className="bg-primary/10 text-primary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl">
+                      <Search size={20} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Nhập ít nhất 2 ký tự ở ô tìm kiếm phía trên để tìm nhóm
+                      trên toàn hệ thống.
+                    </p>
+                  </div>
+                ) : isSearching ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <GroupCardSkeleton key={i} />
+                  ))
+                ) : searchResults.length === 0 ? (
+                  <div className="border-border bg-muted/20 rounded-3xl border border-dashed px-5 py-8 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Không tìm thấy nhóm phù hợp với từ khóa &quot;{debouncedKeyword}&quot;.
+                    </p>
+                  </div>
+                ) : (
+                  searchResults.map((group) => (
+                    <SearchGroupCard key={group.id} group={group} />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }

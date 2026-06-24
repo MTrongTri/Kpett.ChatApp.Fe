@@ -33,6 +33,7 @@ export interface PostModalProps {
   onOpenChange: (open: boolean) => void;
   mode: PostEditorMode;
   postId?: string | null;
+  groupId?: string | null;
 }
 
 const steps = [
@@ -46,6 +47,7 @@ export default function PostEditor({
   onOpenChange,
   mode,
   postId,
+  groupId,
 }: PostModalProps) {
   const isEdit = mode === "edit";
   const [step, setStep] = useState(0);
@@ -96,26 +98,37 @@ export default function PostEditor({
 
   const canSubmit = (content.trim().length > 0 || media.length > 0) && !isFetchingSWR;
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     setSub(true);
     try {
       if (mode === "create") {
-        const newPost = await createPost({ content, privacy, media });
-
-        queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
-          { queryKey: ["feed"] },
-          (oldData) => {
-            if (!oldData || oldData.pages.length === 0) return oldData;
-
-            const newPages = [...oldData.pages];
-            newPages[0] = {
-              ...newPages[0],
-              items: [newPost, ...newPages[0].items],
-            };
-
-            return { ...oldData, pages: newPages };
-          }
-        );
+        let newPost;
+        if (groupId) {
+          const { createGroupPost } = await import("@/services/group.service");
+          newPost = await createGroupPost(groupId, { content, privacy, media });
+          
+          queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
+            { queryKey: ["group-posts", groupId] },
+            (oldData) => {
+              if (!oldData || oldData.pages.length === 0) return oldData;
+              const newPages = [...oldData.pages];
+              newPages[0] = { ...newPages[0], items: [newPost, ...newPages[0].items] };
+              return { ...oldData, pages: newPages };
+            }
+          );
+        } else {
+          newPost = await createPost({ content, privacy, media });
+          
+          queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
+            { queryKey: ["feed"] },
+            (oldData) => {
+              if (!oldData || oldData.pages.length === 0) return oldData;
+              const newPages = [...oldData.pages];
+              newPages[0] = { ...newPages[0], items: [newPost, ...newPages[0].items] };
+              return { ...oldData, pages: newPages };
+            }
+          );
+        }
 
       } else {
         // Logic dành cho Update (Giữ nguyên)

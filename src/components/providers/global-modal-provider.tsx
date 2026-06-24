@@ -58,6 +58,7 @@ export function GlobalModalProvider() {
                     }}
                     mode={postEditorModal.mode}
                     postId={postEditorModal.postId}
+                    groupId={postEditorModal.groupId}
                 />
             )}
 

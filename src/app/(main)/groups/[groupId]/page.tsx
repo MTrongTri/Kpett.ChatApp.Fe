@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+import { openPostEditorModal } from "@/store/features/modal-slice";
+import PostCard from "@/app/(main)/components/posts/post-card";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -31,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { formatRelativeTime } from "@/lib/format-date-utils";
-import { getGroupDetailById, joinGroup, leaveGroup } from "@/services/group.service";
+import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts } from "@/services/group.service";
 import type { GroupDetailResponse } from "@/types/group";
 
 // ── Tab Types ──
@@ -108,12 +111,17 @@ function GroupDetailSkeleton() {
 
 // ── Placeholder Post ──
 
-function PostComposer({ user }: { user: any }) {
+function PostComposer({ user, groupId }: { user: any, groupId: string }) {
+  const dispatch = useDispatch();
+
   return (
     <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
       <div className="flex gap-3 mb-4">
         <UserAvatar user={user} className="h-11 w-11" />
-        <div className="flex-1 bg-muted/50 hover:bg-muted border border-border transition-colors rounded-2xl px-5 py-3 text-muted-foreground text-[15px] cursor-pointer flex items-center font-medium">
+        <div 
+          onClick={() => dispatch(openPostEditorModal({ mode: "create", groupId }))}
+          className="flex-1 bg-muted/50 hover:bg-muted border border-border transition-colors rounded-2xl px-5 py-3 text-muted-foreground text-[15px] cursor-pointer flex items-center font-medium"
+        >
           Chia sẻ điều gì đó với nhóm...
         </div>
       </div>
@@ -164,13 +172,51 @@ function PlaceholderPost() {
 // ── Tab Content ──
 
 function TabHome({ group, user }: { group: GroupDetailResponse; user: any }) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status
+  } = useInfiniteQuery({
+    queryKey: ["group-posts", group.id],
+    queryFn: ({ pageParam = null }: { pageParam: string | null }) => getGroupPosts(group.id, pageParam),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+
+  const posts = data?.pages.flatMap(page => page.items) || [];
+
   return (
     <div className="flex gap-6 flex-col lg:flex-row">
       {/* Main feed */}
       <div className="flex-1 min-w-0 space-y-4">
-        {user && group.isMember && <PostComposer user={user} />}
-        <PlaceholderPost />
-        <PlaceholderPost />
+        {user && group.isMember && <PostComposer user={user} groupId={group.id} />}
+        
+        {status === "pending" && (
+          <>
+            <PlaceholderPost />
+            <PlaceholderPost />
+          </>
+        )}
+
+        {status === "success" && posts.map(post => (
+          <PostCard key={post.id} post={post} />
+        ))}
+        
+        {status === "success" && posts.length === 0 && (
+           <div className="text-center text-muted-foreground py-10 bg-card rounded-3xl border border-border">
+             Chưa có bài viết nào trong nhóm này.
+           </div>
+        )}
+
+        {hasNextPage && (
+          <div className="flex justify-center mt-4">
+            <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage} variant="ghost" className="rounded-full">
+              {isFetchingNextPage ? <Loader2 className="animate-spin mr-2" /> : "Tải thêm"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
@@ -281,19 +327,55 @@ function TabAbout({ group }: { group: GroupDetailResponse }) {
 }
 
 function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any }) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status
+  } = useInfiniteQuery({
+    queryKey: ["group-posts", group.id],
+    queryFn: ({ pageParam = null }: { pageParam: string | null }) => getGroupPosts(group.id, pageParam),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+
+  const posts = data?.pages.flatMap(page => page.items) || [];
+
   return (
     <div className="max-w-2xl space-y-4">
-      {user && group.isMember && <PostComposer user={user} />}
+      {user && group.isMember && <PostComposer user={user} groupId={group.id} />}
 
-      <div className="border-border bg-muted/20 rounded-3xl border border-dashed px-5 py-10 text-center">
-        <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
-          <MessageCircle size={24} />
+      {status === "pending" && (
+        <>
+          <PlaceholderPost />
+          <PlaceholderPost />
+        </>
+      )}
+
+      {status === "success" && posts.map(post => (
+        <PostCard key={post.id} post={post} />
+      ))}
+
+      {status === "success" && posts.length === 0 && (
+        <div className="border-border bg-muted/20 rounded-3xl border border-dashed px-5 py-10 text-center">
+          <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <MessageCircle size={24} />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">Chưa có bài thảo luận nào</h3>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Hãy là người đầu tiên chia sẻ suy nghĩ với cộng đồng!
+          </p>
         </div>
-        <h3 className="text-lg font-semibold text-foreground">Chưa có bài thảo luận nào</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Hãy là người đầu tiên chia sẻ suy nghĩ với cộng đồng!
-        </p>
-      </div>
+      )}
+
+      {hasNextPage && (
+        <div className="flex justify-center mt-4">
+          <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage} variant="ghost" className="rounded-full">
+            {isFetchingNextPage ? <Loader2 className="animate-spin mr-2" /> : "Tải thêm"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

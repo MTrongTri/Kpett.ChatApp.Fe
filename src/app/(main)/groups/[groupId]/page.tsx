@@ -85,11 +85,11 @@ function GroupDetailSkeleton() {
     <div className="mt-14.5 min-h-[calc(100vh-5rem)] bg-background">
       <div className="mx-auto max-w-5xl">
         {/* Cover skeleton */}
-        <div className="h-[280px] md:h-[340px] bg-muted animate-pulse rounded-b-3xl" />
+        <div className="h-[200px] md:h-[260px] bg-muted animate-pulse rounded-b-3xl relative z-0" />
         {/* Header skeleton */}
-        <div className="px-4 md:px-8 -mt-8 space-y-4">
+        <div className="px-4 md:px-8 -mt-12 md:-mt-16 space-y-4 relative z-10">
           <div className="flex items-end gap-5">
-            <div className="h-24 w-24 rounded-2xl bg-muted border-4 border-background animate-pulse" />
+            <div className="h-24 w-24 md:h-32 md:w-32 rounded-2xl bg-muted border-4 border-background animate-pulse" />
             <div className="space-y-2 flex-1 pb-2">
               <div className="h-7 w-64 bg-muted rounded animate-pulse" />
               <div className="h-4 w-40 bg-muted rounded animate-pulse" />
@@ -399,9 +399,9 @@ export default function GroupDetailPage() {
       <div className="mx-auto max-w-5xl">
 
         {/* ── Cover Image ── */}
-        <div className="relative">
+        <div className="relative z-0">
           {group.avatarUrl ? (
-            <div className="h-[280px] md:h-[340px] overflow-hidden rounded-b-3xl">
+            <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl">
               <img
                 src={group.avatarUrl}
                 alt={`${group.name} cover`}
@@ -409,12 +409,12 @@ export default function GroupDetailPage() {
               />
             </div>
           ) : (
-            <div className="h-[280px] md:h-[340px] overflow-hidden rounded-b-3xl bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 relative">
+            <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 relative">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-10 -left-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-                <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-sm border border-white/20">
-                  <ImageIcon className="text-white/80 w-16 h-16" />
+                <div className="bg-white/10 p-6 md:p-8 rounded-[2rem] backdrop-blur-md border border-white/20 shadow-xl">
+                  <ImageIcon className="text-white/90 w-20 h-20 md:w-24 md:h-24" />
                 </div>
               </div>
             </div>
@@ -423,30 +423,30 @@ export default function GroupDetailPage() {
           {/* Back button */}
           <button
             onClick={() => router.push("/groups")}
-            className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors"
+            className="absolute top-4 left-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors z-10"
           >
             <ArrowLeft size={20} />
           </button>
 
           {/* Admin settings */}
           {isAdmin && (
-            <Link href={`/groups/${groupId}/manage`} className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors">
+            <Link href={`/groups/${groupId}/manage`} className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors z-10">
               <Settings size={20} />
             </Link>
           )}
         </div>
 
         {/* ── Group Header ── */}
-        <div className="px-4 md:px-8 pb-0">
-          <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-10 md:-mt-12">
+        <div className="px-4 md:px-8 pb-0 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12 md:-mt-16">
             {/* Avatar */}
-            <div className="shrink-0">
+            <div className="shrink-0 relative">
               {group.avatarUrl ? (
-                <div className="h-24 w-24 md:h-28 md:w-28 rounded-2xl overflow-hidden border-4 border-background shadow-lg">
+                <div className="h-28 w-28 md:h-32 md:w-32 rounded-2xl overflow-hidden border-4 border-background shadow-lg">
                   <img src={group.avatarUrl} alt={group.name} className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="h-24 w-24 md:h-28 md:w-28 rounded-2xl border-4 border-background shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="h-28 w-28 md:h-32 md:w-32 rounded-2xl border-4 border-background shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
                   {(group.name || "G").charAt(0).toUpperCase()}
                 </div>
               )}

@@ -55,9 +55,9 @@ export default function PostCard({ post }: PostCardProps) {
     <article className="border-0 md:border-border bg-card rounded-xl md:border transition-all duration-200">
 
       {/* ── HEADER ── */}
-      <div className="flex items-center justify-between gap-3 pr-4 pt-1">
+      <div className="flex items-start justify-between gap-3 pr-4 pt-1">
         <div className="flex-1 min-w-0 px-3">
-          <PostHeader author={post.author} postCreatedAt={post.createdAt} />
+          <PostHeader author={post.author} postCreatedAt={post.createdAt} group={post.group} />
         </div>
 
         <DropdownMenu>
@@ -92,30 +92,34 @@ export default function PostCard({ post }: PostCardProps) {
       />
 
       {/* ── ACTIONS ── */}
-      <div className="flex items-center gap-1 px-3 py-2.5">
+      {post.status === "pending" ? (
+        <div className="px-4 py-3 bg-amber-500/10 border-t border-amber-500/20 text-amber-600 text-sm font-medium flex items-center justify-center gap-2 rounded-b-xl">
+           Bài viết đang chờ quản trị viên phê duyệt
+        </div>
+      ) : (
+        <div className="flex items-center gap-1 px-3 py-2.5">
+          {/* Nút Like */}
+          <LikeButton
+            postId={post.id}
+            initialLiked={post.viewerContext.isLiked ?? false}
+            initialLikeCount={post.metrics.likeCount}
+          />
 
-        {/* Nút Like */}
-        <LikeButton
-          postId={post.id}
-          initialLiked={post.viewerContext.isLiked ?? false}
-          initialLikeCount={post.metrics.likeCount}
-        />
+          {/* Nút Comment */}
+          <CommentButton
+            commentCount={post.metrics.commentCount}
+            onClick={handleOpenLightBox}
+          />
 
-        {/* Nút Comment */}
-        <CommentButton
-          commentCount={post.metrics.commentCount}
-          onClick={handleOpenLightBox}
-        />
+          <div className="flex-1" />
 
-        <div className="flex-1" />
-
-        {/* Nút Save */}
-        <SaveButton
-          postId={post.id}
-          initialSaved={post.viewerContext.isSaved ?? false}
-        />
-
-      </div>
+          {/* Nút Save */}
+          <SaveButton
+            postId={post.id}
+            initialSaved={post.viewerContext.isSaved ?? false}
+          />
+        </div>
+      )}
     </article>
   );
 }

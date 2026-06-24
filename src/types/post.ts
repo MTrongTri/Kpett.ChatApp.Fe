@@ -35,6 +35,15 @@ export interface Post {
   viewerContext: PostViewerContext;
   privacy: PrivacyLevel;
 
+  groupId: string | null;
+  status?: "approved" | "pending" | "rejected";
+  group?: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+    privacy: "public" | "private" | "hidden" | null;
+  } | null;
+
   createdAt: string;
   updatedAt?: string;
 }

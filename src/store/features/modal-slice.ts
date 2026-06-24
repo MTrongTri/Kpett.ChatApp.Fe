@@ -19,13 +19,14 @@ interface ModalState {
         isOpen: boolean;
         mode: PostEditorMode;
         postId: string | null;
+        groupId: string | null;
     };
 }
 
 const initialState: ModalState = {
     postLightBox: { isOpen: false, post: null, postId: null, autoScrollTarget: null },
     mediaLightBox: { isOpen: false, media: [], currentIndex: 0 },
-    postEditorModal: { isOpen: false, mode: "create", postId: null },
+    postEditorModal: { isOpen: false, mode: "create", postId: null, groupId: null },
 };
 
 export const modalSlice = createSlice({
@@ -67,16 +68,18 @@ export const modalSlice = createSlice({
         // Post Editor Modal
         openPostEditorModal: (
             state,
-            action: PayloadAction<{ mode: PostEditorMode; postId?: string | null }>
+            action: PayloadAction<{ mode: PostEditorMode; postId?: string | null; groupId?: string | null }>
         ) => {
             state.postEditorModal.isOpen = true;
             state.postEditorModal.mode = action.payload.mode;
             state.postEditorModal.postId = action.payload.postId || null;
+            state.postEditorModal.groupId = action.payload.groupId || null;
         },
         closePostEditorModal: (state) => {
             state.postEditorModal.isOpen = false;
             state.postEditorModal.mode = "create";
             state.postEditorModal.postId = null;
+            state.postEditorModal.groupId = null;
         },
 
         // 

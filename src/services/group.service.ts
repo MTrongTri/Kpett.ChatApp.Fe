@@ -90,3 +90,24 @@ export const leaveGroup = async (groupId: string): Promise<LeaveGroupResponse> =
     const response = await http.post(`${API_URL}/${groupId}/leave`);
     return response.data;
 };
+
+import { PaginatedData } from "@/types/common/api";
+import { CreatePostRequest, Post } from "@/types/post";
+
+// ── TẠO BÀI VIẾT NHÓM — POST /api/groups/{groupId}/posts ──
+export const createGroupPost = async (groupId: string, data: CreatePostRequest) => {
+    const response = await http.post(`${API_URL}/${groupId}/posts`, data);
+    return response.data;
+};
+
+// ── LẤY DANH SÁCH BÀI VIẾT NHÓM — GET /api/groups/{groupId}/posts ──
+export const getGroupPosts = async (groupId: string, cursor?: string | null, limit: number = 10): Promise<PaginatedData<Post>> => {
+    const response = await http.get(`${API_URL}/${groupId}/posts`, { params: { cursor, limit } });
+    return response.data;
+};
+
+// ── DUYỆT BÀI VIẾT NHÓM — PUT /api/groups/{groupId}/posts/{postId}/status ──
+export const moderateGroupPost = async (groupId: string, postId: string, status: "approved" | "pending" | "rejected") => {
+    const response = await http.put(`${API_URL}/${groupId}/posts/${postId}/status`, { status });
+    return response.data;
+};

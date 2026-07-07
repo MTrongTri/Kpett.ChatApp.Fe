@@ -83,7 +83,33 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
 
     const { notifyTyping, notifyStopTyping } = useTyping(conversationId, handleTypingChange);
 
-    const handleSend = async (content: string) => {
+    const handleSend = async (content: string, attachments?: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]) => {
+        const clientMessageId = crypto.randomUUID();
+        const hasAttachments = attachments && attachments.length > 0;
+
+        const optimisticMsg: MessageResponse = {
+            id: clientMessageId,
+            clientMessageId: clientMessageId,
+            senderId: user?.id || "",
+            senderName: user?.displayName || "",
+            type: hasAttachments ? "Text" : "Text",
+            content: content,
+            createdAt: new Date().toISOString(),
+            localStatus: "sending"
+        };
+
+        addMessageToCache(optimisticMsg);
+
+        try {
+            await chatService.sendMessage(conversationId, content, "Text", clientMessageId, attachments);
+            updateMessageStatus(clientMessageId, "sent");
+        } catch (error) {
+            console.error(error);
+            updateMessageStatus(clientMessageId, "error");
+        }
+    };
+
+    const handleSendAttachments = async (content: string, attachments: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]) => {
         const clientMessageId = crypto.randomUUID();
 
         const optimisticMsg: MessageResponse = {
@@ -94,15 +120,50 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
             type: "Text",
             content: content,
             createdAt: new Date().toISOString(),
-            localStatus: "sending"
+            localStatus: "sending",
+            attachments: attachments.map((a, i) => ({
+                id: `${clientMessageId}-att-${i}`,
+                messageId: clientMessageId,
+                type: a.type,
+                url: a.url,
+                publicId: a.publicId,
+                filename: a.filename,
+                fileSize: a.fileSize,
+            })),
         };
 
         addMessageToCache(optimisticMsg);
 
         try {
-            await chatService.sendMessage(conversationId, content, "Text", clientMessageId);
+            await chatService.sendMessage(conversationId, content, "Text", clientMessageId, attachments);
             updateMessageStatus(clientMessageId, "sent");
+        } catch (error) {
+            console.error(error);
+            updateMessageStatus(clientMessageId, "error");
+        }
+    };
 
+    const handleSendSticker = async (stickerUrl: string) => {
+        const clientMessageId = crypto.randomUUID();
+
+        const optimisticMsg: MessageResponse = {
+            id: clientMessageId,
+            clientMessageId: clientMessageId,
+            senderId: user?.id || "",
+            senderName: user?.displayName || "",
+            type: "Sticker",
+            content: stickerUrl,
+            createdAt: new Date().toISOString(),
+            localStatus: "sending"
+        };
+
+        addMessageToCache(optimisticMsg);
+
+        const attachment = { type: "sticker", url: stickerUrl };
+
+        try {
+            await chatService.sendMessage(conversationId, stickerUrl, "Sticker", clientMessageId, [attachment]);
+            updateMessageStatus(clientMessageId, "sent");
         } catch (error) {
             console.error(error);
             updateMessageStatus(clientMessageId, "error");
@@ -208,6 +269,8 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
             <TypingIndicator typers={typers} />
             <ChatInputArea
                 onSendMessage={handleSend}
+                onSendAttachments={handleSendAttachments}
+                onSendSticker={handleSendSticker}
                 onTyping={notifyTyping}
                 onStopTyping={notifyStopTyping}
             />

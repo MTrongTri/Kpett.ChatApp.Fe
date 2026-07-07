@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { uploadFileToCloudinary } from "@/services/media.service";
 import { StickerPicker } from "./sticker-picker";
+import { toast } from "sonner";
 
 interface AttachmentInfo {
   type: string;
@@ -96,6 +97,7 @@ export function ChatInputArea({
       }
     } catch (error) {
       console.error("[ChatInputArea] Upload image failed:", error);
+      toast.error("Tải ảnh lên thất bại. Vui lòng thử lại.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

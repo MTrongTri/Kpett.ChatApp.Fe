@@ -34,8 +34,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { formatRelativeTime } from "@/lib/format-date-utils";
-import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts } from "@/services/group.service";
+import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts, getGroupMembers } from "@/services/group.service";
 import type { GroupDetailResponse } from "@/types/group";
+import type { GroupMemberResponse } from "@/types/group-member";
 
 // ── Tab Types ──
 
@@ -182,7 +183,7 @@ function TabHome({ group, user }: { group: GroupDetailResponse; user: any }) {
     queryKey: ["group-posts", group.id],
     queryFn: ({ pageParam = null }: { pageParam: string | null }) => getGroupPosts(group.id, pageParam),
     initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
   });
 
   const posts = data?.pages.flatMap(page => page.items) || [];
@@ -337,7 +338,7 @@ function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any 
     queryKey: ["group-posts", group.id],
     queryFn: ({ pageParam = null }: { pageParam: string | null }) => getGroupPosts(group.id, pageParam),
     initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
   });
 
   const posts = data?.pages.flatMap(page => page.items) || [];
@@ -381,6 +382,23 @@ function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any 
 }
 
 function TabMembers({ group }: { group: GroupDetailResponse }) {
+  const { data: membersData, isLoading } = useQuery({
+    queryKey: ["group-members-public", group.id],
+    queryFn: () => getGroupMembers(group.id, { pageSize: 20 }),
+    enabled: !!group.id,
+    staleTime: 60 * 1000,
+  });
+
+  const members = membersData?.items ?? [];
+
+  function getRoleIcon(role: string) {
+    switch (role) {
+      case "admin": return <Crown size={14} className="text-amber-500" />;
+      case "moderator": return <Shield size={14} className="text-blue-500" />;
+      default: return null;
+    }
+  }
+
   return (
     <div className="max-w-2xl space-y-4">
       <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
@@ -394,12 +412,56 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
           </Button>
         </div>
 
-        <div className="border-border bg-muted/20 rounded-2xl border border-dashed px-5 py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Danh sách thành viên sẽ được hiển thị tại đây khi API member list
-            được tích hợp.
-          </p>
-        </div>
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 animate-pulse">
+                <div className="h-10 w-10 rounded-full bg-muted" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-4 w-32 rounded bg-muted" />
+                  <div className="h-3 w-20 rounded bg-muted" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : members.length === 0 ? (
+          <div className="border-border bg-muted/20 rounded-2xl border border-dashed px-5 py-8 text-center">
+            <p className="text-sm text-muted-foreground">Chưa có thành viên nào.</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {members.map((member) => (
+              <div key={member.userId} className="flex items-center gap-3 p-2.5 hover:bg-muted/30 rounded-xl transition-colors">
+                <UserAvatar
+                  user={{
+                    id: member.userId,
+                    username: member.username || "",
+                    displayName: member.displayName || member.username || "",
+                    avatarUrl: null,
+                  }}
+                  className="h-10 w-10"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    {member.displayName || member.username}
+                    {getRoleIcon(member.role)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">@{member.username}</p>
+                </div>
+                {member.role === "admin" && (
+                  <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">
+                    Quản trị
+                  </span>
+                )}
+                {member.role === "moderator" && (
+                  <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+                    Kiểm duyệt
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -482,7 +544,15 @@ export default function GroupDetailPage() {
 
         {/* ── Cover Image ── */}
         <div className="relative z-0">
-          {group.avatarUrl ? (
+          {group.coverImageUrl ? (
+            <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl">
+              <img
+                src={group.coverImageUrl}
+                alt={`${group.name} cover`}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : group.avatarUrl ? (
             <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl">
               <img
                 src={group.avatarUrl}

@@ -40,6 +40,7 @@ import {
 import { notificationService } from "@/services/notification.service";
 import { getMyStats, searchUsers } from "@/services/user.service";
 import { NotificationResponse } from "@/types/notification";
+import { PaginatedData } from "@/types/common/api";
 import { BaseUser, UserProfile } from "@/types/user";
 
 const FRIENDS_PAGE_SIZE = 12;
@@ -349,6 +350,19 @@ export default function FriendsPage() {
         } else {
           await friendRequestDecline(requestId);
         }
+
+        // Xoá notification khỏi cache ngay lập tức để button biến mất,
+        // tránh user click "Chấp nhận" lần 2 gây lỗi
+        queryClient.setQueryData<PaginatedData<NotificationResponse>>(
+          ["friends-activity"],
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              items: old.items.filter((item) => item.id !== notification.id),
+            };
+          },
+        );
 
         await Promise.allSettled([
           notificationService.markAsRead(notification.id),

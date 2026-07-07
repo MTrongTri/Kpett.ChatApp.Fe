@@ -9,7 +9,8 @@ import {
   Clapperboard,
   CalendarDays,
   Bookmark,
-  Users
+  Users,
+  Group,
 } from "lucide-react";
 
 // Tách interface để có thể tái sử dụng ở MobileMenu
@@ -26,7 +27,7 @@ export const NAV_TABS: NavTabItem[] = [
   { label: "Reels", href: "/reels", icon: <Clapperboard size={14} /> },
   // { label: "Sự kiện",   href: "/events",  icon: <CalendarDays size={14} /> },
   { label: "Lưu trữ", href: "/saved", icon: <Bookmark size={14} /> },
-  { label: "Nhóm", href: "/groups", icon: <Users size={14} /> },
+  { label: "Nhóm", href: "/groups", icon: <Group size={14} /> },
 ];
 
 export default function NavTabs() {

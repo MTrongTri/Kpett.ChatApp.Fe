@@ -73,17 +73,19 @@ export function useNotifications(isFetch: boolean = false) {
       queryClient.setQueryData(["notifications-unread"], (oldCount: number = 0) => {
         return oldCount + 1;
       });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+      const keysToInvalidate: unknown[][] = [["notifications"]];
 
       if (
         newNotification.type === "FriendRequestAccepted" ||
         newNotification.type === "FriendRequestReceived"
       ) {
-        void queryClient.invalidateQueries({
-          queryKey: ["user-profile", newNotification.actor?.username],
-        });
-        void queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+        keysToInvalidate.push(["user-profile", newNotification.actor?.username]);
       }
+
+      void Promise.all(
+        keysToInvalidate.map((key) => queryClient.invalidateQueries({ queryKey: key })),
+      );
     };
 
     connection.on("ReceiveNotification", handleReceiveNotification);

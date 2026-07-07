@@ -1,13 +1,16 @@
-"use client"; // Bắt buộc nếu dùng Next.js App Router
+"use client";
 import { Post } from "@/types/post";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface PostContentProps {
   content: string;
-  tags?: string[]
+  tags?: string[];
+  isNsfw?: boolean;
+  showNsfwContent?: boolean;
 }
 
-export default function PostContent({ content, tags }: PostContentProps) {
+export default function PostContent({ content, tags, isNsfw, showNsfwContent }: PostContentProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const MAX_LENGTH = 150;
@@ -15,7 +18,7 @@ export default function PostContent({ content, tags }: PostContentProps) {
   const isLongContent = content?.length > MAX_LENGTH;
 
   return (
-    <div className="text-foreground/65 text-[13.5px] leading-relaxed">
+    <div className={cn("text-foreground/65 text-[13.5px] leading-relaxed", isNsfw && !showNsfwContent && "blur-sm select-none")}>
       <div
         className={`wrap-break-word whitespace-pre-wrap ${!isExpanded && isLongContent ? "line-clamp-4" : ""
           }`}
@@ -33,7 +36,6 @@ export default function PostContent({ content, tags }: PostContentProps) {
         ))}
       </div>
 
-      {/* 3. Nút Xem thêm / Thu gọn */}
       {isLongContent && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}

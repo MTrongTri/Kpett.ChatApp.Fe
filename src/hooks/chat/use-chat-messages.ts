@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useRef } from "react";
 import {
     InfiniteData,
     useInfiniteQuery,
@@ -33,6 +33,7 @@ export function useChatMessages(
 ) {
     const queryClient = useQueryClient();
     const { connection, isConnected } = useSignalR();
+    const lastMarkedRef = useRef<string | null>(null);
 
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useInfiniteQuery({
@@ -254,6 +255,10 @@ export function useChatMessages(
         });
 
         if (!needsApiCall) return;
+
+        // Dedup: chỉ gọi markAsRead nếu chưa gọi cho conversation này
+        if (lastMarkedRef.current === conversationId) return;
+        lastMarkedRef.current = conversationId;
 
         chatService.markAsRead(conversationId).catch(() => undefined);
         queryClient.setQueryData<boolean>(

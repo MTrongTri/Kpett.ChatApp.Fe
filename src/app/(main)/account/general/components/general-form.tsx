@@ -62,6 +62,14 @@ export default function ProfileGeneralForm() {
   const queryClient = useQueryClient();
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   const { data: userProfile, isLoading, error } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => getMyProfile(),

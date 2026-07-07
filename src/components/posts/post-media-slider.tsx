@@ -8,14 +8,17 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useDispatch } from "react-redux";
+import { cn } from "@/lib/utils";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 interface PostMediaSliderProps {
     media: Media[];
+    isNsfw?: boolean;
+    showNsfwContent?: boolean;
 }
 
-export default function PostMediaSlider({ media }: PostMediaSliderProps) {
+export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: PostMediaSliderProps) {
     const [prevEl, setPrevEl] = useState<HTMLButtonElement | null>(null);
     const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
@@ -34,9 +37,11 @@ export default function PostMediaSlider({ media }: PostMediaSliderProps) {
 
     if (!media || media.length === 0) return null;
 
+    const isBlurred = isNsfw && !showNsfwContent;
+
     return (
         <div ref={ref} className="md:mx-4 md:mb-3">
-            <div className="border-border group relative h-100 w-full overflow-hidden md:rounded-xl border">
+            <div className={cn("border-border group relative h-100 w-full overflow-hidden md:rounded-xl border", isBlurred && "blur-xl select-none pointer-events-none")}>
                 <Swiper
                     modules={[Navigation, Pagination]}
                     pagination={{ clickable: true }}

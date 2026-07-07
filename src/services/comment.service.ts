@@ -30,6 +30,14 @@ export const deleteComment = async (commentId: string): Promise<Comment> => {
   return response.data;
 };
 
+export const likeComment = async (commentId: string): Promise<void> => {
+    await http.put(`/comments/${commentId}/likes`);
+};
+
+export const unlikeComment = async (commentId: string): Promise<void> => {
+    await http.delete(`/comments/${commentId}/likes`);
+};
+
 export const getCommentsByPostId = async (
   postId: string,
   parentCommentId: string | null,

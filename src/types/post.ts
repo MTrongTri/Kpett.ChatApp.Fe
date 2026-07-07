@@ -37,6 +37,7 @@ export interface Post {
 
   groupId: string | null;
   status?: "approved" | "pending" | "rejected";
+  isNsfw?: boolean;
   group?: {
     id: string;
     name: string | null;
@@ -65,5 +66,6 @@ export interface PostThumbnail {
 export interface CreatePostRequest {
   content?: string,
   privacy: string,
-  media: Media[]
+  media: Media[],
+  isNsfw?: boolean,
 }

@@ -11,8 +11,10 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/types/user";
 import { UserAvatar } from "@/components/user/user-avatar";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function CreateGroupPage() {
+    const { user } = useAuth();
     const router = useRouter();
     const [groupName, setGroupName] = useState('');
     const [privacy, setPrivacy] = useState('');
@@ -67,12 +69,7 @@ export default function CreateGroupPage() {
         };
     }, []);
 
-    // moc data user
-    const currentUser = {
-        name: "Quang Du",
-        role: "Quản trị viên",
-        avatarUrl: "https://github.com/shadcn.png" // placeholder avatar
-    };
+    if (!user) return null;
 
     return (
         <div className="flex h-screen w-full bg-[#fafafa] overflow-hidden font-sans pt-[58px]">
@@ -93,9 +90,9 @@ export default function CreateGroupPage() {
                 <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
                     {/* User Info */}
                     <div className="flex items-center gap-4 mb-8 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm" />
+                        <img src={user.avatarUrl ?? ""} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm" />
                         <div>
-                            <div className="font-bold text-gray-900 text-[15px]">{currentUser.name}</div>
+                            <div className="font-bold text-gray-900 text-[15px]">{user.displayName}</div>
                             <div className="text-[13px] text-gray-500 font-medium">Quản trị viên nhóm</div>
                         </div>
                     </div>
@@ -353,7 +350,7 @@ export default function CreateGroupPage() {
                             <div className="flex-1 max-w-[600px] flex flex-col gap-6">
                                 <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100">
                                     <div className="flex gap-3 mb-4">
-                                        <img src={currentUser.avatarUrl} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white" />
+                                        <img src={user.avatarUrl ?? ""} alt="Avatar" className="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white" />
                                         <div className="flex-1 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-colors rounded-2xl px-5 py-3 text-gray-500 text-[15px] cursor-pointer flex items-center font-medium">
                                             Chia sẻ điều gì đó với nhóm...
                                         </div>

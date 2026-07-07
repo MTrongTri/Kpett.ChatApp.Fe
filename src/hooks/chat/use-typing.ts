@@ -25,6 +25,11 @@ export function useTyping(
     });
 
     return () => {
+      if (stopTypingTimerRef.current) {
+        clearTimeout(stopTypingTimerRef.current);
+        stopTypingTimerRef.current = null;
+      }
+
       if (isCurrentlyTypingRef.current) {
         void connection.invoke("SendTyping", conversationId, false).catch(() => {});
       }

@@ -4,7 +4,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  Play
+  Play,
+  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -26,6 +27,8 @@ interface StepSettingsProps {
   media: Media[];
   allowComments: boolean;
   setAllowComments: (checked: boolean) => void;
+  isNsfw: boolean;
+  setIsNsfw: (checked: boolean) => void;
 }
 
 export default function StepSettings({
@@ -33,6 +36,8 @@ export default function StepSettings({
   media,
   allowComments,
   setAllowComments,
+  isNsfw,
+  setIsNsfw,
 }: StepSettingsProps) {
 
   const {
@@ -104,6 +109,31 @@ export default function StepSettings({
           className="data-[state=checked]:bg-primary"
         />
 
+      </div>
+
+      {/* 3. Cài đặt Nội dung nhạy cảm (18+) */}
+      <div className="border-border bg-secondary/20 hover:bg-secondary/30 flex items-center justify-between rounded-xl border p-4 transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="bg-background border-destructive/30 border rounded-lg p-2 shadow-sm">
+            <AlertTriangle className="text-destructive h-5 w-5" />
+          </div>
+          <div>
+            <Label
+              className="cursor-pointer text-sm font-medium"
+              onClick={() => setIsNsfw(!isNsfw)}
+            >
+              Nội dung nhạy cảm (18+)
+            </Label>
+            <div className="text-muted-foreground mt-0.5 text-xs">
+              Bài viết sẽ bị làm mờ và yêu cầu xác nhận tuổi trước khi xem
+            </div>
+          </div>
+        </div>
+        <Switch
+          checked={isNsfw}
+          onCheckedChange={setIsNsfw}
+          className="data-[state=checked]:bg-destructive"
+        />
       </div>
       <MediaLightbox
         isOpen={isOpenMediaLightBox}

@@ -1,3 +1,4 @@
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // GROUP MEMBER TYPES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -5,6 +6,28 @@
 export type GroupMemberRole = "member" | "moderator" | "admin";
 
 export type GroupMemberStatus = "active" | "pending" | "declined" | "left" | "kicked" | "blocked";
+
+export interface GroupMemberResponse {
+    memberId: string;
+    groupId: string;
+    userId: string;
+    username: string | null;
+    email: string | null;
+    displayName: string | null;
+    isVerified: boolean;
+    role: string;
+    status: string;
+    createdAt: string;
+    joinedAt: string | null;
+    updatedAt: string | null;
+}
+
+export interface GroupMemberListResponse {
+    items: GroupMemberResponse[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+}
 
 export interface JoinGroupResponse {
     groupId: string;
@@ -16,7 +39,5 @@ export interface JoinGroupResponse {
 }
 
 export interface LeaveGroupResponse {
-    // API chưa mô tả chi tiết response của leave, 
-    // tạm thời define type rỗng hoặc chứa data cơ bản nếu có
     success?: boolean;
 }

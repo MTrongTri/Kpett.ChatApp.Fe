@@ -15,13 +15,13 @@ export interface GroupRule {
 // ── 1. TẠO NHÓM — POST /api/groups ──
 
 export interface CreateGroupRequest {
-    name: string;                          // [BẮT BUỘC]
+    name: string;
     description?: string;
-    type?: string;                         // "public" | "private" | "hidden"  (mặc định: "public")
+    type?: string;
     avatarUrl?: string;
     coverImageUrl?: string;
-    language?: string;                     // mặc định: "vi"
-    rules?: string[];                      // Danh sách nội quy (mảng chuỗi)
+    language?: string;
+    rules?: string[];
 }
 
 export interface CreateGroupResponse {
@@ -37,7 +37,7 @@ export interface CreateGroupResponse {
 export interface UpdateGroupRequest {
     name?: string;
     description?: string;
-    privacy?: number;                      // 0=Public | 1=Private | 2=Hidden
+    type?: string;
     avatarUrl?: string;
     coverImageUrl?: string;
     language?: string;
@@ -49,12 +49,12 @@ export interface UpdateGroupResponse {
     name: string;
     avatarUrl: string | null;
     description: string | null;
-    type: string;                          // "public" | "private" | "hidden"
+    type: string;
     createdAt: string;
     createdByUserId: string | null;
     updatedAt: string | null;
     isMember: boolean;
-    myRole: string | null;                 // "admin" | "moderator" | "member" | null
+    myRole: string | null;
     memberCount: number;
 }
 
@@ -67,9 +67,9 @@ export interface UpdateGroupRulesRequest {
 
 export interface GroupSettingsResponse {
     groupId: string;
-    privacy: string;                       // "public" | "private" | "hidden"
-    whoCanPost: string;                    // "anyone" | "admin_mod" | "admin_only"
-    whoCanInvite: string;                  // "anyone" | "admin_mod" | "admin_only"
+    privacy: string;
+    whoCanPost: string;
+    whoCanInvite: string;
     postApproval: boolean;
     memberApproval: boolean;
     language: string;
@@ -102,13 +102,20 @@ export interface GroupDetailResponse {
     name: string;
     slug: string;
     avatarUrl: string | null;
+    coverImageUrl: string | null;
     description: string | null;
-    type: string;                          // "public" | "private" | "hidden"
+    type: string;
+    language: string;
+    whoCanPost: string;
+    whoCanInvite: string;
+    postApproval: boolean;
+    memberApproval: boolean;
+    rules: GroupRule[];
     createdAt: string;
     createdByUserId: string | null;
     updatedAt: string | null;
     isMember: boolean;
-    myRole: string | null;                 // "admin" | "moderator" | "member" | null
+    myRole: string | null;
     memberCount: number;
 }
 
@@ -117,9 +124,9 @@ export interface GroupDetailResponse {
 
 export interface SearchGroupRequest {
     keyword?: string;
-    type?: string;                         // "public" | "private" | "hidden"
+    type?: string;
     language?: string;
-    sortBy?: number;                       // 0=Relevance | 1=NewestCreated | 2=MostMembers | 3=MostActive
+    sortBy?: number;
     page?: number;
     pageSize?: number;
 }
@@ -129,7 +136,7 @@ export interface SearchGroupItem {
     name: string | null;
     slug: string;
     avatarUrl: string | null;
-    privacy: number;                       // 0=Public | 1=Private | 2=Hidden
+    privacy: number;
     memberCount: number;
     isMember: boolean;
 }
@@ -157,7 +164,7 @@ export interface MyGroupItem {
     name: string | null;
     slug: string;
     avatarUrl: string | null;
-    myRole: number;                        // 0=Member | 1=Moderator | 2=Admin
+    myRole: number;
     memberCount: number;
     unreadPostCount: number;
     joinedAt: string;

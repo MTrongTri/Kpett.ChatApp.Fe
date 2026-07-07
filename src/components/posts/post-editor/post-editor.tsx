@@ -72,6 +72,7 @@ export default function PostEditor({
   const [content, setContent] = useState("");
   const [privacy, setPrivacy] = useState("public");
   const [allowComments, setAllowComments] = useState(true);
+  const [isNsfw, setIsNsfw] = useState(false);
   const [media, setMedia] = useState<Media[]>([]);
   const [uploadMediaLoading, setUploadMediaLoading] = useState(false);
   const [submitting, setSub] = useState(false);
@@ -84,6 +85,7 @@ export default function PostEditor({
         setContent("");
         setPrivacy("public");
         setAllowComments(true);
+        setIsNsfw(false);
         setMedia([]);
         setStep(0);
         setDone(false);
@@ -102,10 +104,10 @@ export default function PostEditor({
     setSub(true);
     try {
       if (mode === "create") {
-        let newPost;
+        let newPost: Post;
         if (groupId) {
           const { createGroupPost } = await import("@/services/group.service");
-          newPost = await createGroupPost(groupId, { content, privacy, media });
+          newPost = await createGroupPost(groupId, { content, privacy, media, isNsfw });
           
           queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
             { queryKey: ["group-posts", groupId] },
@@ -117,7 +119,7 @@ export default function PostEditor({
             }
           );
         } else {
-          newPost = await createPost({ content, privacy, media });
+          newPost = await createPost({ content, privacy, media, isNsfw });
           
           queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
             { queryKey: ["feed"] },
@@ -132,7 +134,7 @@ export default function PostEditor({
 
       } else {
         // Logic dành cho Update (Giữ nguyên)
-        await updatePost(postId!, { content, privacy, media });
+        await updatePost(postId!, { content, privacy, media, isNsfw });
         queryClient.invalidateQueries({ queryKey: ["post-detail", postId] });
       }
 
@@ -255,6 +257,8 @@ export default function PostEditor({
                       media={media}
                       allowComments={allowComments}
                       setAllowComments={setAllowComments}
+                      isNsfw={isNsfw}
+                      setIsNsfw={setIsNsfw}
                     />
                   </div>
                 </>

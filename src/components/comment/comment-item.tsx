@@ -28,6 +28,7 @@ import {
 // Hooks React Query
 import { useCreateCommentReply } from "@/hooks/comment/use-create-comment-reply";
 import { useManageComment } from "@/hooks/comment/use-manage-comment";
+import { useCommentReaction } from "@/hooks/comment/use-comment-reaction";
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { toast } from "sonner";
 
@@ -112,6 +113,9 @@ export const CommentItem = memo(({
       }
     }
   });
+
+  // Hook quản lý comment: like, unlike
+  const { toggleLike } = useCommentReaction(postId);
 
   // Hook quản lý comment: sửa, xóa
   const { handleEditSubmit, handleDeleteSubmit } = useManageComment({
@@ -206,8 +210,12 @@ export const CommentItem = memo(({
               <span>{formatRelativeTime(currentComment.createdAt)}</span>
               {currentComment.isEdited && <span>(Đã chỉnh sửa)</span>}
 
-              <button className={`hidden hover:text-foreground/80 cursor-pointer font-semibold transition-colors ${currentComment.viewerContext?.isLiked ? "text-blue-500 hover:text-blue-600" : ""}`}>
-                Thích {currentComment.metrics.likeCount > 0 && `(${currentComment.metrics.likeCount})`}
+              <button
+                className={`hover:text-foreground/80 cursor-pointer font-semibold transition-colors ${currentComment.viewerContext?.isLiked ? "text-blue-500 hover:text-blue-600" : ""}`}
+                onClick={() => toggleLike(currentComment)}
+              >
+                {currentComment.viewerContext?.isLiked ? "Đã thích" : "Thích"}
+                {currentComment.metrics.likeCount > 0 && ` (${currentComment.metrics.likeCount})`}
               </button>
 
               {currentComment.viewerContext?.canReply && (

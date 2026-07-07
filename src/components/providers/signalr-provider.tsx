@@ -65,7 +65,7 @@ export const SignalRProvider = ({
         if (!isStopped) {
           setIsConnected(true);
           setConnection(newConnection);
-          console.log("SignalR: Connected successfully!");
+          // Connected
         } else {
           await newConnection.stop();
         }

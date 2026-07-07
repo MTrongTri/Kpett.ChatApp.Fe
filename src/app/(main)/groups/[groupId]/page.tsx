@@ -19,6 +19,7 @@ import {
   Lock,
   MessageCircle,
   MoreHorizontal,
+  Send,
   Settings,
   Share2,
   Shield,
@@ -27,6 +28,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { UserAvatar } from "@/components/user/user-avatar";
@@ -34,7 +36,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { formatRelativeTime } from "@/lib/format-date-utils";
-import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts, getGroupMembers } from "@/services/group.service";
+import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts, getGroupMembers, inviteMembers } from "@/services/group.service";
+import { Input } from "@/components/ui/input";
 import type { GroupDetailResponse } from "@/types/group";
 import type { GroupMemberResponse } from "@/types/group-member";
 
@@ -261,14 +264,30 @@ function TabHome({ group, user }: { group: GroupDetailResponse; user: any }) {
           </div>
         </div>
 
-        {/* Rules placeholder */}
+        {/* Rules */}
         <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
           <h3 className="text-[15px] font-bold text-foreground mb-3">
             Quy tắc nhóm
           </h3>
-          <div className="text-sm text-muted-foreground bg-muted/30 rounded-2xl p-4 border border-border/50">
-            Nhóm chưa có quy tắc nào. Quản trị viên sẽ cập nhật sau.
-          </div>
+          {group.rules && group.rules.length > 0 ? (
+            <ol className="space-y-2">
+              {group.rules.map((rule) => (
+                <li key={rule.id} className="flex gap-2 text-sm">
+                  <span className="font-bold text-primary shrink-0 mt-0.5">{rule.order}.</span>
+                  <div>
+                    <span className="font-semibold text-foreground">{rule.title}</span>
+                    {rule.description && (
+                      <p className="text-muted-foreground mt-0.5 text-[13px]">{rule.description}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-2xl p-4 border border-border/50">
+              Nhóm chưa có quy tắc nào. Quản trị viên sẽ cập nhật sau.
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -382,11 +401,28 @@ function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any 
 }
 
 function TabMembers({ group }: { group: GroupDetailResponse }) {
+  const queryClient = useQueryClient();
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteInput, setInviteInput] = useState("");
+
   const { data: membersData, isLoading } = useQuery({
     queryKey: ["group-members-public", group.id],
     queryFn: () => getGroupMembers(group.id, { pageSize: 20 }),
     enabled: !!group.id,
     staleTime: 60 * 1000,
+  });
+
+  const { mutate: sendInvite, isPending: isInviting } = useMutation({
+    mutationFn: (userIds: string[]) => inviteMembers(group.id, userIds),
+    onSuccess: (data) => {
+      const invited = data?.data?.invitedCount ?? data?.invitedCount ?? 0;
+      const skipped = data?.data?.skippedCount ?? data?.skippedCount ?? 0;
+      toast.success(`Đã mời ${invited} người${skipped > 0 ? `, ${skipped} người bị bỏ qua` : ""}`);
+      setShowInvite(false);
+      setInviteInput("");
+      queryClient.invalidateQueries({ queryKey: ["group-members-public", group.id] });
+    },
+    onError: () => toast.error("Không thể gửi lời mời."),
   });
 
   const members = membersData?.items ?? [];
@@ -399,6 +435,18 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
     }
   }
 
+  const handleInvite = () => {
+    const userIds = inviteInput
+      .split(/[\s,]+/)
+      .map((id) => id.trim())
+      .filter(Boolean);
+    if (userIds.length === 0) {
+      toast.error("Vui lòng nhập ít nhất một ID người dùng.");
+      return;
+    }
+    sendInvite(userIds);
+  };
+
   return (
     <div className="max-w-2xl space-y-4">
       <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
@@ -406,11 +454,33 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
           <h3 className="text-lg font-bold text-foreground">
             Thành viên ({formatCompactNumber(group.memberCount)})
           </h3>
-          <Button variant="outline" className="rounded-full gap-2" size="sm">
-            <UserPlus size={14} />
-            Mời
-          </Button>
+          {group.isMember && (
+            <Button variant="outline" className="rounded-full gap-2" size="sm" onClick={() => setShowInvite(!showInvite)}>
+              <UserPlus size={14} />
+              Mời
+            </Button>
+          )}
         </div>
+
+        {showInvite && (
+          <div className="mb-4 p-3 bg-muted/30 rounded-2xl border border-border space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Nhập ID bạn bè (cách nhau bằng dấu phẩy hoặc khoảng trắng):</p>
+            <div className="flex gap-2">
+              <Input
+                value={inviteInput}
+                onChange={(e) => setInviteInput(e.target.value)}
+                placeholder="user_id1, user_id2, ..."
+                className="h-9 text-sm rounded-xl flex-1"
+              />
+              <Button size="sm" className="rounded-xl shrink-0" onClick={handleInvite} disabled={isInviting}>
+                {isInviting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              </Button>
+              <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => setShowInvite(false)}>
+                <X size={14} />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">

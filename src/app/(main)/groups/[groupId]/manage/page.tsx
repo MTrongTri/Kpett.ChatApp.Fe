@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -245,9 +245,26 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description || "");
   const [privacy, setPrivacy] = useState(group.type);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingCover(true);
+    try {
+      const { uploadFileToCloudinary } = await import("@/services/media.service");
+      const result = await uploadFileToCloudinary(file, "group-covers");
+      saveGroup({ coverImageUrl: result.url });
+    } catch {
+      toast.error("Không thể tải ảnh bìa lên.");
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
 
   const { mutate: saveGroup, isPending } = useMutation({
-    mutationFn: (data: { name?: string; description?: string; type?: string }) =>
+    mutationFn: (data: { name?: string; description?: string; type?: string; coverImageUrl?: string }) =>
       updateGroup(groupId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-detail", groupId] });
@@ -279,11 +296,28 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-foreground">Ảnh bìa nhóm</label>
-          <div className="h-40 w-full rounded-2xl bg-muted border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="text-center">
-              <ImageIcon size={32} className="mx-auto text-muted-foreground mb-2" />
-              <span className="text-sm font-medium text-primary">Thay đổi ảnh bìa</span>
-            </div>
+          <div
+            className="h-40 w-full rounded-2xl bg-muted border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {group.coverImageUrl ? (
+              <img src={group.coverImageUrl} alt="Cover" className="h-full w-full object-cover" />
+            ) : null}
+            {isUploadingCover ? (
+              <Loader2 size={32} className="animate-spin text-primary z-10" />
+            ) : (
+              <div className="text-center z-10">
+                <ImageIcon size={32} className="mx-auto text-muted-foreground mb-2" />
+                <span className="text-sm font-medium text-primary">Thay đổi ảnh bìa</span>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCoverUpload}
+            />
           </div>
         </div>
 
@@ -303,7 +337,7 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
 
         <div className="space-y-2">
           <label className="text-sm font-semibold text-foreground">Quyền riêng tư</label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div
               onClick={() => setPrivacy("public")}
               className={cn(
@@ -325,6 +359,17 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
               <Lock size={24} className={privacy === "private" ? "text-primary" : "text-muted-foreground"} />
               <h4 className="font-bold text-foreground mt-2">Riêng tư</h4>
               <p className="text-xs text-muted-foreground mt-1">Chỉ thành viên mới có thể xem nội dung trong nhóm.</p>
+            </div>
+            <div
+              onClick={() => setPrivacy("hidden")}
+              className={cn(
+                "p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                privacy === "hidden" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+              )}
+            >
+              <Lock size={24} className={privacy === "hidden" ? "text-primary" : "text-muted-foreground"} />
+              <h4 className="font-bold text-foreground mt-2">Ẩn</h4>
+              <p className="text-xs text-muted-foreground mt-1">Chỉ thành viên mới tìm thấy và xem nội dung.</p>
             </div>
           </div>
         </div>

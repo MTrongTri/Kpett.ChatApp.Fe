@@ -1,4 +1,3 @@
-// components/chat/chat-message-bubble.tsx
 import React from 'react';
 import { MessageResponse, ParticipantResponse } from '@/types/chat';
 import { UserAvatar } from '@/components/user/user-avatar';
@@ -30,6 +29,9 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
         );
     }
 
+    const hasSticker = msg.type === "Sticker";
+    const hasImageAttachments = msg.attachments && msg.attachments.length > 0;
+
     const borderRadiusClass = isMine
         ? isConsecutive ? "rounded-2xl rounded-tr-sm rounded-br-sm" : "rounded-2xl rounded-br-sm"
         : isConsecutive ? "rounded-2xl rounded-tl-sm rounded-bl-sm" : "rounded-2xl rounded-bl-sm";
@@ -60,10 +62,61 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                         )}>
                             {formatRelativeTime(msg.createdAt)}
                         </span>
-                        <div className={`px-4 py-2 text-[15px] shadow-sm ${borderRadiusClass} ${isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border"
-                            } ${msg.localStatus === "sending" ? "opacity-70" : ""}`}>
-                            {msg.content}
-                        </div>
+
+                        {hasSticker ? (
+                            <div className={cn(
+                                "overflow-hidden",
+                                isMine ? "" : "",
+                                msg.localStatus === "sending" ? "opacity-70" : ""
+                            )}>
+                                <img
+                                    src={msg.content}
+                                    alt="sticker"
+                                    className="max-w-[160px] max-h-[160px] object-contain"
+                                />
+                            </div>
+                        ) : hasImageAttachments ? (
+                            <div className={cn(
+                                "flex flex-col gap-1",
+                                isMine ? "items-end" : "items-start",
+                                msg.localStatus === "sending" ? "opacity-70" : ""
+                            )}>
+                                <div className={cn(
+                                    "grid gap-1",
+                                    msg.attachments!.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                                )}>
+                                    {msg.attachments!.map((att) => (
+                                        <div key={att.id} className="overflow-hidden rounded-2xl">
+                                            <img
+                                                src={att.url}
+                                                alt={att.filename || "Image"}
+                                                className="w-full h-auto max-w-[240px] max-h-[300px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                loading="lazy"
+                                                onClick={() => window.open(att.url, '_blank')}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                {msg.content && (
+                                    <div className={cn(
+                                        "px-4 py-2 text-[15px] shadow-sm",
+                                        isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border",
+                                        borderRadiusClass
+                                    )}>
+                                        {msg.content}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={cn(
+                                "px-4 py-2 text-[15px] shadow-sm",
+                                borderRadiusClass,
+                                isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border",
+                                msg.localStatus === "sending" ? "opacity-70" : ""
+                            )}>
+                                {msg.content}
+                            </div>
+                        )}
                     </div>
                 </div>
 

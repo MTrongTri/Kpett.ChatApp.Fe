@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Image as ImageIcon, Mic, Send, Smile } from "lucide-react";
+import { Image as ImageIcon, Mic, Send, Smile, Sticker } from "lucide-react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { useTheme } from "next-themes";
 import {
@@ -9,9 +9,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { uploadFileToCloudinary } from "@/services/media.service";
+import { StickerPicker } from "./sticker-picker";
+
+interface AttachmentInfo {
+  type: string;
+  url: string;
+  publicId?: string;
+  filename?: string;
+  fileSize?: number;
+}
 
 interface ChatInputAreaProps {
   onSendMessage: (content: string) => void;
+  onSendAttachments?: (content: string, attachments: AttachmentInfo[]) => void;
+  onSendSticker?: (stickerUrl: string) => void;
   onTyping?: () => void;
   onStopTyping?: () => void;
   className?: string;
@@ -19,12 +31,17 @@ interface ChatInputAreaProps {
 
 export function ChatInputArea({
   onSendMessage,
+  onSendAttachments,
+  onSendSticker,
   onTyping,
   onStopTyping,
 }: ChatInputAreaProps) {
   const [inputValue, setInputValue] = useState("");
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const [isStickerOpen, setIsStickerOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { resolvedTheme } = useTheme();
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -60,18 +77,81 @@ export function ChatInputArea({
     setInputValue((previous) => previous + emoji);
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const result = await uploadFileToCloudinary(file, "chat");
+        const attachment: AttachmentInfo = {
+          type: result.type,
+          url: result.url,
+          publicId: result.publicId,
+          filename: file.name,
+          fileSize: file.size,
+        };
+        onSendAttachments?.("", [attachment]);
+      }
+    } catch (error) {
+      console.error("[ChatInputArea] Upload image failed:", error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleStickerSelect = (stickerUrl: string) => {
+    onSendSticker?.(stickerUrl);
+    setIsStickerOpen(false);
+  };
+
   const emojiTheme = resolvedTheme === "dark" ? Theme.DARK : Theme.LIGHT;
 
   return (
     <div className="bg-background border-t border-border p-2">
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleImageSelect}
+        />
+
         <button
           type="button"
-          className="text-primary hover:bg-muted hidden rounded-full p-1.5 transition outline-none"
-          title="Gui anh"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none disabled:opacity-50"
+          title="Gửi ảnh"
         >
           <ImageIcon size={18} />
         </button>
+
+        <Popover open={isStickerOpen} onOpenChange={setIsStickerOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none"
+              title="Gửi sticker"
+            >
+              <Sticker size={18} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            sideOffset={10}
+            className="w-[320px] border border-border bg-card p-0 shadow-2xl"
+          >
+            <StickerPicker onStickerSelect={handleStickerSelect} />
+          </PopoverContent>
+        </Popover>
 
         <div className="bg-muted flex flex-1 items-center rounded-full px-3 py-1.5">
           <input
@@ -85,8 +165,9 @@ export function ChatInputArea({
               }
             }}
             onBlur={() => onStopTyping?.()}
-            placeholder="Aa"
-            className="text-foreground w-full flex-1 bg-transparent py-1 text-sm outline-none"
+            placeholder={isUploading ? "Đang tải ảnh lên..." : "Aa"}
+            disabled={isUploading}
+            className="text-foreground w-full flex-1 bg-transparent py-1 text-sm outline-none disabled:opacity-50"
           />
 
           <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>

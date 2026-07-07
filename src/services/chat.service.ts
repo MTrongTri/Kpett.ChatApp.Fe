@@ -36,9 +36,13 @@ export const chatService = {
         conversationId: string,
         content: string,
         type: string = "Text",
-        clientMessageId: string
+        clientMessageId: string,
+        attachments?: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]
     ): Promise<MessageResponse> => {
-        const payload = { content, type, clientMessageId };
+        const payload: Record<string, unknown> = { content, type, clientMessageId };
+        if (attachments && attachments.length > 0) {
+            payload.attachments = attachments;
+        }
         const response = await http.post(`${API_URL}/${conversationId}/messages`, payload);
         return response.data;
     },

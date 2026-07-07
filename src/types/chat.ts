@@ -10,8 +10,14 @@ export interface SystemMessageMetadata {
 
 export interface MessageAttachmentResponse {
   id: string;
-  url: string;
+  messageId: string;
   type: string;
+  url: string;
+  publicId?: string;
+  filename?: string;
+  fileSize?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface MessageSnippetResponse {

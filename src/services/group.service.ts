@@ -135,3 +135,59 @@ export const revokeMemberRole = async (groupId: string, targetUserId: string) =>
     const response = await http.delete(`${API_URL}/${groupId}/members/${targetUserId}/role`);
     return response.data;
 };
+
+export const getBlockedMembers = async (groupId: string, params?: { page?: number; pageSize?: number }): Promise<GroupMemberListResponse> => {
+    const response = await http.get(`${API_URL}/${groupId}/blocked-members`, { params });
+    return response.data;
+};
+
+export const unblockMember = async (groupId: string, targetUserId: string) => {
+    const response = await http.post(`${API_URL}/${groupId}/members/${targetUserId}/unblock`);
+    return response.data;
+};
+
+export const getAdminsAndModerators = async (groupId: string, params?: { page?: number; pageSize?: number }): Promise<GroupMemberListResponse> => {
+    const response = await http.get(`${API_URL}/${groupId}/admins-moderators`, { params });
+    return response.data;
+};
+
+export const transferOwnership = async (groupId: string, targetUserId: string) => {
+    const response = await http.post(`${API_URL}/${groupId}/transfer-ownership`, { targetUserId });
+    return response.data;
+};
+
+export const togglePinPost = async (groupId: string, postId: string) => {
+    const response = await http.post(`${API_URL}/${groupId}/posts/${postId}/pin`);
+    return response.data;
+};
+
+export const inviteMembers = async (groupId: string, userIds: string[]) => {
+    const response = await http.post(`${API_URL}/${groupId}/invitations`, { userIds });
+    return response.data;
+};
+
+// ── LỜI MỜI ──
+
+export interface GroupInvitationResponse {
+    id: string;
+    groupId: string;
+    invitedByUserId: string;
+    inviteeUserId: string;
+    status: string;
+    createdAt: string;
+}
+
+export const getMyInvitations = async (): Promise<GroupInvitationResponse[]> => {
+    const response = await http.get(`${API_URL}/invitations`);
+    return response.data;
+};
+
+export const acceptInvitation = async (invitationId: string) => {
+    const response = await http.post(`${API_URL}/invitations/${invitationId}/accept`);
+    return response.data;
+};
+
+export const declineInvitation = async (invitationId: string) => {
+    const response = await http.post(`${API_URL}/invitations/${invitationId}/decline`);
+    return response.data;
+};

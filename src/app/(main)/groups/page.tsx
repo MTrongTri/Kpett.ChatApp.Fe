@@ -269,12 +269,20 @@ export default function GroupsPage() {
               </p>
             </div>
 
-            <Button asChild className="rounded-full px-6 gap-2 shadow-sm">
-              <Link href="/groups/create">
-                <Plus size={18} />
-                Tạo nhóm mới
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" className="rounded-full px-4 gap-2 shadow-sm">
+                <Link href="/groups/invitations">
+                  <Sparkles size={16} />
+                  Lời mời
+                </Link>
+              </Button>
+              <Button asChild className="rounded-full px-6 gap-2 shadow-sm">
+                <Link href="/groups/create">
+                  <Plus size={18} />
+                  Tạo nhóm mới
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {/* Stats */}

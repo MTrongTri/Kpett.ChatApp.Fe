@@ -182,6 +182,27 @@ export default function CreateGroupPage() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Option Ẩn */}
+                                    <div
+                                        onClick={() => { setPrivacy('hidden'); setIsPrivacyDropdownOpen(false); }}
+                                        className={`flex items-start gap-4 p-3.5 cursor-pointer mx-2 rounded-xl transition-all ${privacy === 'hidden' ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 mt-0.5 border border-gray-100">
+                                            <Lock size={20} className="text-indigo-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-bold text-[15px] text-gray-900">Ẩn</div>
+                                            <div className="text-[13px] text-gray-500 mt-1 leading-relaxed">
+                                                Chỉ thành viên mới có thể tìm thấy và xem nội dung nhóm.
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center mt-2 shrink-0">
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${privacy === 'hidden' ? 'border-indigo-600' : 'border-gray-300'}`}>
+                                                {privacy === 'hidden' && <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -326,8 +347,8 @@ export default function CreateGroupPage() {
                             </h2>
                             <div className="flex items-center text-gray-500 text-[15px] gap-2 mb-6 font-medium">
                                 <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-gray-700">
-                                    {privacy === 'public' ? <Globe2 size={16} className="text-indigo-500" /> : privacy === 'private' ? <Lock size={16} className="text-purple-500" /> : <Lock size={16} className="text-gray-400" />}
-                                    {privacy === 'public' ? 'Công khai' : privacy === 'private' ? 'Riêng tư' : 'Chưa thiết lập'}
+                                    {privacy === 'public' ? <Globe2 size={16} className="text-indigo-500" /> : <Lock size={16} className={privacy === 'hidden' ? 'text-rose-500' : 'text-purple-500'} />}
+                                    {privacy === 'public' ? 'Công khai' : privacy === 'private' ? 'Riêng tư' : privacy === 'hidden' ? 'Ẩn' : 'Chưa thiết lập'}
                                 </span>
                                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span className="text-gray-700 font-bold">1 thành viên</span>

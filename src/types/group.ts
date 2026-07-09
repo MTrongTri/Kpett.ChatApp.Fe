@@ -22,6 +22,7 @@ export interface CreateGroupRequest {
     coverImageUrl?: string;
     language?: string;
     rules?: string[];
+    inviteeIds?: string[];
 }
 
 export interface CreateGroupResponse {

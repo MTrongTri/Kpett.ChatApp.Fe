@@ -1,7 +1,7 @@
 import http from "@/lib/axios";
 import axios from "axios";
 
-const cloudinaryClient = axios.create();
+const cloudinaryClient = axios.create({ timeout: 30000 });
 
 export const uploadFileToCloudinary = async (
   file: File,

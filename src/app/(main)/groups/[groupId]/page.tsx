@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Calendar,
+  Check,
   Crown,
   Globe2,
   Image as ImageIcon,
@@ -19,6 +20,7 @@ import {
   Lock,
   MessageCircle,
   MoreHorizontal,
+  Search,
   Send,
   Settings,
   Share2,
@@ -37,9 +39,10 @@ import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts, getGroupMembers, inviteMembers } from "@/services/group.service";
-import { Input } from "@/components/ui/input";
+import { getFriendsWithFilter } from "@/services/friend.service";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { GroupDetailResponse } from "@/types/group";
-import type { GroupMemberResponse } from "@/types/group-member";
+import type { UserProfile } from "@/types/user";
 
 // ── Tab Types ──
 
@@ -403,7 +406,20 @@ function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any 
 function TabMembers({ group }: { group: GroupDetailResponse }) {
   const queryClient = useQueryClient();
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteInput, setInviteInput] = useState("");
+  const [friendSearch, setFriendSearch] = useState("");
+  const [selectedFriends, setSelectedFriends] = useState<UserProfile[]>([]);
+  const [isFriendInputFocused, setIsFriendInputFocused] = useState(false);
+  const debouncedFriendSearch = useDebounce(friendSearch, 300);
+
+  const { data: friendsData, isLoading: isSearchingFriends } = useQuery({
+    queryKey: ["friends-search-invite", debouncedFriendSearch],
+    queryFn: () => getFriendsWithFilter({ search: debouncedFriendSearch, cursor: null, limit: 10 }),
+    enabled: showInvite,
+  });
+
+  const friendSuggestions = friendsData?.items?.filter(
+    friend => !selectedFriends.some(selected => selected.id === friend.id)
+  ) || [];
 
   const { data: membersData, isLoading } = useQuery({
     queryKey: ["group-members-public", group.id],
@@ -419,7 +435,8 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
       const skipped = data?.data?.skippedCount ?? data?.skippedCount ?? 0;
       toast.success(`Đã mời ${invited} người${skipped > 0 ? `, ${skipped} người bị bỏ qua` : ""}`);
       setShowInvite(false);
-      setInviteInput("");
+      setFriendSearch("");
+      setSelectedFriends([]);
       queryClient.invalidateQueries({ queryKey: ["group-members-public", group.id] });
     },
     onError: () => toast.error("Không thể gửi lời mời."),
@@ -436,12 +453,9 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
   }
 
   const handleInvite = () => {
-    const userIds = inviteInput
-      .split(/[\s,]+/)
-      .map((id) => id.trim())
-      .filter(Boolean);
+    const userIds = selectedFriends.map(f => f.id);
     if (userIds.length === 0) {
-      toast.error("Vui lòng nhập ít nhất một ID người dùng.");
+      toast.error("Vui lòng chọn ít nhất một người bạn.");
       return;
     }
     sendInvite(userIds);
@@ -463,20 +477,84 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
         </div>
 
         {showInvite && (
-          <div className="mb-4 p-3 bg-muted/30 rounded-2xl border border-border space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">Nhập ID bạn bè (cách nhau bằng dấu phẩy hoặc khoảng trắng):</p>
-            <div className="flex gap-2">
-              <Input
-                value={inviteInput}
-                onChange={(e) => setInviteInput(e.target.value)}
-                placeholder="user_id1, user_id2, ..."
-                className="h-9 text-sm rounded-xl flex-1"
+          <div className="mb-4 p-4 bg-muted/30 rounded-2xl border border-border space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground">Tìm kiếm bạn bè để mời:</p>
+
+            {selectedFriends.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedFriends.map(friend => (
+                  <div key={friend.id} className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 pl-1.5 pr-2 py-1 rounded-full text-xs font-semibold text-primary">
+                    <UserAvatar user={friend} className="w-5 h-5" />
+                    <span>{friend.displayName || friend.username}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFriends(prev => prev.filter(p => p.id !== friend.id))}
+                      className="text-primary/60 hover:text-primary ml-0.5"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+              <input
+                type="text"
+                value={friendSearch}
+                onChange={(e) => setFriendSearch(e.target.value)}
+                onFocus={() => setIsFriendInputFocused(true)}
+                onBlur={() => setTimeout(() => setIsFriendInputFocused(false), 200)}
+                className="w-full pl-9 pr-3 h-9 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60"
+                placeholder="Nhập tên bạn bè..."
               />
-              <Button size="sm" className="rounded-xl shrink-0" onClick={handleInvite} disabled={isInviting}>
+              {isSearchingFriends && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 size={14} className="animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+
+            {isFriendInputFocused && (
+              <div className="max-h-[200px] overflow-y-auto space-y-1 -mx-1 px-1">
+                {friendSuggestions.length > 0 ? (
+                  friendSuggestions.map(friend => (
+                    <div
+                      key={friend.id}
+                      onClick={() => {
+                        setSelectedFriends(prev => [...prev, friend]);
+                        setFriendSearch('');
+                      }}
+                      className="flex items-center justify-between p-2 rounded-xl hover:bg-muted cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <UserAvatar user={friend} className="w-8 h-8" />
+                        <div>
+                          <div className="text-sm font-semibold">{friend.displayName || friend.username}</div>
+                          <div className="text-xs text-muted-foreground">@{friend.username}</div>
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedFriends.some(s => s.id === friend.id) ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                        {selectedFriends.some(s => s.id === friend.id) && <Check size={12} className="text-primary-foreground" />}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-4 text-sm">
+                    {debouncedFriendSearch ? "Không tìm thấy bạn bè" : "Gõ tên để tìm kiếm bạn bè"}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" className="rounded-xl gap-1.5 flex-1" onClick={handleInvite} disabled={isInviting || selectedFriends.length === 0}>
                 {isInviting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                {isInviting ? "Đang mời..." : `Mời (${selectedFriends.length})`}
               </Button>
-              <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => setShowInvite(false)}>
-                <X size={14} />
+              <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => { setShowInvite(false); setSelectedFriends([]); setFriendSearch(""); }}>
+                Hủy
               </Button>
             </div>
           </div>

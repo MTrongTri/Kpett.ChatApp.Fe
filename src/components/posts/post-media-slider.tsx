@@ -77,7 +77,7 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                             alt="Post media"
                                             fill
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                            className="object-cover cursor-pointer"
+                                            className="object-contain cursor-pointer"
                                             onClick={() => dispatch(openMediaLightBox({ media, index }))}
                                         />
                                     ) : playingIndex === index ? (

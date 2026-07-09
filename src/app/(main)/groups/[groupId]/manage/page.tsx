@@ -273,13 +273,16 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
     onError: () => toast.error("Có lỗi xảy ra khi lưu."),
   });
 
-  const { mutate: removeGroup } = useMutation({
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const { mutate: removeGroup, isPending: isDeleting } = useMutation({
     mutationFn: () => deleteGroup(groupId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-groups"] });
-      toast.success("Đã xóa nhóm.");
+      toast.success("Đã giải tán nhóm.");
+      router.push("/groups");
     },
-    onError: () => toast.error("Có lỗi xảy ra khi xóa nhóm."),
+    onError: () => toast.error("Có lỗi xảy ra khi giải tán nhóm."),
   });
 
   const handleSave = () => {
@@ -375,17 +378,37 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
         </div>
 
         <div className="pt-6 border-t border-border flex items-center justify-between">
-          <Button
-            variant="outline"
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive rounded-xl"
-            onClick={() => {
-              if (window.confirm("Bạn có chắc chắn muốn xóa nhóm này? Hành động này không thể hoàn tác.")) {
-                removeGroup();
-              }
-            }}
-          >
-            Xóa nhóm này
-          </Button>
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive rounded-xl"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Giải tán nhóm
+            </Button>
+            {showDeleteConfirm && (
+              <div className="p-3 bg-destructive/5 border border-destructive/20 rounded-xl space-y-2">
+                <p className="text-xs font-semibold text-destructive">
+                  Bạn có chắc chắn muốn giải tán nhóm này? Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="rounded-lg"
+                    onClick={() => removeGroup()}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
+                    Xác nhận giải tán
+                  </Button>
+                  <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => setShowDeleteConfirm(false)}>
+                    Hủy
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
           <Button className="rounded-xl px-8" onClick={handleSave} disabled={isPending}>
             {isPending ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
             Lưu thay đổi

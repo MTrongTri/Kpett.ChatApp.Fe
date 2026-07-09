@@ -30,7 +30,7 @@ function InvitationCard({
   return (
     <div className="bg-card border border-border rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shrink-0">
+        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shrink-0">
           {(invitation.groupName || "G").charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0">

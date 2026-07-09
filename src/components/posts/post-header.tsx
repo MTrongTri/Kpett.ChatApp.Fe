@@ -17,9 +17,9 @@ export function PostHeader({ author, postCreatedAt, group }: PostHeaderProps) {
     <div className="flex shrink-0 items-start gap-2.5 py-3">
       <Link href={group ? `/groups/${group.id}` : `/${author.username}`} className="shrink-0 mt-0.5 relative">
         {group && group.avatarUrl ? (
-           <img src={group.avatarUrl} alt={group.name || "Group"} className="w-10 h-10 rounded-xl object-cover" />
+           <img src={group.avatarUrl} alt={group.name || "Group"} className="w-10 h-10 rounded-full object-cover" />
         ) : group ? (
-           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
+           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
              {group.name ? group.name.charAt(0).toUpperCase() : "G"}
            </div>
         ) : (

@@ -75,7 +75,7 @@ function getRoleBadge(role: number) {
 function GroupAvatar({ name, avatarUrl, className }: { name: string | null; avatarUrl: string | null; className?: string }) {
   if (avatarUrl) {
     return (
-      <div className={cn("shrink-0 overflow-hidden rounded-xl ring-2 ring-white/20", className)}>
+      <div className={cn("shrink-0 overflow-hidden rounded-full ring-2 ring-white/20", className)}>
         <img src={avatarUrl} alt={name || "Group"} className="h-full w-full object-cover" />
       </div>
     );
@@ -85,7 +85,7 @@ function GroupAvatar({ name, avatarUrl, className }: { name: string | null; avat
   return (
     <div
       className={cn(
-        "shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold ring-2 ring-white/20",
+        "shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold ring-2 ring-white/20",
         className,
       )}
     >

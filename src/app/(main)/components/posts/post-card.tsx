@@ -15,11 +15,14 @@ import {
   Flag,
   Link2,
   MoreHorizontal,
+  Trash2,
   UserMinus,
   AlertTriangle,
   Eye,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deletePost } from "@/services/post.service";
 
 import CommentButton from "@/components/posts/comment-button";
 import LikeButton from "@/components/posts/like-button";
@@ -37,7 +40,20 @@ interface PostCardProps {
 
 export default function PostCard({ post }: PostCardProps) {
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [showNsfw, setShowNsfw] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const { mutate: handleDelete, isPending: isDeleting } = useMutation({
+    mutationFn: () => deletePost(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["group-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-posts"] });
+      toast.success("Đã xóa bài viết.");
+    },
+    onError: () => toast.error("Không thể xóa bài viết."),
+  });
 
   const handleOpenLightBox = () => {
     dispatch(openPostLightBox({ postId: post.id, post, targetScroll: "comment-list-area" }));
@@ -55,6 +71,38 @@ export default function PostCard({ post }: PostCardProps) {
 
   return (
     <article className="border-0 md:border-border bg-card rounded-xl md:border transition-all duration-200 relative">
+      {/* ── DELETE CONFIRM ── */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-xl bg-black/70 backdrop-blur-sm p-6">
+          <div className="bg-destructive/20 p-3 rounded-full mb-3">
+            <Trash2 className="text-destructive h-8 w-8" />
+          </div>
+          <h3 className="text-white text-lg font-bold mb-1">Xóa bài viết?</h3>
+          <p className="text-white/70 text-sm text-center max-w-xs mb-4">
+            Bài viết này sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="rounded-full"
+              disabled={isDeleting}
+              onClick={() => handleDelete()}
+            >
+              {isDeleting ? "Đang xóa..." : "Xóa"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-white/20 text-white hover:text-white hover:bg-white/10"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Hủy
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── NSFW OVERLAY ── */}
       {post.isNsfw && !showNsfw && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-xl bg-black/80 backdrop-blur-sm p-6">
@@ -101,6 +149,17 @@ export default function PostCard({ post }: PostCardProps) {
             <DropdownMenuItem onClick={handleCopyLink} className="hover:text-primary focus:text-primary cursor-pointer gap-2">
               <Link2 size={13} /> Sao chép liên kết
             </DropdownMenuItem>
+            {post.viewerContext.canDelete && (
+              <>
+                <div className="h-px bg-border mx-2" />
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-destructive hover:text-destructive focus:text-destructive cursor-pointer gap-2"
+                >
+                  <Trash2 size={13} /> Xóa bài viết
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

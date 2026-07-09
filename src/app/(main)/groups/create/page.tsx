@@ -52,7 +52,8 @@ export default function CreateGroupPage() {
             name: groupName,
             type: privacy,
             language: "vi",
-            rules: []
+            rules: [],
+            inviteeIds: selectedFriends.map(f => f.id)
         });
     };
 

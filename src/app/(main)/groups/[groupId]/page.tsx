@@ -99,7 +99,7 @@ function GroupDetailSkeleton() {
         {/* Header skeleton */}
         <div className="px-4 md:px-8 -mt-12 md:-mt-16 space-y-4 relative z-10">
           <div className="flex items-end gap-5">
-            <div className="h-24 w-24 md:h-32 md:w-32 rounded-2xl bg-muted border-4 border-background animate-pulse" />
+            <div className="h-24 w-24 md:h-32 md:w-32 rounded-full bg-muted border-4 border-background animate-pulse" />
             <div className="space-y-2 flex-1 pb-2">
               <div className="h-7 w-64 bg-muted rounded animate-pulse" />
               <div className="h-4 w-40 bg-muted rounded animate-pulse" />
@@ -742,11 +742,11 @@ export default function GroupDetailPage() {
             {/* Avatar */}
             <div className="shrink-0 relative">
               {group.avatarUrl ? (
-                <div className="h-28 w-28 md:h-32 md:w-32 rounded-2xl overflow-hidden border-4 border-background shadow-lg">
+                <div className="h-28 w-28 md:h-32 md:w-32 rounded-full overflow-hidden border-4 border-background shadow-lg">
                   <img src={group.avatarUrl} alt={group.name} className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="h-28 w-28 md:h-32 md:w-32 rounded-2xl border-4 border-background shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="h-28 w-28 md:h-32 md:w-32 rounded-full border-4 border-background shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
                   {(group.name || "G").charAt(0).toUpperCase()}
                 </div>
               )}

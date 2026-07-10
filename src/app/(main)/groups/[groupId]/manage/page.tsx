@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useCallback, useRef } from "react";
 import Link from "next/link";
@@ -241,12 +241,15 @@ function PendingPostsNavButton({ activeTab, tab, groupId, onClick }: { activeTab
 // ── General Tab ──
 
 function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: string }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description || "");
   const [privacy, setPrivacy] = useState(group.type);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -263,8 +266,23 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const { uploadFileToCloudinary } = await import("@/services/media.service");
+      const result = await uploadFileToCloudinary(file, "group-avatars");
+      saveGroup({ avatarUrl: result.url });
+    } catch {
+      toast.error("Không thể tải ảnh đại diện lên.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const { mutate: saveGroup, isPending } = useMutation({
-    mutationFn: (data: { name?: string; description?: string; type?: string; coverImageUrl?: string }) =>
+    mutationFn: (data: { name?: string; description?: string; type?: string; coverImageUrl?: string; avatarUrl?: string }) =>
       updateGroup(groupId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-detail", groupId] });
@@ -297,6 +315,41 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
       </div>
 
       <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-foreground">Ảnh đại diện nhóm</label>
+          <div className="flex items-center gap-4">
+            <div
+              className="relative w-24 h-24 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors overflow-hidden group shrink-0"
+              onClick={() => avatarFileInputRef.current?.click()}
+            >
+              {group.avatarUrl ? (
+                <img src={group.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl font-bold text-muted-foreground">
+                  {(group.name || "G").charAt(0).toUpperCase()}
+                </span>
+              )}
+              {isUploadingAvatar ? (
+                <Loader2 size={24} className="animate-spin text-primary absolute" />
+              ) : (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  <ImageIcon size={20} className="text-white" />
+                </div>
+              )}
+              <input
+                ref={avatarFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ảnh đại diện sẽ hiển thị ở dạng hình tròn. Kích thước đề xuất: 200x200px.
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-foreground">Ảnh bìa nhóm</label>
           <div

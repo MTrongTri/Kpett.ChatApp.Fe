@@ -102,6 +102,7 @@ export default function PostDetailClient({
               postId={post.id}
               initialLiked={post.viewerContext.isLiked ?? false}
               initialLikeCount={post.metrics.likeCount}
+              initialReactionType={post.viewerContext.reactionType ?? null}
             />
 
             <CommentButton

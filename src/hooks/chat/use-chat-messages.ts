@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useCallback, useEffect, useRef } from "react";
 import {
@@ -34,6 +34,7 @@ export function useChatMessages(
     const queryClient = useQueryClient();
     const { connection, isConnected } = useSignalR();
     const lastMarkedRef = useRef<string | null>(null);
+    const lastMarkedTimeRef = useRef<number>(0);
 
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useInfiniteQuery({
@@ -172,10 +173,33 @@ export function useChatMessages(
             const targetConversationId = newMessage.conversationId ?? conversationId;
             if (targetConversationId !== conversationId) return;
 
-            addMessageToCache(newMessage);
+            // Chỉ update messages cache — conversations cache do useChatRealtime xử lý
+            queryClient.setQueryData<MessagesCache>(
+                ["chat-messages", conversationId],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
+                    return produce(oldData, (draft) => {
+                        const currentItems = draft.pages[0]?.items;
+                        if (!currentItems) return;
+                        const existingIndex = currentItems.findIndex(
+                            (m) => m.id === newMessage.id ||
+                                  (newMessage.clientMessageId && m.id === newMessage.clientMessageId)
+                        );
+                        if (existingIndex > -1) {
+                            currentItems[existingIndex] = newMessage;
+                            return;
+                        }
+                        currentItems.unshift(newMessage);
+                    });
+                }
+            );
 
             if (!isMinimized) {
-                chatService.markAsRead(conversationId).catch(() => undefined);
+                const now = Date.now();
+                if (now - lastMarkedTimeRef.current > 2000) {
+                    lastMarkedTimeRef.current = now;
+                    chatService.markAsRead(conversationId).catch(() => undefined);
+                }
             }
         };
 
@@ -226,9 +250,8 @@ export function useChatMessages(
         connection,
         isConnected,
         conversationId,
-        addMessageToCache,
-        isMinimized,
-        queryClient
+        queryClient,
+        isMinimized
     ]);
 
     useEffect(() => {
@@ -256,7 +279,6 @@ export function useChatMessages(
 
         if (!needsApiCall) return;
 
-        // Dedup: chỉ gọi markAsRead nếu chưa gọi cho conversation này
         if (lastMarkedRef.current === conversationId) return;
         lastMarkedRef.current = conversationId;
 

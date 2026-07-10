@@ -183,7 +183,7 @@ export default function PostCard({ post }: PostCardProps) {
         </div>
       ) : (
         <div className={cn("flex items-center gap-1 px-3 py-2.5", post.isNsfw && !showNsfw && "blur-sm select-none pointer-events-none")}>
-          <LikeButton postId={post.id} initialLiked={post.viewerContext.isLiked ?? false} initialLikeCount={post.metrics.likeCount} />
+          <LikeButton postId={post.id} initialLiked={post.viewerContext.isLiked ?? false} initialLikeCount={post.metrics.likeCount} initialReactionType={post.viewerContext.reactionType ?? null} />
           <CommentButton commentCount={post.metrics.commentCount} onClick={handleOpenLightBox} />
           <div className="flex-1" />
           <SaveButton postId={post.id} initialSaved={post.viewerContext.isSaved ?? false} />

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useAuth } from '@/components/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
@@ -31,10 +31,10 @@ interface ChatPopupProps {
 }
 
 const suggestedMessages = [
-    "Xin chào 👋",
-    "Hi 👋",
-    "Ê",
-    "Làm quen nhé",
+    "Xin chĂ o đŸ‘‹",
+    "Hi đŸ‘‹",
+    "Ă",
+    "LĂ m quen nhĂ©",
 ];
 
 export default function ChatPopup({
@@ -68,7 +68,7 @@ export default function ChatPopup({
     const isOnline = participants
         .filter((participant) => participant.id !== user?.id)
         .some((participant) => participant.isOnline);
-    const chatName = currentConversation?.name || "Người dùng";
+    const chatName = currentConversation?.name || "NgÆ°á»i dĂ¹ng";
 
     const {
         messages,
@@ -200,6 +200,87 @@ export default function ChatPopup({
         }
     };
 
+    const handleSendAttachments = async (
+        content: string,
+        attachments?: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]
+    ) => {
+        const clientMessageId = crypto.randomUUID();
+        const hasAttachments = attachments && attachments.length > 0;
+
+        const optimisticMessage: MessageResponse = {
+            id: clientMessageId,
+            clientMessageId,
+            senderId: user?.id || "",
+            senderName: user?.displayName || "",
+            type: "Text",
+            content,
+            createdAt: new Date().toISOString(),
+            localStatus: "sending",
+            ...(hasAttachments
+                ? {
+                      attachments: attachments!.map((a, i) => ({
+                          id: `${clientMessageId}-att-${i}`,
+                          messageId: clientMessageId,
+                          type: a.type,
+                          url: a.url,
+                          publicId: a.publicId,
+                          filename: a.filename,
+                          fileSize: a.fileSize,
+                      })),
+                  }
+                : {}),
+        };
+
+        addMessageToCache(optimisticMessage);
+
+        try {
+            await chatService.sendMessage(
+                conversationId,
+                content,
+                "Text",
+                clientMessageId,
+                attachments
+            );
+            updateMessageStatus(clientMessageId, "sent");
+        } catch (error) {
+            console.error(error);
+            updateMessageStatus(clientMessageId, "error");
+        }
+    };
+
+    const handleSendSticker = async (stickerUrl: string) => {
+        const clientMessageId = crypto.randomUUID();
+
+        const optimisticMessage: MessageResponse = {
+            id: clientMessageId,
+            clientMessageId,
+            senderId: user?.id || "",
+            senderName: user?.displayName || "",
+            type: "Sticker",
+            content: stickerUrl,
+            createdAt: new Date().toISOString(),
+            localStatus: "sending",
+        };
+
+        addMessageToCache(optimisticMessage);
+
+        const attachment = { type: "sticker", url: stickerUrl };
+
+        try {
+            await chatService.sendMessage(
+                conversationId,
+                stickerUrl,
+                "Sticker",
+                clientMessageId,
+                [attachment]
+            );
+            updateMessageStatus(clientMessageId, "sent");
+        } catch (error) {
+            console.error(error);
+            updateMessageStatus(clientMessageId, "error");
+        }
+    };
+
     const handleGoToFullChat = () => {
         clearPreview();
         dispatch(closeChatPopup(conversationId));
@@ -245,7 +326,7 @@ export default function ChatPopup({
                         dispatch(toggleMinimizePopup(conversationId));
                     }}
                     className="relative bg-transparent p-0 hover:-translate-y-1 transition-transform rounded-full cursor-pointer select-none [-webkit-tap-highlight-color:transparent] outline-none!"
-                    title={`Trò chuyện với ${chatName}`}
+                    title={`TrĂ² chuyá»‡n vá»›i ${chatName}`}
                 >
                     {currentConversation ? (
                         <>
@@ -295,11 +376,11 @@ export default function ChatPopup({
                                 {isShowDotOnline &&
                                     (isOnline ? (
                                         <span className="text-[10px] text-emerald-500 font-medium leading-none">
-                                            Đang hoạt động
+                                            Äang hoáº¡t Ä‘á»™ng
                                         </span>
                                     ) : (
                                         <span className="text-[10px] text-muted-foreground font-medium leading-none">
-                                            Ngoại tuyến
+                                            Ngoáº¡i tuyáº¿n
                                         </span>
                                     ))}
                             </div>
@@ -398,7 +479,7 @@ export default function ChatPopup({
                     className="absolute bottom-17.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
                 >
                     <ArrowDown size={14} />
-                    Tin nhắn mới
+                    Tin nháº¯n má»›i
                 </button>
             )}
 

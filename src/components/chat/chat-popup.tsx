@@ -31,10 +31,10 @@ interface ChatPopupProps {
 }
 
 const suggestedMessages = [
-    "Xin chĂ o đŸ‘‹",
-    "Hi đŸ‘‹",
-    "Ă",
-    "LĂ m quen nhĂ©",
+    "Xin chào 👋",
+    "Hi 👋",
+    "Ê",
+    "Làm quen nhé",
 ];
 
 export default function ChatPopup({
@@ -68,7 +68,7 @@ export default function ChatPopup({
     const isOnline = participants
         .filter((participant) => participant.id !== user?.id)
         .some((participant) => participant.isOnline);
-    const chatName = currentConversation?.name || "NgÆ°á»i dĂ¹ng";
+    const chatName = currentConversation?.name || "Người dùng";
 
     const {
         messages,
@@ -206,13 +206,15 @@ export default function ChatPopup({
     ) => {
         const clientMessageId = crypto.randomUUID();
         const hasAttachments = attachments && attachments.length > 0;
+        const hasImage = hasAttachments && attachments!.some((a) => a.type === "image");
+        const messageType = hasImage ? "Image" : "Text";
 
         const optimisticMessage: MessageResponse = {
             id: clientMessageId,
             clientMessageId,
             senderId: user?.id || "",
             senderName: user?.displayName || "",
-            type: "Text",
+            type: messageType,
             content,
             createdAt: new Date().toISOString(),
             localStatus: "sending",
@@ -237,7 +239,7 @@ export default function ChatPopup({
             await chatService.sendMessage(
                 conversationId,
                 content,
-                "Text",
+                messageType,
                 clientMessageId,
                 attachments
             );
@@ -326,7 +328,7 @@ export default function ChatPopup({
                         dispatch(toggleMinimizePopup(conversationId));
                     }}
                     className="relative bg-transparent p-0 hover:-translate-y-1 transition-transform rounded-full cursor-pointer select-none [-webkit-tap-highlight-color:transparent] outline-none!"
-                    title={`TrĂ² chuyá»‡n vá»›i ${chatName}`}
+                        title={`Trò chuyện với ${chatName}`}
                 >
                     {currentConversation ? (
                         <>
@@ -376,11 +378,11 @@ export default function ChatPopup({
                                 {isShowDotOnline &&
                                     (isOnline ? (
                                         <span className="text-[10px] text-emerald-500 font-medium leading-none">
-                                            Äang hoáº¡t Ä‘á»™ng
+                                            Đang hoạt động
                                         </span>
                                     ) : (
                                         <span className="text-[10px] text-muted-foreground font-medium leading-none">
-                                            Ngoáº¡i tuyáº¿n
+                                            Ngoại tuyến
                                         </span>
                                     ))}
                             </div>
@@ -403,7 +405,7 @@ export default function ChatPopup({
                             handleGoToFullChat();
                         }}
                         className="p-1.5 hover:bg-muted hover:text-foreground rounded-full transition-colors cursor-pointer outline-none!"
-                        title="Mo trong Messenger"
+                        title="Mở trong Messenger"
                     >
                         <Maximize2 size={16} />
                     </div>
@@ -418,7 +420,7 @@ export default function ChatPopup({
                             dispatch(toggleMinimizePopup(conversationId));
                         }}
                         className="p-1.5 hover:bg-muted hover:text-foreground rounded-full transition-colors cursor-pointer outline-none!"
-                        title="Thu nho"
+                        title="Thu nhỏ"
                     >
                         <Minus size={16} />
                     </div>
@@ -433,7 +435,7 @@ export default function ChatPopup({
                             dispatch(closeChatPopup(conversationId));
                         }}
                         className="p-1.5 hover:bg-destructive/10 text-destructive rounded-full transition-colors cursor-pointer outline-none!"
-                        title="Dong"
+                        title="Đóng"
                     >
                         <X size={16} />
                     </div>
@@ -479,13 +481,15 @@ export default function ChatPopup({
                     className="absolute bottom-17.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-3 py-1.5 shadow-xl text-xs flex items-center gap-1.5 animate-bounce z-20 cursor-pointer border border-primary-foreground/10 hover:bg-primary/90 transition-colors"
                 >
                     <ArrowDown size={14} />
-                    Tin nháº¯n má»›i
+                    Tin nhắn mới
                 </button>
             )}
 
             <TypingIndicator typers={typers} compact />
             <ChatInputArea
                 onSendMessage={handleSend}
+                onSendAttachments={handleSendAttachments}
+                onSendSticker={handleSendSticker}
                 onTyping={notifyTyping}
                 onStopTyping={notifyStopTyping}
             />

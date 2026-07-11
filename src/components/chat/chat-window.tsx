@@ -86,22 +86,37 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
     const handleSend = async (content: string, attachments?: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]) => {
         const clientMessageId = crypto.randomUUID();
         const hasAttachments = attachments && attachments.length > 0;
+        const hasImage = hasAttachments && attachments!.some((a) => a.type === "image");
+        const messageType = hasImage ? "Image" : hasAttachments ? "File" : "Text";
 
         const optimisticMsg: MessageResponse = {
             id: clientMessageId,
             clientMessageId: clientMessageId,
             senderId: user?.id || "",
             senderName: user?.displayName || "",
-            type: hasAttachments ? "Text" : "Text",
+            type: messageType,
             content: content,
             createdAt: new Date().toISOString(),
-            localStatus: "sending"
+            localStatus: "sending",
+            ...(hasAttachments
+                ? {
+                      attachments: attachments!.map((a, i) => ({
+                          id: `${clientMessageId}-att-${i}`,
+                          messageId: clientMessageId,
+                          type: a.type,
+                          url: a.url,
+                          publicId: a.publicId,
+                          filename: a.filename,
+                          fileSize: a.fileSize,
+                      })),
+                  }
+                : {}),
         };
 
         addMessageToCache(optimisticMsg);
 
         try {
-            await chatService.sendMessage(conversationId, content, "Text", clientMessageId, attachments);
+            await chatService.sendMessage(conversationId, content, messageType, clientMessageId, attachments);
             updateMessageStatus(clientMessageId, "sent");
         } catch (error) {
             console.error(error);
@@ -111,13 +126,15 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
 
     const handleSendAttachments = async (content: string, attachments: { type: string; url: string; publicId?: string; filename?: string; fileSize?: number }[]) => {
         const clientMessageId = crypto.randomUUID();
+        const hasImage = attachments.some((a) => a.type === "image");
+        const messageType = hasImage ? "Image" : "File";
 
         const optimisticMsg: MessageResponse = {
             id: clientMessageId,
             clientMessageId: clientMessageId,
             senderId: user?.id || "",
             senderName: user?.displayName || "",
-            type: "Text",
+            type: messageType,
             content: content,
             createdAt: new Date().toISOString(),
             localStatus: "sending",
@@ -135,7 +152,7 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
         addMessageToCache(optimisticMsg);
 
         try {
-            await chatService.sendMessage(conversationId, content, "Text", clientMessageId, attachments);
+            await chatService.sendMessage(conversationId, content, messageType, clientMessageId, attachments);
             updateMessageStatus(clientMessageId, "sent");
         } catch (error) {
             console.error(error);

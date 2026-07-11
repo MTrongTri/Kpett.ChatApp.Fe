@@ -97,7 +97,7 @@ export function ChatInputArea({
       }
     } catch (error) {
       console.error("[ChatInputArea] Upload image failed:", error);
-      toast.error("Táº£i áº£nh lĂªn tháº¥t báº¡i. Vui lĂ²ng thá»­ láº¡i.");
+      toast.error("Tải ảnh lên thất bại. Vui lòng thử lại.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -130,7 +130,7 @@ export function ChatInputArea({
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none disabled:opacity-50"
-          title="Gá»­i áº£nh"
+          title="Gửi ảnh"
         >
           <ImageIcon size={18} />
         </button>
@@ -140,7 +140,7 @@ export function ChatInputArea({
             <button
               type="button"
               className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none"
-              title="Gá»­i sticker"
+               title="Gửi sticker"
             >
               <Sticker size={18} />
             </button>
@@ -167,7 +167,7 @@ export function ChatInputArea({
               }
             }}
             onBlur={() => onStopTyping?.()}
-            placeholder={isUploading ? "Äang táº£i áº£nh lĂªn..." : "Aa"}
+            placeholder={isUploading ? "Đang tải ảnh lên..." : "Aa"}
             disabled={isUploading}
             className="text-foreground w-full flex-1 bg-transparent py-1 text-sm outline-none disabled:opacity-50"
           />
@@ -193,7 +193,7 @@ export function ChatInputArea({
                   onEmojiClick={handleEmojiSelect}
                   autoFocusSearch={false}
                   theme={emojiTheme}
-                  searchPlaceHolder="Tim kiem emoji..."
+                  searchPlaceHolder="Tìm kiếm emoji..."
                   width={320}
                   height={400}
                   lazyLoadEmojis
@@ -218,7 +218,7 @@ export function ChatInputArea({
           <button
             type="button"
             className="text-primary hover:bg-primary/10 rounded-full p-1.5 transition outline-none"
-            title="Gui tin nhan thoai"
+            title="Gửi tin nhắn thoại"
           >
             <Mic size={18} />
           </button>

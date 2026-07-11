@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useRef, useState } from "react";
 import { Image as ImageIcon, Mic, Send, Smile, Sticker } from "lucide-react";
@@ -97,7 +97,7 @@ export function ChatInputArea({
       }
     } catch (error) {
       console.error("[ChatInputArea] Upload image failed:", error);
-      toast.error("Tải ảnh lên thất bại. Vui lòng thử lại.");
+      toast.error("Táº£i áº£nh lĂªn tháº¥t báº¡i. Vui lĂ²ng thá»­ láº¡i.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -130,7 +130,7 @@ export function ChatInputArea({
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none disabled:opacity-50"
-          title="Gửi ảnh"
+          title="Gá»­i áº£nh"
         >
           <ImageIcon size={18} />
         </button>
@@ -140,7 +140,7 @@ export function ChatInputArea({
             <button
               type="button"
               className="text-primary hover:bg-muted rounded-full p-1.5 transition outline-none"
-              title="Gửi sticker"
+              title="Gá»­i sticker"
             >
               <Sticker size={18} />
             </button>
@@ -167,7 +167,7 @@ export function ChatInputArea({
               }
             }}
             onBlur={() => onStopTyping?.()}
-            placeholder={isUploading ? "Đang tải ảnh lên..." : "Aa"}
+            placeholder={isUploading ? "Äang táº£i áº£nh lĂªn..." : "Aa"}
             disabled={isUploading}
             className="text-foreground w-full flex-1 bg-transparent py-1 text-sm outline-none disabled:opacity-50"
           />

@@ -92,7 +92,7 @@ export default function PostEditor({
       } else if (mode === "edit" && postData) {
         setContent(postData?.content || "");
         setPrivacy(postData?.privacy || "public");
-        setAllowComments(true);
+        setAllowComments(postData?.allowComments ?? true);
         setMedia(postData?.media || []);
       }
     }
@@ -107,7 +107,7 @@ export default function PostEditor({
         let newPost: Post;
         if (groupId) {
           const { createGroupPost } = await import("@/services/group.service");
-          newPost = await createGroupPost(groupId, { content, privacy, media, isNsfw });
+          newPost = await createGroupPost(groupId, { content, privacy, media, isNsfw, allowComments });
           
           queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
             { queryKey: ["group-posts", groupId] },
@@ -119,7 +119,7 @@ export default function PostEditor({
             }
           );
         } else {
-          newPost = await createPost({ content, privacy, media, isNsfw });
+          newPost = await createPost({ content, privacy, media, isNsfw, allowComments });
           
           queryClient.setQueriesData<InfiniteData<PaginatedData<Post>>>(
             { queryKey: ["feed"] },
@@ -134,7 +134,7 @@ export default function PostEditor({
 
       } else {
         // Logic dành cho Update (Giữ nguyên)
-        await updatePost(postId!, { content, privacy, media, isNsfw });
+        await updatePost(postId!, { content, privacy, media, isNsfw, allowComments });
         queryClient.invalidateQueries({ queryKey: ["post-detail", postId] });
       }
 

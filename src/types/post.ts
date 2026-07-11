@@ -13,6 +13,7 @@ export interface PostMetrics {
 interface PostViewerContext {
   isOwner: boolean;
   isLiked: boolean;
+  reactionType: number | null;
   isSaved: boolean;
   isPinned: boolean;
   canEdit: boolean;
@@ -38,6 +39,7 @@ export interface Post {
   groupId: string | null;
   status?: "approved" | "pending" | "rejected";
   isNsfw?: boolean;
+  allowComments?: boolean;
   group?: {
     id: string;
     name: string | null;
@@ -68,4 +70,5 @@ export interface CreatePostRequest {
   privacy: string,
   media: Media[],
   isNsfw?: boolean,
+  allowComments?: boolean,
 }

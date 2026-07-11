@@ -54,9 +54,9 @@ export const deletePost = async (postId: string): Promise<Post> => {
   return response.data;
 };
 
-export const addReaction = async (postId: string): Promise<void> => {
+export const addReaction = async (postId: string, reactionType: number = 1): Promise<void> => {
   await http.put(`/posts/${postId}/reactions`, {
-    reactionType: 1
+    reactionType
   });
 };
 

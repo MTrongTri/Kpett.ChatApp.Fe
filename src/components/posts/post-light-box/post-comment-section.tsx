@@ -162,7 +162,18 @@ export default function PostCommentSection({
             )}
 
             {/* KHUNG NHẬP BÌNH LUẬN HOẶC YÊU CẦU ĐĂNG NHẬP */}
-            {currentUser ? (
+            {!post.viewerContext.canComment ? (
+                <div className="border-border/50 sticky bottom-0 bg-card border-t px-4 py-4 mt-auto z-10">
+                    <div className="bg-muted/30 border-border flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center">
+                        <p className="text-foreground text-sm font-semibold">
+                            Bình luận đã bị tắt
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                            Chủ bài viết đã tắt tính năng bình luận cho bài viết này.
+                        </p>
+                    </div>
+                </div>
+            ) : currentUser ? (
                 <div className="border-border/50 sticky bottom-0 bg-card border-t px-4 pt-4 pb-4 mt-auto z-10">
                     <CommentInput
                         author={currentUser}

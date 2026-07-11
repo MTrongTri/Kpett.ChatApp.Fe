@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import { useDispatch, useSelector } from 'react-redux';
 import { produce } from 'immer';
@@ -133,7 +133,11 @@ export const useChatRealtime = (currentConversationId?: string | null) => {
             if (!isFoundInCache) {
                 try {
                     const missingConversation =
-                        await chatService.getConversationById(targetConversationId);
+                        await queryClient.fetchQuery({
+                            queryKey: ['conversation', targetConversationId],
+                            queryFn: () => chatService.getConversationById(targetConversationId),
+                            staleTime: 30000,
+                        });
 
                     queryClient.setQueryData<ConversationsCache>(
                         ['conversations'],

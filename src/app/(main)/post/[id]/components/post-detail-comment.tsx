@@ -123,7 +123,18 @@ export default function PostDetailComments({ post }: { post: Post }) {
             </div>
 
             <div className="mt-5 pt-4">
-                {currentUser ? (
+                {!post.viewerContext.canComment ? (
+                    <div className="bg-muted/30 border-border flex flex-col items-center justify-between gap-3 rounded-xl border p-3 text-center sm:flex-row sm:px-4 sm:text-left">
+                        <div>
+                            <p className="text-foreground text-sm font-semibold">
+                                Bình luận đã bị tắt
+                            </p>
+                            <p className="text-muted-foreground mt-0.5 text-xs">
+                                Chủ bài viết đã tắt tính năng bình luận cho bài viết này.
+                            </p>
+                        </div>
+                    </div>
+                ) : currentUser ? (
                     <>
                         <CommentInput
                             author={currentUser}

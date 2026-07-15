@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       "api.dicebear.com",
       "picsum.photos",
       "res.cloudinary.com",
+      "kpettapi.idct.duckdns.org",
+      "localhost",
     ],
   },
 };

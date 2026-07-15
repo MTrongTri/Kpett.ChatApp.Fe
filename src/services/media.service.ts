@@ -27,7 +27,7 @@ export const uploadFile = async (
     },
   });
 
-  const data = response.data.data;
+  const data = response.data;
   const type = file.type.startsWith("video/") ? "video" : "image";
 
   return {

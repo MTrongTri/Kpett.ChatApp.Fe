@@ -3,7 +3,7 @@
 import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
-import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Maximize2, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useDispatch } from "react-redux";
@@ -97,16 +97,35 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                                 });
                                             }}
                                         />
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                dispatch(openMediaLightBox({ media, index }));
-                                            }}
-                                            className="absolute top-3 right-3 z-10 rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                                            title="Mở hộp thoại toàn màn hình"
-                                        >
-                                            <Maximize2 className="h-5 w-5" />
-                                        </button>
+                                        <div className="absolute top-3 right-3 z-10 flex gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const a = document.createElement('a');
+                                                    a.href = optimizedUrl;
+                                                    a.download = `video-${index + 1}.mp4`;
+                                                    a.target = '_blank';
+                                                    a.rel = 'noopener noreferrer';
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                }}
+                                                className="rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                                title="Tải video"
+                                            >
+                                                <Download className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    dispatch(openMediaLightBox({ media, index }));
+                                                }}
+                                                className="rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                                title="Mở hộp thoại toàn màn hình"
+                                            >
+                                                <Maximize2 className="h-5 w-5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div
@@ -124,16 +143,35 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                                             <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                                         </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                dispatch(openMediaLightBox({ media, index }));
-                                            }}
-                                            className="absolute top-3 right-3 z-10 rounded-lg bg-black/40 p-1.5 text-white opacity-0 backdrop-blur-sm transition-all hover:bg-black/70 group-hover/video:opacity-100 md:opacity-0"
-                                            title="Mở hộp thoại toàn màn hình"
-                                        >
-                                            <Maximize2 className="h-5 w-5" />
-                                        </button>
+                                        <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 transition-all group-hover/video:opacity-100 md:opacity-0">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const a = document.createElement('a');
+                                                    a.href = optimizedUrl;
+                                                    a.download = `video-${index + 1}.mp4`;
+                                                    a.target = '_blank';
+                                                    a.rel = 'noopener noreferrer';
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                }}
+                                                className="rounded-lg bg-black/40 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                                title="Tải video"
+                                            >
+                                                <Download className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    dispatch(openMediaLightBox({ media, index }));
+                                                }}
+                                                className="rounded-lg bg-black/40 p-1.5 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                                title="Mở hộp thoại toàn màn hình"
+                                            >
+                                                <Maximize2 className="h-5 w-5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </SwiperSlide>

@@ -9,7 +9,7 @@ import {
 import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { cn } from "@/lib/utils";
 import { Media } from "@/types/media";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -101,12 +101,31 @@ export function MediaLightbox({
                         />
                       </div>
                     ) : (
-                      <video
-                        src={optimizedUrl}
-                        controls
-                        autoPlay
-                        className="max-h-full max-w-full shadow-2xl"
-                      />
+                      <div className="relative flex items-center justify-center">
+                        <video
+                          src={optimizedUrl}
+                          controls
+                          autoPlay
+                          className="max-h-full max-w-full shadow-2xl"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const a = document.createElement('a');
+                            a.href = optimizedUrl;
+                            a.download = `video-${index + 1}.mp4`;
+                            a.target = '_blank';
+                            a.rel = 'noopener noreferrer';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="absolute top-2 right-2 z-10 rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                          title="Tải video"
+                        >
+                          <Download className="h-5 w-5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </SwiperSlide>

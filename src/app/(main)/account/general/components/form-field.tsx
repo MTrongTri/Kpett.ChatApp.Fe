@@ -19,7 +19,7 @@ export default function FormField({
     <div className={cn("mb-5 last:mb-0", className)}>
       <label className="
         block  text-[11px] font-semibold
-        uppercase text-foreground/50
+        uppercase text-muted-foreground
         mb-1.5
       ">
         {label}
@@ -31,7 +31,7 @@ export default function FormField({
       {children}
 
       {hint && (
-        <p className=" text-[11px] text-foreground/30 mt-1.5 leading-relaxed">
+        <p className=" text-[11px] text-muted-foreground/60 mt-1.5 leading-relaxed">
           {hint}
         </p>
       )}

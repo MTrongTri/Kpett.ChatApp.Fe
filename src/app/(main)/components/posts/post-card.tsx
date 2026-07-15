@@ -70,7 +70,7 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <article className="border-0 md:border-border bg-card rounded-xl md:border transition-all duration-200 relative">
+    <article className="border-0 md:border-border bg-card rounded-xl md:border transition-all duration-200 relative hover:shadow-md hover:-translate-y-0.5">
       {/* ── DELETE CONFIRM ── */}
       {showDeleteConfirm && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-xl bg-black/70 backdrop-blur-sm p-6">

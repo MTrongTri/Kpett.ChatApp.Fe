@@ -87,7 +87,7 @@ export default function ProfileTabs({ author }: ProfileTabsProps) {
               {t.icon}
               <span className="hidden sm:inline">{t.label}</span>
               {active && (
-                <span className="bg-primary absolute right-0 -bottom-px left-0 h-0.5 rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.4)]" />
+                <span className="bg-primary absolute right-0 -bottom-px left-0 h-0.5 rounded-t-full shadow-[0_-2px_8px_oklch(0.73_0.18_72/0.4)]" />
               )}
             </button>
           );

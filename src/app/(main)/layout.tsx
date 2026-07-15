@@ -1,6 +1,6 @@
-// import Navbar from '@/components/layout/Navbar'
-
 import Header from "@/components/layouts/main/header";
+import BottomNav from "@/components/layouts/main/bottom-nav";
+import ConnectionIndicator from "@/components/shared/connection-indicator";
 
 export default function MainLayout({
   children,
@@ -10,7 +10,11 @@ export default function MainLayout({
   return (
     <main className="h-full mx-auto max-w-360">
       <Header />
-      {children}
+      <ConnectionIndicator />
+      <div className="pt-[58px] pb-20 md:pb-0">
+        {children}
+      </div>
+      <BottomNav />
     </main>
   );
 }

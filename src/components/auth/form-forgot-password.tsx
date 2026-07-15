@@ -64,25 +64,30 @@ export default function FormForgotPassword() {
       transition={{ duration: 0.4 }}
       className="z-10 w-full max-w-md"
     >
-      <Card className="border-zinc-200 bg-white/80 shadow-2xl shadow-zinc-200/50 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/50">
+      <Card className="border-border bg-card/80 shadow-xl backdrop-blur-md transition-colors dark:bg-card/90">
         <CardHeader className="space-y-2 pt-8 text-center">
           <div className="mx-auto flex items-center justify-center">
             <Logo />
           </div>
-          <CardTitle className="text-2xl font-black tracking-tighter text-zinc-950 dark:text-zinc-50">
+          <CardTitle className="text-2xl font-black tracking-tighter text-foreground">
             Quên mật khẩu
           </CardTitle>
-          <CardDescription className="font-medium text-zinc-500 dark:text-zinc-400">
+          <CardDescription className="font-medium text-muted-foreground">
             Nhập email để nhận mã OTP đặt lại mật khẩu
           </CardDescription>
         </CardHeader>
 
         <CardContent className="grid gap-5">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="space-y-1.5"
+            >
               <Label
                 htmlFor="email"
-                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-bold text-foreground/80"
               >
                 Email
               </Label>
@@ -91,36 +96,42 @@ export default function FormForgotPassword() {
                 type="email"
                 placeholder="name@example.com"
                 {...register("email")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.email ? "border-red-500 dark:border-red-500" : ""
-                  }`}
+                className={`h-11 ${errors.email ? "border-destructive" : ""}`}
               />
               {errors.email && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                <p className="text-xs font-medium text-destructive">
                   {errors.email.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 h-12 w-full cursor-pointer rounded-md bg-zinc-950 text-xs font-bold tracking-widest text-white transition-all hover:bg-zinc-800 active:scale-[0.99] dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "GỬI OTP"
-              )}
-            </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                size="lg"
+                className="mt-2 w-full font-bold tracking-widest active:scale-[0.99]"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "GỬI OTP"
+                )}
+              </Button>
+            </motion.div>
           </form>
         </CardContent>
 
-        <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-8">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <CardFooter className="flex-col items-center gap-4 pt-2 pb-8">
+          <p className="text-sm font-medium text-muted-foreground">
             Đã nhớ mật khẩu?{" "}
             <Link
               href="/login"
-              className="cursor-pointer font-black text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50"
+              className="font-bold text-primary underline-offset-4 hover:underline"
             >
               Đăng nhập
             </Link>

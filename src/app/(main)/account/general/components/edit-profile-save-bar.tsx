@@ -35,7 +35,7 @@ export default function EditProfileSaveBar({
       {/* Dirty indicator */}
       <div className="flex items-center gap-2.5">
         <span className="h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
-        <span className=" text-[12px] text-foreground/50">
+        <span className=" text-xs text-muted-foreground">
           Có thay đổi chưa lưu
         </span>
       </div>

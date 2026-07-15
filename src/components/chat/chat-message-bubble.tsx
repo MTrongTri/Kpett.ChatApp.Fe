@@ -99,8 +99,8 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                                 </div>
                                 {msg.content && (
                                     <div className={cn(
-                                        "px-4 py-2 text-[15px] shadow-sm",
-                                        isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border",
+                                        "px-4 py-2 text-[15px]",
+                                        isMine ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-card text-foreground border border-border",
                                         borderRadiusClass
                                     )}>
                                         {msg.content}
@@ -111,7 +111,7 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                             <div className={cn(
                                 "px-4 py-2 text-[15px] shadow-sm",
                                 borderRadiusClass,
-                                isMine ? "bg-primary text-primary-foreground" : "bg-card text-foreground border border-border",
+                                isMine ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-card text-foreground border border-border",
                                 msg.localStatus === "sending" ? "opacity-70" : ""
                             )}>
                                 {msg.content}

@@ -1,6 +1,8 @@
 export function PostCardSkeleton() {
   return (
-    <article className="border-border bg-card rounded-xl border transition-all duration-200">
+    <article className="border-border bg-card rounded-xl border transition-all duration-200 relative overflow-hidden">
+      {/* Shimmer overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full animate-shimmer pointer-events-none" />
       {/* ── HEADER SKELETON ── */}
       <div className="flex items-start gap-3 p-4 pb-0">
         {/* Avatar Skeleton */}

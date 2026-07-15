@@ -709,7 +709,7 @@ export default function GroupDetailPage() {
               />
             </div>
           ) : (
-            <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 relative">
+            <div className="h-[200px] md:h-[260px] overflow-hidden rounded-b-3xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 relative">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-10 -left-16 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
@@ -746,7 +746,7 @@ export default function GroupDetailPage() {
                   <img src={group.avatarUrl} alt={group.name} className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="h-28 w-28 md:h-32 md:w-32 rounded-full border-4 border-background shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="h-28 w-28 md:h-32 md:w-32 rounded-full border-4 border-background shadow-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-3xl font-bold">
                   {(group.name || "G").charAt(0).toUpperCase()}
                 </div>
               )}

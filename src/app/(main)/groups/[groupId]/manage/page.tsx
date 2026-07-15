@@ -256,8 +256,8 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
     if (!file) return;
     setIsUploadingCover(true);
     try {
-      const { uploadFileToCloudinary } = await import("@/services/media.service");
-      const result = await uploadFileToCloudinary(file, "group-covers");
+      const { uploadFile } = await import("@/services/media.service");
+      const result = await uploadFile(file, "group-covers");
       saveGroup({ coverImageUrl: result.url });
     } catch {
       toast.error("Không thể tải ảnh bìa lên.");
@@ -271,8 +271,8 @@ function GeneralTab({ group, groupId }: { group: GroupDetailResponse; groupId: s
     if (!file) return;
     setIsUploadingAvatar(true);
     try {
-      const { uploadFileToCloudinary } = await import("@/services/media.service");
-      const result = await uploadFileToCloudinary(file, "group-avatars");
+      const { uploadFile } = await import("@/services/media.service");
+      const result = await uploadFile(file, "group-avatars");
       saveGroup({ avatarUrl: result.url });
     } catch {
       toast.error("Không thể tải ảnh đại diện lên.");

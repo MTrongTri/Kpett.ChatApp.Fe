@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
-import { uploadFileToCloudinary } from "@/services/media.service";
+import { uploadFile } from "@/services/media.service";
 import { deleteUserMediaPrimary, updateUserMedia } from "@/services/user.service";
 import { useDispatch } from "react-redux";
 import { openMediaLightBox } from "@/store/features/modal-slice";
@@ -85,7 +85,7 @@ export default function ProfileAvatarRow({
       const localUrl = URL.createObjectURL(compressedFile);
       setPreviewUrl(localUrl);
 
-      const uploadedMedia = await uploadFileToCloudinary(
+      const uploadedMedia = await uploadFile(
         compressedFile,
         "avatars",
         (percent) => setUploadProgress(percent)

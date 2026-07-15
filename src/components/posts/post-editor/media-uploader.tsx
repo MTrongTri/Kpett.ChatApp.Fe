@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { compressImageClientSide, validateFile } from "@/lib/file-utils";
-import { deleteFile, uploadFileToCloudinary } from "@/services/media.service";
+import { deleteFile, uploadFile } from "@/services/media.service";
 import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
-import axios from "axios";
 import { Loader2, Play, Plus, UploadCloud, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -109,7 +107,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
 
       const uploadPromises = newQueueItems.map(async (queueItem) => {
         try {
-          const result = await uploadFileToCloudinary(
+          const result = await uploadFile(
             queueItem.file,
             "posts",
             (percent) => {
@@ -123,8 +121,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           );
           return { success: true, item: queueItem, result, canceled: false };
         } catch (error: unknown) {
-          // Bắt lỗi hủy từ Axios chuẩn xác
-          const isCanceled = axios.isCancel(error);
+          const isCanceled = error instanceof DOMException && error.name === "AbortError";
           return { success: false, item: queueItem, error, canceled: isCanceled };
         }
       });
@@ -134,6 +131,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       const successfulUploads: Media[] = [];
       const completedIds: string[] = [];
       let hasError = false;
+      let firstUploadError: string | null = null;
 
       results.forEach((res) => {
         if (res.status === "fulfilled") {
@@ -145,6 +143,10 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           } else if (!canceled) {
             console.error("Lỗi upload file:", item.file.name, error);
             hasError = true;
+            firstUploadError =
+              error instanceof Error
+                ? error.message
+                : "Lỗi mạng hoặc file vượt quá giới hạn của dịch vụ upload.";
           }
 
           // Xóa preview URL khỏi RAM khi xử lý xong
@@ -152,7 +154,11 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         }
       });
 
-      if (hasError) {
+      if (hasError && firstUploadError) {
+        toast.error(firstUploadError);
+      }
+
+      if (hasError && !firstUploadError) {
         toast.error("Một số file tải lên thất bại do lỗi mạng hoặc quá dung lượng.");
       }
 
@@ -217,7 +223,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     try {
       setDeletingIds((prev) => [...prev, itemToRemove.publicId]);
 
-      await deleteFile(itemToRemove.publicId, itemToRemove.type);
+      await deleteFile(itemToRemove.url);
 
       successfullyDeletedIdsRef.current.add(itemToRemove.publicId);
 
@@ -291,14 +297,14 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
                     className="group/video relative h-full w-full cursor-pointer bg-black"
                     onClick={() => dispatch(openMediaLightBox({ media, index }))}
                   >
-                    <video src={getOptimizedCloudinaryUrl(item.url)} className="h-full w-full object-contain" preload="metadata" />
+                    <video src={item.url} className="h-full w-full object-contain" preload="metadata" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-all group-hover/video:bg-black/25">
                       <Play className="h-14 w-14 text-white opacity-90 drop-shadow-lg transition-transform duration-200 group-hover/video:scale-110" />
                     </div>
                   </div>
                 ) : (
                   <img
-                    src={getOptimizedCloudinaryUrl(item.url)}
+                    src={item.url}
                     alt="Uploaded"
                     className="h-full w-full object-cover cursor-pointer"
                     onClick={() => dispatch(openMediaLightBox({ media, index }))}

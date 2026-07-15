@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { uploadFileToCloudinary } from "@/services/media.service";
+import { uploadFile } from "@/services/media.service";
 import { StickerPicker } from "./sticker-picker";
 import { toast } from "sonner";
 
@@ -85,7 +85,7 @@ export function ChatInputArea({
     setIsUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const result = await uploadFileToCloudinary(file, "chat");
+        const result = await uploadFile(file, "chat");
         const attachment: AttachmentInfo = {
           type: result.type,
           url: result.url,

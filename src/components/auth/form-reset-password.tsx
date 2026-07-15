@@ -94,25 +94,30 @@ export default function FormResetPassword() {
       transition={{ duration: 0.4 }}
       className="z-10 w-full max-w-md"
     >
-      <Card className="border-zinc-200 bg-white/80 shadow-2xl shadow-zinc-200/50 backdrop-blur-md transition-colors dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/50">
+      <Card className="border-border bg-card/80 shadow-xl backdrop-blur-md transition-colors dark:bg-card/90">
         <CardHeader className="space-y-2 pt-8 text-center">
           <div className="mx-auto flex items-center justify-center">
             <Logo />
           </div>
-          <CardTitle className="text-2xl font-black tracking-tighter text-zinc-950 dark:text-zinc-50">
+          <CardTitle className="text-2xl font-black tracking-tighter text-foreground">
             Đặt lại mật khẩu
           </CardTitle>
-          <CardDescription className="font-medium text-zinc-500 dark:text-zinc-400">
+          <CardDescription className="font-medium text-muted-foreground">
             Nhập mã OTP và mật khẩu mới
           </CardDescription>
         </CardHeader>
 
         <CardContent className="grid gap-5">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="space-y-1.5"
+            >
               <Label
                 htmlFor="email"
-                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-bold text-foreground/80"
               >
                 Email
               </Label>
@@ -121,20 +126,24 @@ export default function FormResetPassword() {
                 type="email"
                 placeholder="name@example.com"
                 {...register("email")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.email ? "border-red-500 dark:border-red-500" : ""
-                  }`}
+                className={`h-11 ${errors.email ? "border-destructive" : ""}`}
               />
               {errors.email && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                <p className="text-xs font-medium text-destructive">
                   {errors.email.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+              className="space-y-1.5"
+            >
               <Label
                 htmlFor="otp"
-                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-bold text-foreground/80"
               >
                 Mã OTP
               </Label>
@@ -144,20 +153,24 @@ export default function FormResetPassword() {
                 placeholder="123456"
                 maxLength={6}
                 {...register("otp")}
-                className={`h-11 rounded-md border-zinc-200 bg-transparent text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.otp ? "border-red-500 dark:border-red-500" : ""
-                  }`}
+                className={`h-11 ${errors.otp ? "border-destructive" : ""}`}
               />
               {errors.otp && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                <p className="text-xs font-medium text-destructive">
                   {errors.otp.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="space-y-1.5"
+            >
               <Label
                 htmlFor="newPassword"
-                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-bold text-foreground/80"
               >
                 Mật khẩu mới
               </Label>
@@ -167,28 +180,32 @@ export default function FormResetPassword() {
                   type={showNewPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("newPassword")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.newPassword ? "border-red-500 dark:border-red-500" : ""
-                    }`}
+                  className={`h-11 pr-10 ${errors.newPassword ? "border-destructive" : ""}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-zinc-50"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                <p className="text-xs font-medium text-destructive">
                   {errors.newPassword.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <div className="space-y-1.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.25 }}
+              className="space-y-1.5"
+            >
               <Label
                 htmlFor="confirmPassword"
-                className="text-xs font-bold text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-bold text-foreground/80"
               >
                 Xác nhận mật khẩu
               </Label>
@@ -198,44 +215,50 @@ export default function FormResetPassword() {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("confirmPassword")}
-                  className={`h-11 rounded-md border-zinc-200 bg-transparent pr-10 text-zinc-900 transition-all placeholder:text-zinc-400 focus:border-zinc-950 focus:ring-0 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-50 ${errors.confirmPassword ? "border-red-500 dark:border-red-500" : ""
-                    }`}
+                  className={`h-11 pr-10 ${errors.confirmPassword ? "border-destructive" : ""}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-zinc-50"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-[10px] font-bold text-red-500 dark:text-red-400">
+                <p className="text-xs font-medium text-destructive">
                   {errors.confirmPassword.message}
                 </p>
               )}
-            </div>
+            </motion.div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 h-12 w-full cursor-pointer rounded-md bg-zinc-950 text-xs font-bold tracking-widest text-white transition-all hover:bg-zinc-800 active:scale-[0.99] dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "ĐẶT LẠI MẬT KHẨU"
-              )}
-            </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                size="lg"
+                className="mt-2 w-full font-bold tracking-widest active:scale-[0.99]"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "ĐẶT LẠI MẬT KHẨU"
+                )}
+              </Button>
+            </motion.div>
           </form>
         </CardContent>
 
-        <CardFooter className="flex flex-col items-center gap-4 pt-2 pb-8">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <CardFooter className="flex-col items-center gap-4 pt-2 pb-8">
+          <p className="text-sm font-medium text-muted-foreground">
             Đã nhớ mật khẩu?{" "}
             <Link
               href="/login"
-              className="cursor-pointer font-black text-zinc-950 underline-offset-4 hover:underline dark:text-zinc-50"
+              className="font-bold text-primary underline-offset-4 hover:underline"
             >
               Đăng nhập
             </Link>

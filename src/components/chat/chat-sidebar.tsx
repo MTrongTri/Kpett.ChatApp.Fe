@@ -60,7 +60,7 @@ export default function ChatSidebar() {
                 </div>
             </div>
 
-            <div className="px-4 pb-2 hidden">
+            <div className="px-4 pb-2">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input

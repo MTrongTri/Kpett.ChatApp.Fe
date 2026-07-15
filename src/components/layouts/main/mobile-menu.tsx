@@ -53,10 +53,9 @@ export default function MobileMenu() {
           size="icon"
           className="
             md:hidden h-9 w-9 rounded-md
-            bg-white dark:bg-zinc-900 
-            border-zinc-200 dark:border-zinc-700 
-            text-zinc-600 dark:text-zinc-400
-            hover:bg-zinc-100 dark:hover:bg-zinc-800
+            bg-background border-border
+            text-muted-foreground
+            hover:bg-muted
           "
         >
           <Menu size={16} />
@@ -65,14 +64,14 @@ export default function MobileMenu() {
 
       <SheetContent
         side="left"
-        className="w-72 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 p-0 flex flex-col"
+        className="w-72 bg-background border-border p-0 flex flex-col"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Menu điều hướng</SheetTitle>
         </SheetHeader>
 
         {/* Header của Menu: Sử dụng lại component Logo */}
-        <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="px-6 py-5 border-b border-border">
           <Logo />
         </div>
 
@@ -89,11 +88,11 @@ export default function MobileMenu() {
                   "text-[12px] font-semibold tracking-wider uppercase transition-all",
                   active
                     ? "text-primary bg-primary/10 dark:bg-amber-400/10"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50",
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 {/* Clone icon để tùy chỉnh size nếu cần */}
-                <span className={cn(active ? "text-primary" : "text-zinc-400")}>
+                <span className={cn(active ? "text-primary" : "text-muted-foreground")}>
                   {tab.icon}
                 </span>
                 {tab.label}
@@ -103,7 +102,7 @@ export default function MobileMenu() {
         </nav>
 
 
-        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="p-4 border-t border-border">
           {currentUser ? (
             <Button
               onClick={handleOpenCreate}

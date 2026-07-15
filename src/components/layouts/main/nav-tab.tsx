@@ -48,7 +48,7 @@ export default function NavTabs() {
               "transition-all duration-200 whitespace-nowrap",
               active
                 ? "text-primary bg-primary/10 dark:bg-primary/20"
-                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
           >
             {/* Thêm hiệu ứng cho icon khi active */}

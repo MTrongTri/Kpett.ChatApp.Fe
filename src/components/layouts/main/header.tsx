@@ -17,7 +17,7 @@ export default function Header() {
   const { user } = useAuth();
 
   return (
-    <header className="fixed gap-4 top-0 right-0 left-0 z-50 flex h-14.5 items-center border-b border-zinc-200 bg-white/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7 dark:border-zinc-800 dark:bg-zinc-950/90">
+    <header className="fixed gap-4 top-0 right-0 left-0 z-50 flex h-14.5 items-center border-b border-border bg-background/80 px-5 backdrop-blur-xl transition-colors duration-300 md:px-7">
       {/* Logo */}
       <Logo />
 

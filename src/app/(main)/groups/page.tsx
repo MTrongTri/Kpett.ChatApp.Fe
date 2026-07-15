@@ -32,16 +32,16 @@ import type { MyGroupItem, SearchGroupItem } from "@/types/group";
 // ── Cover gradient palette ──
 
 const COVER_GRADIENTS = [
-  "from-violet-600 via-purple-600 to-fuchsia-600",
+  "from-amber-600 via-orange-600 to-rose-500",
   "from-cyan-600 via-teal-600 to-emerald-600",
-  "from-orange-600 via-rose-600 to-pink-600",
+  "from-orange-600 via-rose-500 to-pink-500",
   "from-blue-600 via-indigo-600 to-violet-600",
   "from-emerald-600 via-teal-600 to-cyan-600",
-  "from-pink-600 via-rose-600 to-orange-600",
+  "from-pink-600 via-rose-500 to-orange-600",
   "from-indigo-600 via-blue-600 to-cyan-600",
-  "from-amber-600 via-orange-600 to-rose-600",
+  "from-amber-600 via-orange-500 to-rose-600",
   "from-teal-600 via-emerald-600 to-green-600",
-  "from-fuchsia-600 via-pink-600 to-rose-600",
+  "from-rose-500 via-pink-500 to-amber-500",
 ];
 
 function getCoverGradient(id: string) {
@@ -64,7 +64,7 @@ function getPrivacyLabel(privacy: number | string) {
 function getRoleBadge(role: number) {
   switch (role) {
     case 2:
-      return { label: "Quản trị", icon: Crown, color: "text-amber-300 bg-amber-500/20 border-amber-500/30" };
+      return { label: "Quản trị", icon: Crown, color: "text-amber-300 bg-amber-500/20 border-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/20" };
     case 1:
       return { label: "Kiểm duyệt", icon: Shield, color: "text-blue-300 bg-blue-500/20 border-blue-500/30" };
     default:
@@ -85,7 +85,7 @@ function GroupAvatar({ name, avatarUrl, className }: { name: string | null; avat
   return (
     <div
       className={cn(
-        "shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold ring-2 ring-white/20",
+        "shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white font-bold ring-2 ring-white/20",
         className,
       )}
     >
@@ -104,7 +104,7 @@ function GroupTileCard({ group }: { group: MyGroupItem }) {
   return (
     <Link
       href={`/groups/${group.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
     >
       <div className={cn("relative h-24 bg-gradient-to-br", coverGradient)}>
         <div className="absolute inset-0 bg-black/20" />
@@ -125,7 +125,7 @@ function GroupTileCard({ group }: { group: MyGroupItem }) {
 
       <div className="flex flex-1 flex-col justify-between gap-2 p-4">
         <div>
-          <p className="truncate text-[15px] font-bold text-foreground group-hover:text-purple-400 transition-colors">
+          <p className="truncate text-[15px] font-bold text-foreground group-hover:text-primary transition-colors">
             {group.name || "Nhóm không tên"}
           </p>
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
@@ -136,7 +136,7 @@ function GroupTileCard({ group }: { group: MyGroupItem }) {
             {group.unreadPostCount > 0 && (
               <>
                 <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                <span className="font-semibold text-purple-400">
+                <span className="font-semibold text-primary">
                   +{group.unreadPostCount}
                 </span>
               </>
@@ -145,7 +145,7 @@ function GroupTileCard({ group }: { group: MyGroupItem }) {
         </div>
         <div className="flex items-center justify-between border-t border-border/50 pt-3">
           <span className="text-[11px] text-muted-foreground/60">Mở nhóm</span>
-          <ChevronRight size={14} className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-purple-400" />
+          <ChevronRight size={14} className="text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
         </div>
       </div>
     </Link>
@@ -160,7 +160,7 @@ function DiscoverGroupCard({ group }: { group: SearchGroupItem }) {
   return (
     <Link
       href={`/groups/${group.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
     >
       <div className={cn("relative h-20 bg-gradient-to-br", coverGradient)}>
         <div className="absolute inset-0 bg-black/20" />
@@ -191,12 +191,12 @@ function DiscoverGroupCard({ group }: { group: SearchGroupItem }) {
             <span>{formatCompactNumber(group.memberCount)}</span>
           </div>
           {group.isMember ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400">
               <UserCheck size={10} />
               Đã tham gia
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[11px] font-semibold text-purple-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
               Khám phá
             </span>
           )}
@@ -210,7 +210,7 @@ function DiscoverGroupCard({ group }: { group: SearchGroupItem }) {
 
 function GroupTileSkeleton() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card animate-pulse">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card animate-pulse">
       <div className="h-24 bg-muted" />
       <div className="p-4 space-y-3">
         <div className="h-4 w-3/4 rounded bg-muted" />
@@ -284,7 +284,7 @@ export default function GroupsPage() {
   if (!user) {
     return (
       <div className="mt-14.5 flex min-h-[calc(100vh-5rem)] items-center justify-center px-4">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 p-8 text-center shadow-2xl max-w-md">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 p-8 text-center shadow-2xl max-w-md">
           <div className="absolute inset-0 opacity-[0.04]"
             style={{
               backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
@@ -299,7 +299,7 @@ export default function GroupsPage() {
             Đăng nhập để khám phá và tham gia các cộng đồng trên Kpett.
           </p>
           <div className="relative mt-6 flex justify-center">
-            <Button asChild className="rounded-full px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-0 shadow-lg shadow-purple-500/25">
+            <Button asChild className="rounded-full px-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0 shadow-lg shadow-amber-500/25">
               <Link href="/login">Đăng nhập</Link>
             </Button>
           </div>
@@ -313,17 +313,17 @@ export default function GroupsPage() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6">
 
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950 p-6 shadow-2xl md:p-8">
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-amber-950 to-orange-950 p-6 shadow-2xl md:p-8">
           <DotPattern />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-purple-300 backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 backdrop-blur-sm">
                 <Hash size={12} />
                 Kpett Groups
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
                 Cộng đồng{" "}
-                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
                   Kpett
                 </span>
               </h1>
@@ -343,7 +343,7 @@ export default function GroupsPage() {
                   Lời mời
                 </Link>
               </Button>
-              <Button asChild className="rounded-full border-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500">
+              <Button asChild className="rounded-full border-0 bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:from-amber-500 hover:to-orange-500">
                 <Link href="/groups/create">
                   <Plus size={18} />
                   Tạo nhóm
@@ -363,7 +363,7 @@ export default function GroupsPage() {
                 key={i}
                 className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-colors hover:bg-white/[0.07]"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/20 text-purple-300">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
                   <stat.icon size={18} />
                 </div>
                 <div className="mt-3">
@@ -401,7 +401,7 @@ export default function GroupsPage() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Tìm nhóm..."
-                  className="h-10 rounded-xl border-white/10 bg-card pl-9 pr-4 text-sm placeholder:text-muted-foreground/50"
+                   className="h-10 rounded-xl border-border bg-card pl-9 pr-4 text-sm placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -417,8 +417,8 @@ export default function GroupsPage() {
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all",
                       filterRole === f.value
-                        ? "border-purple-500/50 bg-purple-500/20 text-purple-300 shadow-sm shadow-purple-500/10"
-                        : "border-white/10 bg-card text-muted-foreground hover:border-white/20 hover:text-foreground",
+                        ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
+                        : "border-border bg-card text-muted-foreground hover:border-foreground/20 hover:text-foreground",
                     )}
                   >
                     {Icon && <Icon size={12} />}
@@ -436,9 +436,9 @@ export default function GroupsPage() {
                 ))}
               </div>
             ) : filteredGroups.length === 0 ? (
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/50 to-purple-950/50 px-6 py-12 text-center">
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-12 text-center">
                 <DotPattern />
-                <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/25">
+          <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
                   <Users size={24} className="text-white" />
                 </div>
                 <h3 className="relative text-lg font-bold text-white">
@@ -449,7 +449,7 @@ export default function GroupsPage() {
                 <p className="relative mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-400">
                   Khám phá các cộng đồng bên cạnh hoặc tạo nhóm mới để bắt đầu.
                 </p>
-                <Button asChild className="relative mt-5 rounded-full border-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500">
+                <Button asChild className="relative mt-5 rounded-full">
                   <Link href="/groups/create">
                     <Plus size={16} />
                     Tạo nhóm đầu tiên
@@ -478,17 +478,17 @@ export default function GroupsPage() {
                     Tạo nhóm hoặc xem lời mời
                   </p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/25">
-                  <Sparkles size={16} className="text-white" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Sparkles size={16} />
                 </div>
               </div>
 
               <div className="mt-4 space-y-2">
                 <Link
                   href="/groups/create"
-                  className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-sm hover:shadow-purple-500/5"
+                  className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-all hover:border-primary/30 hover:bg-primary/5"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/20 text-purple-300">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Plus size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -504,9 +504,9 @@ export default function GroupsPage() {
 
                 <Link
                   href="/groups/invitations"
-                  className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 hover:shadow-sm hover:shadow-purple-500/5"
+                  className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-all hover:border-primary/30 hover:bg-primary/5"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300 dark:bg-amber-500/10 dark:text-amber-400">
                     <Sparkles size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -523,7 +523,7 @@ export default function GroupsPage() {
             </div>
 
             {/* Discover */}
-            <div className="rounded-2xl border border-white/10 bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-foreground">
@@ -533,15 +533,15 @@ export default function GroupsPage() {
                     Tìm cộng đồng mới
                   </p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
-                  <Compass size={16} className="text-white" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Compass size={16} />
                 </div>
               </div>
 
               <div className="mt-5 space-y-3">
                 {debouncedKeyword.trim().length < 2 ? (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-center">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
+                  <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
+                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <Search size={18} />
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -555,7 +555,7 @@ export default function GroupsPage() {
                     ))}
                   </div>
                 ) : searchResults.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-center">
+                  <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
                     <p className="text-xs text-muted-foreground">
                       Không tìm thấy nhóm với từ khóa &quot;{debouncedKeyword}&quot;.
                     </p>

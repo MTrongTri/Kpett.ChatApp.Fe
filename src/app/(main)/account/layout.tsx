@@ -19,7 +19,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
           <h1 className="text-foreground text-[28px] font-bold tracking-tight">
             Chỉnh sửa trang cá nhân
           </h1>
-          <p className="text-foreground/40 mt-1 text-[12px]">
+          <p className="text-muted-foreground mt-1 text-xs">
             Thay đổi sẽ được hiển thị công khai trên trang của bạn
           </p>
         </div>

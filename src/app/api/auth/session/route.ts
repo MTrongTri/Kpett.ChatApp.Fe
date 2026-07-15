@@ -39,8 +39,12 @@ export async function GET(req: NextRequest) {
 
   if (!accessToken) {
     return NextResponse.json(
-      { errorCode: "AUTH.NO_VALID_ACCESS_TOKEN" },
-      { status: 401 },
+      { data: { accessToken: null } },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
     );
   }
 

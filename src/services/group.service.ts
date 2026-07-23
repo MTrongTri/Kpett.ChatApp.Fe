@@ -171,7 +171,9 @@ export const inviteMembers = async (groupId: string, userIds: string[]) => {
 export interface GroupInvitationResponse {
     id: string;
     groupId: string;
+    groupName?: string;
     invitedByUserId: string;
+    inviterName?: string;
     inviteeUserId: string;
     status: string;
     createdAt: string;

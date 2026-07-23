@@ -2,6 +2,7 @@ const SOUND_ASSETS: Record<string, string> = {
   friend_request: "/sounds/notification.mp3",
   friend_accept: "/sounds/notification.mp3",
   comment_mention: "/sounds/notification.mp3",
+  group_invitation: "/sounds/notification.mp3",
   chat_message: "/sounds/notification.mp3",
   notification_default: "/sounds/notification.mp3",
 };
@@ -14,6 +15,7 @@ const NOTIFICATION_TYPE_SOUND: Record<string, string> = {
   FriendRequestReceived: "friend_request",
   FriendRequestAccepted: "friend_accept",
   CommentMention: "comment_mention",
+  GroupInvitationReceived: "group_invitation",
 };
 
 export function isNotificationSoundEnabled(): boolean {

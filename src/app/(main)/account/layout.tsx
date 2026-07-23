@@ -12,7 +12,7 @@ export const metadata = createPageMetadata({
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-background text-foreground mt-14.5 min-h-screen pb-20 font-sans">
+    <div className="bg-background text-foreground mt-14.5 min-h-screen pb-20 font-roboto">
       <div className="mx-auto max-w-6xl px-5 pt-8 pb-6">
         {/* Tiêu đề trang */}
         <div className="mb-7">

@@ -18,6 +18,7 @@ export function NotificationToast({ toastId, notification, text }: NotificationT
         let link = "#";
         if (notification.type.includes("Friend")) link = `/${notification.actor?.username}`;
         if (notification.type === "CommentMention") link = `/post/${notification.referenceId}`;
+        if (notification.type === "GroupInvitationReceived") link = "/groups/invitations";
 
         // Đóng toast ngay khi click
         toast.dismiss(toastId);

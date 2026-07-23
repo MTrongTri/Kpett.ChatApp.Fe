@@ -22,7 +22,7 @@ function InvitationCard({
   onDecline,
   isProcessing,
 }: {
-  invitation: GroupInvitationResponse & { groupName?: string; inviterName?: string };
+  invitation: GroupInvitationResponse;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
   isProcessing: boolean;
@@ -137,11 +137,7 @@ export default function InvitationsPage() {
             {enrichedInvitations.map((invitation) => (
               <InvitationCard
                 key={invitation.id}
-                invitation={{
-                  ...invitation,
-                  groupName: undefined,
-                  inviterName: undefined,
-                }}
+                invitation={invitation}
                 onAccept={handleAccept}
                 onDecline={handleDecline}
                 isProcessing={isProcessing}

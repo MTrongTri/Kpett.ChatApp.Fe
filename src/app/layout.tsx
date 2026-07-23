@@ -2,7 +2,23 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+import { Roboto, IBM_Plex_Mono } from "next/font/google";
 import Script from "next/script";
+
+const roboto = Roboto({
+  weight: ["400", "500", "700", "900"],
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  variable: "--font-roboto",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-mono",
+});
+
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { GlobalModalProvider } from "@/components/providers/global-modal-provider";
@@ -41,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning className="bg-background">
+    <html lang="vi" suppressHydrationWarning className={`${roboto.variable} ${ibmPlexMono.variable} bg-background`}>
       <head>
         <Script
           id="theme-initializer"

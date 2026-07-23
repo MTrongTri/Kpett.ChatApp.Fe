@@ -23,6 +23,8 @@ export function useNotifications(isFetch: boolean = false) {
         return "đã chấp nhận lời mời kết bạn của bạn.";
       case "CommentMention":
         return "đã nhắc đến bạn trong một bình luận.";
+      case "GroupInvitationReceived":
+        return "đã mời bạn tham gia nhóm.";
       default:
         return "đã tương tác với bạn.";
     }
@@ -81,6 +83,10 @@ export function useNotifications(isFetch: boolean = false) {
         newNotification.type === "FriendRequestReceived"
       ) {
         keysToInvalidate.push(["user-profile", newNotification.actor?.username]);
+      }
+
+      if (newNotification.type === "GroupInvitationReceived") {
+        keysToInvalidate.push(["my-invitations"]);
       }
 
       void Promise.all(

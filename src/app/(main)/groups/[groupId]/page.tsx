@@ -431,9 +431,19 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
   const { mutate: sendInvite, isPending: isInviting } = useMutation({
     mutationFn: (userIds: string[]) => inviteMembers(group.id, userIds),
     onSuccess: (data) => {
-      const invited = data?.data?.invitedCount ?? data?.invitedCount ?? 0;
-      const skipped = data?.data?.skippedCount ?? data?.skippedCount ?? 0;
-      toast.success(`Đã mời ${invited} người${skipped > 0 ? `, ${skipped} người bị bỏ qua` : ""}`);
+      const result = data as { invitedCount: number; skipped: { reason: string }[] } | undefined;
+      const invited = result?.invitedCount ?? 0;
+      const skipped = result?.skipped ?? [];
+      let message = `Đã mời ${invited} người thành công.`;
+      if (skipped.length > 0) {
+        const reasons = [...new Set(skipped.map((s) => s.reason))];
+        const reasonText = reasons.join(", ");
+        message += ` ${skipped.length} người bỏ qua (${reasonText}).`;
+        if (reasons.includes("not_friend")) {
+          message += " Chỉ có thể mời bạn bè.";
+        }
+      }
+      toast.success(message);
       setShowInvite(false);
       setFriendSearch("");
       setSelectedFriends([]);

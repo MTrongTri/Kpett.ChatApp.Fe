@@ -73,7 +73,7 @@ export default function CreateGroupPage() {
     if (!user) return null;
 
     return (
-        <div className="flex h-screen w-full bg-background overflow-hidden font-sans pt-[58px]">
+        <div className="flex h-screen w-full bg-background overflow-hidden font-roboto pt-[58px]">
             {/* CỘT BÊN TRÁI - FORM TẠO NHÓM */}
             <div className="w-[380px] bg-card border-r border-border flex flex-col h-full shadow-sm z-10 flex-shrink-0">
                 {/* Header */}

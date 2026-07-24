@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store/store";
 import { ProfileViewerContext } from "@/types/user";
+import type { ApiErrorResponse } from "@/types/common/api";
 import {
   friendRequest,
   friendRequestAccept,
@@ -64,8 +65,8 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-    } catch (error: any) {
-      const errorCode = error?.response?.data?.errorCode;
+    } catch (error) {
+      const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
         toast.info("Người này đã gửi lời mời kết bạn cho bạn. Hãy kiểm tra và chấp nhận.");
         try {
@@ -106,8 +107,8 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-    } catch (error: any) {
-      const errorCode = error?.response?.data?.errorCode;
+    } catch (error) {
+      const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
         toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
         refreshCache();
@@ -139,8 +140,8 @@ export function useUserInteractions(
 
       refreshCache();
       void queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
-    } catch (error: any) {
-      const errorCode = error?.response?.data?.errorCode;
+    } catch (error) {
+      const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
         try {
           const freshProfile = await getUserProfile(username);
@@ -180,8 +181,8 @@ export function useUserInteractions(
       }));
 
       refreshCache();
-    } catch (error: any) {
-      const errorCode = error?.response?.data?.errorCode;
+    } catch (error) {
+      const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
       if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
         toast.error("Lời mời kết bạn không tồn tại hoặc đã được xử lý.");
         refreshCache();

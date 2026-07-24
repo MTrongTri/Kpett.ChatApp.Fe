@@ -28,6 +28,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { formatRelativeTime } from "@/lib/format-date-utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
 import { cn } from "@/lib/utils";
+import type { ApiErrorResponse } from "@/types/common/api";
 import { chatService } from "@/services/chat.service";
 import {
   friendRequest,
@@ -286,8 +287,8 @@ export default function FriendsPage() {
         await friendRequest(person.id);
         toast.success(`Đã gửi lời mời cho ${person.displayName || person.username}.`);
         await refreshRelationshipState();
-      } catch (error: any) {
-        const errorCode = error?.response?.data?.errorCode;
+      } catch (error) {
+        const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
         if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
           toast.info("Người này đã gửi lời mời kết bạn cho bạn.");
           await refreshRelationshipState();
@@ -374,8 +375,8 @@ export default function FriendsPage() {
             ? "Đã chấp nhận lời mời kết bạn."
             : "Đã từ chối lời mời kết bạn.",
         );
-      } catch (error: any) {
-        const errorCode = error?.response?.data?.errorCode;
+      } catch (error) {
+        const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
         if (errorCode === 'FRIEND.FRIEND_REQUEST_NOT_FOUND') {
           toast.error("Lời mời này không còn tồn tại hoặc đã được xử lý.");
           await refreshRelationshipState();

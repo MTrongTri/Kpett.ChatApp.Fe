@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WifiOff, Wifi } from "lucide-react";
+import { WifiOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ConnectionIndicator() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 

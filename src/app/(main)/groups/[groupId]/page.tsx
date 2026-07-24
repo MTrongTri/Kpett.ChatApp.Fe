@@ -42,7 +42,7 @@ import { getGroupDetailById, joinGroup, leaveGroup, getGroupPosts, getGroupMembe
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { GroupDetailResponse } from "@/types/group";
-import type { UserProfile } from "@/types/user";
+import type { UserProfile, BaseUser } from "@/types/user";
 
 // ── Tab Types ──
 
@@ -118,7 +118,8 @@ function GroupDetailSkeleton() {
 
 // ── Placeholder Post ──
 
-function PostComposer({ user, groupId }: { user: any, groupId: string }) {
+function PostComposer({ user, groupId }: { user: BaseUser | null, groupId: string }) {
+  if (!user) return null;
   const dispatch = useDispatch();
 
   return (
@@ -178,7 +179,8 @@ function PlaceholderPost() {
 
 // ── Tab Content ──
 
-function TabHome({ group, user }: { group: GroupDetailResponse; user: any }) {
+function TabHome({ group, user }: { group: GroupDetailResponse; user: BaseUser | null }) {
+  if (!user) return null;
   const {
     data,
     fetchNextPage,
@@ -349,7 +351,8 @@ function TabAbout({ group }: { group: GroupDetailResponse }) {
   );
 }
 
-function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: any }) {
+function TabDiscussion({ group, user }: { group: GroupDetailResponse; user: BaseUser | null }) {
+  if (!user) return null;
   const {
     data,
     fetchNextPage,

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, PackageOpen } from "lucide-react";
-import { stickerService, StickerPackResponse } from "@/services/sticker.service";
+import { stickerService } from "@/services/sticker.service";
 import { cn } from "@/lib/utils";
 
 interface StickerPickerProps {
@@ -23,14 +23,10 @@ export function StickerPicker({ onStickerSelect }: StickerPickerProps) {
     queryFn: () => stickerService.getPublicPacks(),
   });
 
-  const allPacks = [...myPacks, ...publicPacks];
-  const activePack = allPacks.find((p) => p.id === activePackId) || allPacks[0];
-
-  useEffect(() => {
-    if (!activePackId && allPacks.length > 0) {
-      setActivePackId(allPacks[0].id);
-    }
-  }, [allPacks, activePackId]);
+  const allPacks = useMemo(() => [...myPacks, ...publicPacks], [myPacks, publicPacks]);
+  const activePack = activePackId
+    ? allPacks.find((p) => p.id === activePackId) ?? allPacks[0]
+    : allPacks[0];
 
   const stickers = activePack?.stickers ?? [];
 

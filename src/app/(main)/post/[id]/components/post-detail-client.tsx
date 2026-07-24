@@ -1,26 +1,11 @@
 "use client";
 
-import {
-  EyeOff,
-  Flag,
-  Link2,
-  MoreHorizontal,
-  UserMinus
-} from "lucide-react";
-
 import CommentButton from "@/components/posts/comment-button";
 import LikeButton from "@/components/posts/like-button";
 import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
 import PostMediaSlider from "@/components/posts/post-media-slider";
 import SaveButton from "@/components/posts/save-button";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { usePostDetail } from "@/hooks/post/use-post-detail";
 import type { Post } from "@/types/post";
 import { PostCardSkeleton } from "../../../components/posts/post-card-skeleton";
@@ -44,6 +29,8 @@ export default function PostDetailClient({
     staleTime: 120 * 1000,
   });
 
+  const { handleEditClick, handleDelete, handleCopyLink } = usePostMenuActions(post ?? null);
+
   const scrollToComments = () => {
     document
       .getElementById("comment-list-area")
@@ -64,13 +51,7 @@ export default function PostDetailClient({
     return <PostDetailError />;
   }
 
-  const {
-    handleEditClick,
-    handleDelete,
-    handleCopyLink
-  } = usePostMenuActions(post || null);
-
-  const isAuthor = post?.viewerContext.isOwner
+  const isAuthor = post.viewerContext.isOwner
 
   return (
     <div className="bg-background min-h-screen pt-14.5">

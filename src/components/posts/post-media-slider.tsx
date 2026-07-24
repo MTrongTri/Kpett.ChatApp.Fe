@@ -5,7 +5,7 @@ import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
 import { ChevronLeft, ChevronRight, Play, Maximize2 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useDispatch } from "react-redux";
 import { cn } from "@/lib/utils";
@@ -27,11 +27,7 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
         threshold: 0,
     });
 
-    useEffect(() => {
-        if (!inView && playingIndex !== null) {
-            setPlayingIndex(null);
-        }
-    }, [inView, playingIndex]);
+    const visiblePlayingIndex = inView ? playingIndex : null;
 
     const dispatch = useDispatch();
 
@@ -80,7 +76,7 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                             className="object-contain cursor-pointer"
                                             onClick={() => dispatch(openMediaLightBox({ media, index }))}
                                         />
-                                    ) : playingIndex === index ? (
+                                    ) : visiblePlayingIndex === index ? (
                                         <>
                                             <video
                                                 src={optimizedUrl}

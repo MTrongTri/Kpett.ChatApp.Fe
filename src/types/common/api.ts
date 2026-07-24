@@ -17,3 +17,14 @@ export interface PaginatedData<T> {
   items: T[];
   pagination: CursorPaginationMeta;
 }
+
+export interface ApiErrorData {
+  errorCode?: string;
+  message?: string;
+}
+
+export interface ApiErrorResponse {
+  response?: {
+    data?: ApiErrorData;
+  };
+}

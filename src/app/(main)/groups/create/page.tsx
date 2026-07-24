@@ -40,7 +40,7 @@ export default function CreateGroupPage() {
             toast.success("Tạo nhóm thành công!");
             router.push(`/groups/${data.id}`);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error(error?.message || "Đã có lỗi xảy ra khi tạo nhóm");
         }
     });

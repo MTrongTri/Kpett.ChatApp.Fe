@@ -43,6 +43,13 @@ export default function PostLightbox({
   autoScrollTarget,
 }: PostLightboxProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { post, isPostLoading, error: postError } = usePostDetail(postId, initialPost);
+
+  const {
+    handleEditClick,
+    handleDelete,
+    handleCopyLink
+  } = usePostMenuActions(post || null);
 
   if (!isOpen) {
     return (
@@ -52,16 +59,6 @@ export default function PostLightbox({
     );
   }
 
-  const { post, isPostLoading, error: postError } = usePostDetail(postId, initialPost);
-
-  // Các hành động liên quan đến Post (và fetchMentions truyền xuống cho Comment)
-  const {
-    handleEditClick,
-    handleDelete,
-    handleCopyLink
-  } = usePostMenuActions(post || null);
-
-  // Xử lý lỗi hoặc không tìm thấy bài viết
   if (postError || (!post && !isPostLoading)) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -102,7 +99,6 @@ export default function PostLightbox({
             <PostLightboxSkeleton />
           ) : (
             <div className="flex flex-col h-full px-0 md:px-6 overflow-hidden">
-              {/* ── HEADER BÀI VIẾT ── */}
               <DialogHeader className="hidden md:block px-4 pr-6 py-2 shrink-0">
                 <div className="flex w-full items-center justify-between border-b border-border">
                   <PostHeader
@@ -118,7 +114,6 @@ export default function PostLightbox({
                 </div>
               </DialogHeader>
 
-              {/* SCROLLABLE CONTENT AREA */}
               <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto flex flex-col">
                 <div className="hidden md:block px-4 py-3 shrink-0">
                   <PostContent content={post.content} tags={post.hashtags} />
@@ -128,7 +123,6 @@ export default function PostLightbox({
                   <PostMediaSlider media={post.media} />
                 </div>
 
-                {/* ACTION BUTTONS (Like, Comment, Save) */}
                 <div className="md:block flex items-center gap-1 px-3 py-2.5 shrink-0">
                   <LikeButton
                     postId={post.id}
@@ -153,7 +147,6 @@ export default function PostLightbox({
                   />
                 </div>
 
-                {/* COMMENT SECTION */}
                 <PostCommentSection
                   post={post}
                   scrollContainerRef={scrollContainerRef}

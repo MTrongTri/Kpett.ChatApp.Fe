@@ -9,6 +9,7 @@ import { UserPlus, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
+import type { ApiErrorResponse } from "@/types/common/api";
 
 export function FriendSuggestions() {
     const { user } = useAuth();
@@ -31,6 +32,7 @@ export function FriendSuggestions() {
 
     useEffect(() => {
         fetchSuggestions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const handleAddFriend = async (targetId: string) => {
@@ -40,8 +42,8 @@ export function FriendSuggestions() {
             toast.success("Đã gửi lời mời kết bạn");
             // Xóa khỏi danh sách gợi ý sau khi gửi
             setSuggestions(prev => prev.filter(u => u.id !== targetId));
-        } catch (error: any) {
-            const errorCode = error?.response?.data?.errorCode;
+        } catch (error) {
+            const errorCode = (error as ApiErrorResponse)?.response?.data?.errorCode;
             if (errorCode === 'FRIEND.FRIEND_REQUEST_PENDING') {
                 toast.info("Người này đã gửi lời mời kết bạn cho bạn.");
             } else {

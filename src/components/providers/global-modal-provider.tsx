@@ -26,15 +26,13 @@ export function GlobalModalProvider() {
     return (
         <>
             {/* Post Lightbox */}
-            {postModal.isOpen && (
-                <PostLightbox
-                    isOpen={postModal.isOpen}
-                    initialPost={postModal.post}
-                    postId={postModal.postId}
-                    autoScrollTarget={postModal.autoScrollTarget || ""}
-                    onClose={() => dispatch(closePostLightBox())}
-                />
-            )}
+            <PostLightbox
+                isOpen={postModal.isOpen}
+                initialPost={postModal.post}
+                postId={postModal.postId}
+                autoScrollTarget={postModal.autoScrollTarget || ""}
+                onClose={() => dispatch(closePostLightBox())}
+            />
 
             {/* Media Lightbox */}
             {mediaModal.isOpen && mediaModal.media.length > 0 && (

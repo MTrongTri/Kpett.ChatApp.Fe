@@ -434,14 +434,27 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
       const result = data as { invitedCount: number; skipped: { reason: string }[] } | undefined;
       const invited = result?.invitedCount ?? 0;
       const skipped = result?.skipped ?? [];
-      let message = `Đã mời ${invited} người thành công.`;
+      let message = "";
+      if (invited > 0) {
+        message = `Đã mời ${invited} người thành công.`;
+      } else if (skipped.length > 0) {
+        message = "Không gửi được lời mời mới.";
+      } else {
+        message = "Đã mời 0 người thành công.";
+      }
       if (skipped.length > 0) {
+        const reasonLabels: Record<string, string> = {
+          self: "chính mình",
+          user_not_found: "không tìm thấy người dùng",
+          not_friend: "không phải bạn bè",
+          already_member: "đã là thành viên",
+          blocked: "đã bị chặn",
+          join_request_pending: "đã gửi yêu cầu tham gia",
+          invitation_pending: "đã có lời mời đang chờ",
+        };
         const reasons = [...new Set(skipped.map((s) => s.reason))];
-        const reasonText = reasons.join(", ");
+        const reasonText = reasons.map((r) => reasonLabels[r] ?? r).join(", ");
         message += ` ${skipped.length} người bỏ qua (${reasonText}).`;
-        if (reasons.includes("not_friend")) {
-          message += " Chỉ có thể mời bạn bè.";
-        }
       }
       toast.success(message);
       setShowInvite(false);

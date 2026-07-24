@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { copyToClipboard } from "@/lib/clipboard-utils";
 import { getFriendsWithFilter } from "@/services/friend.service";
 import { deletePost } from "@/services/post.service";
@@ -10,7 +11,7 @@ import { toast } from "sonner";
 
 export const usePostMenuActions = (post: Post | null) => {
     const dispatch = useDispatch();
-
+    const router = useRouter();
     const queryClient = useQueryClient();
 
     const handleEditClick = () => {
@@ -40,7 +41,15 @@ export const usePostMenuActions = (post: Post | null) => {
                     }
                 );
 
+                queryClient.invalidateQueries({ queryKey: ["post-detail", post.id] });
+                queryClient.invalidateQueries({ queryKey: ["posts"] });
+                queryClient.invalidateQueries({ queryKey: ["posts-profile"] });
+
                 dispatch(closePostLightBox());
+
+                if (window.location.pathname.startsWith("/post/")) {
+                    router.back();
+                }
 
                 return;
             }

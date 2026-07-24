@@ -44,6 +44,14 @@ export default function PostLightbox({
 }: PostLightboxProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  if (!isOpen) {
+    return (
+      <Dialog open={false} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="hidden" aria-describedby={undefined} />
+      </Dialog>
+    );
+  }
+
   const { post, isPostLoading, error: postError } = usePostDetail(postId, initialPost);
 
   // Các hành động liên quan đến Post (và fetchMentions truyền xuống cho Comment)
@@ -52,8 +60,6 @@ export default function PostLightbox({
     handleDelete,
     handleCopyLink
   } = usePostMenuActions(post || null);
-
-  if (!isOpen) return null;
 
   // Xử lý lỗi hoặc không tìm thấy bài viết
   if (postError || (!post && !isPostLoading)) {

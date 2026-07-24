@@ -49,7 +49,7 @@ export default function PostCard({ post }: PostCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group-posts"] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["posts-profile"] });
       toast.success("Đã xóa bài viết.");
     },
     onError: () => toast.error("Không thể xóa bài viết."),

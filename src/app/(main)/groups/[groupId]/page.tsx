@@ -779,7 +779,7 @@ export default function GroupDetailPage() {
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0 pb-2">
+            <div className="flex-1 min-w-0 md:pt-4 lg:pt-6 pb-2">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                 {group.name}
               </h1>

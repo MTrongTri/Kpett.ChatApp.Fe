@@ -16,6 +16,19 @@ export const getFeedHome = async (
   return response.data;
 };
 
+export const getReelsFeed = async (
+  cursor: string | null = null,
+  limit: number = 5,
+): Promise<PaginatedData<Post>> => {
+  const response = await http.get("/posts/reels", {
+    params: {
+      cursor,
+      limit,
+    },
+  });
+  return response.data;
+};
+
 export const getPostsByUserId = async (
   userId: string,
   tab: ProfileTab = "Post",
@@ -62,4 +75,27 @@ export const addReaction = async (postId: string, reactionType: number = 1): Pro
 
 export const removeReaction = async (postId: string): Promise<void> => {
   await http.delete(`/posts/${postId}/reactions`);
+};
+
+export const savePost = async (postId: string): Promise<void> => {
+  await http.post(`/savedposts/${postId}`);
+};
+
+export const unsavePost = async (postId: string): Promise<void> => {
+  await http.delete(`/savedposts/${postId}`);
+};
+
+export const checkSaved = async (postId: string): Promise<boolean> => {
+  const response = await http.get(`/savedposts/${postId}/check`);
+  return response.data;
+};
+
+export const getSavedPosts = async (
+  cursor: string | null = null,
+  limit: number = 20,
+): Promise<PaginatedData<PostThumbnail>> => {
+  const response = await http.get("/savedposts", {
+    params: { cursor, limit },
+  });
+  return response.data;
 };

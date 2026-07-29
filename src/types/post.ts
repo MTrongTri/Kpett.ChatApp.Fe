@@ -54,8 +54,11 @@ export interface Post {
 export interface PostThumbnail {
   id: string;
   author: PostAuthor;
-  mediaThumbnail: Media;
-  type: MediaType;
+  mediaThumbnail: Media | null;
+  type: string;
+  content?: string;
+  privacy?: string;
+  status?: string;
 
   metrics: PostMetrics;
   viewerContext: PostViewerContext;
@@ -68,7 +71,12 @@ export interface PostThumbnail {
 export interface CreatePostRequest {
   content?: string,
   privacy: string,
+  type?: string,
   media: Media[],
   isNsfw?: boolean,
   allowComments?: boolean,
+}
+
+export interface Reel extends Post {
+  media: [Media & { thumbnailUrl?: string; duration?: number }];
 }

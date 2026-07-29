@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { savePost, unsavePost } from "@/services/post.service";
-import { toast } from "sonner";
+import { useCheckSaved, useSavePost, useUnsavePost } from "@/hooks/post/use-save-post";
 
 interface SaveButtonProps {
     postId: string;
@@ -13,21 +11,19 @@ interface SaveButtonProps {
 }
 
 export default function SaveButton({ postId, initialSaved }: SaveButtonProps) {
-    const [saved, setSaved] = useState(initialSaved);
+    const { data: isSaved } = useCheckSaved(postId);
+    const { mutate: doSave, isPending: isSaving } = useSavePost(postId);
+    const { mutate: doUnsave, isPending: isUnsaving } = useUnsavePost(postId);
 
-    const handleSave = async () => {
-        const previousSavedState = saved;
-        setSaved(!previousSavedState);
+    const saved = isSaved ?? initialSaved;
+    const loading = isSaving || isUnsaving;
 
-        try {
-            if (!previousSavedState) {
-                await savePost(postId);
-            } else {
-                await unsavePost(postId);
-            }
-        } catch {
-            setSaved(previousSavedState);
-            toast.error("Không thể lưu bài viết");
+    const handleSave = () => {
+        if (loading) return;
+        if (saved) {
+            doUnsave();
+        } else {
+            doSave();
         }
     };
 
@@ -36,6 +32,7 @@ export default function SaveButton({ postId, initialSaved }: SaveButtonProps) {
             variant="ghost"
             size="icon"
             onClick={handleSave}
+            disabled={loading}
             className={cn(
                 "hidden h-8 w-8 rounded-lg transition-all duration-150 md:flex",
                 saved

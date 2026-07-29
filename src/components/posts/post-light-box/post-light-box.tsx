@@ -123,7 +123,7 @@ export default function PostLightbox({
                   <PostMediaSlider media={post.media} />
                 </div>
 
-                <div className="md:block flex items-center gap-1 px-3 py-2.5 shrink-0">
+                <div className="flex items-center gap-1 px-3 py-2.5 shrink-0">
                   <LikeButton
                     postId={post.id}
                     initialLiked={post.viewerContext.isLiked ?? false}

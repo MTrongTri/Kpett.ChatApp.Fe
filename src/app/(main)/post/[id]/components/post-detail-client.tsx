@@ -6,6 +6,7 @@ import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
 import PostMediaSlider from "@/components/posts/post-media-slider";
 import SaveButton from "@/components/posts/save-button";
+import ShareButton from "@/components/posts/share-button";
 import { usePostDetail } from "@/hooks/post/use-post-detail";
 import type { Post } from "@/types/post";
 import { PostCardSkeleton } from "../../../components/posts/post-card-skeleton";
@@ -90,6 +91,8 @@ export default function PostDetailClient({
               commentCount={post.metrics.commentCount}
               onClick={scrollToComments}
             />
+
+            <ShareButton postId={post.id} />
 
             <div className="flex-1" />
 

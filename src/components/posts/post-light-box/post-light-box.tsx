@@ -21,6 +21,7 @@ import LikeButton from "../like-button";
 import { PostHeader } from "../post-header";
 import PostMediaSlider from "../post-media-slider";
 import SaveButton from "../save-button";
+import ShareButton from "../share-button";
 import { PostLightboxSkeleton } from "./post-light-box-skeleton";
 import { PostLightboxMenu } from "./post-lightbox-menu";
 
@@ -138,6 +139,8 @@ export default function PostLightbox({
                       if (target) target.scrollIntoView({ behavior: "smooth" });
                     }}
                   />
+
+                  <ShareButton postId={post.id} />
 
                   <div className="flex-1" />
 

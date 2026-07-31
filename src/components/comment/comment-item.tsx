@@ -39,6 +39,7 @@ interface CommentItemProps {
   threadParentId?: string;
   onReplySuccess?: (newReply: Comment) => void;
   onEditSuccess?: (updatedComment: Comment) => void;
+  onDelete?: (commentId: string) => void;
 }
 
 const MAX_LEVEL = 3;
@@ -50,6 +51,7 @@ export const CommentItem = memo(({
   threadParentId,
   onReplySuccess,
   onEditSuccess,
+  onDelete,
 }: CommentItemProps) => {
   const [currentComment, setCurrentComment] = useState<Comment>(comment);
   const [isDeleted, setIsDeleted] = useState(false);
@@ -89,6 +91,10 @@ export const CommentItem = memo(({
       onEditSuccess(updatedComment);
     }
   }, [onEditSuccess]);
+
+  const handleChildDelete = useCallback((commentId: string) => {
+    setTempReplies((prev) => prev.filter(r => r.id !== commentId));
+  }, []);
 
   const handleChildReply = useCallback((newReply: Comment) => {
     if (currentComment.id === submitParentId) {
@@ -130,6 +136,7 @@ export const CommentItem = memo(({
     },
     onDeleteSuccess: () => {
       setIsDeleted(true);
+      if (onDelete) onDelete(currentComment.id);
     }
   });
 
@@ -164,6 +171,7 @@ export const CommentItem = memo(({
             threadParentId={nextThreadParentId}
             onReplySuccess={handleChildReply}
             onEditSuccess={handleChildEdit}
+            onDelete={handleChildDelete}
           />
         ))}
       </div>

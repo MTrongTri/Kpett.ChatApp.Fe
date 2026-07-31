@@ -7,7 +7,7 @@ export function useTyping(
   conversationId: string | null | undefined,
   onTypingChange: (typers: Map<string, TypingEventPayload>) => void,
 ) {
-  const { connection, isConnected } = useSignalR();
+  const { connection, isConnected, reconnectVersion } = useSignalR();
   const { user } = useAuth();
 
   const typersRef = useRef<Map<string, TypingEventPayload>>(new Map());
@@ -38,7 +38,7 @@ export function useTyping(
         console.error("[useTyping] LeaveConversation failed:", error);
       });
     };
-  }, [connection, conversationId, isConnected]);
+  }, [connection, conversationId, isConnected, reconnectVersion]);
 
   useEffect(() => {
     if (!isConnected || !connection || !conversationId) {
@@ -67,7 +67,7 @@ export function useTyping(
     return () => {
       connection.off("UserTyping", handleUserTyping);
     };
-  }, [connection, conversationId, isConnected, onTypingChange]);
+  }, [connection, conversationId, isConnected, reconnectVersion, onTypingChange]);
 
   useEffect(() => {
     typersRef.current = new Map();

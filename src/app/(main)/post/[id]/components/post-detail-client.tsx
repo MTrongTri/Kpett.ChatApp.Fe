@@ -56,8 +56,8 @@ export default function PostDetailClient({
 
   return (
     <div className="bg-background min-h-screen pt-14.5">
-      <div className="mx-auto w-full h-screen max-w-240 px-0 py-0 md:px-4 md:py-5">
-        <article className="h-screen bg-card border-border rounded-xl border transition-all duration-200">
+      <div className="mx-auto w-full max-w-240 px-0 py-0 md:px-4 md:py-5">
+        <article className="bg-card border-border overflow-hidden rounded-xl border transition-all duration-200">
           <DialogHeader className="px-4 pr-6 py-2 shrink-0">
             <div className="flex w-full items-center justify-between border-b border-border">
               <PostHeader

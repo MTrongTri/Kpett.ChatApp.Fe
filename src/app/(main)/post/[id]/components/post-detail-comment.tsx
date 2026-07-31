@@ -69,7 +69,7 @@ export default function PostDetailComments({ post }: { post: Post }) {
                 )}
             </div>
 
-            <div className="block max-h-[56vh] overflow-y-auto pr-1">
+            <div className="block pr-1">
                 {commentsError && comments.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
                         <div className="bg-destructive/10 text-destructive mb-3 flex h-12 w-12 items-center justify-center rounded-full">

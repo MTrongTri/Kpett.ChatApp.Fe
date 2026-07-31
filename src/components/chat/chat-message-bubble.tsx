@@ -70,7 +70,7 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                                 msg.localStatus === "sending" ? "opacity-70" : ""
                             )}>
                                 <img
-                                    src={msg.content}
+                                    src={msg.content ?? ""}
                                     alt="sticker"
                                     className="max-w-[160px] max-h-[160px] object-contain"
                                 />

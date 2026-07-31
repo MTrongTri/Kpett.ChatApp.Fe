@@ -14,9 +14,9 @@ export default function ReelsPage() {
   const router = useRouter();
   const { reels, isLoadingInitialData, isLoadingMore, hasMore, loadMore } = useReelsFeed();
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const touchStartY = useRef(0);
-  const isScrolling = useRef(false);
+  const rafId = useRef<number>(0);
 
   const { ref: sentinelRef, inView: sentinelInView } = useInView();
 
@@ -33,6 +33,7 @@ export default function ReelsPage() {
     if (reelEl) {
       reelEl.scrollIntoView({ behavior: "smooth" });
       setActiveIndex(index);
+      activeIndexRef.current = index;
     }
   }, []);
 
@@ -41,27 +42,37 @@ export default function ReelsPage() {
     if (!container) return;
 
     const handleScroll = () => {
-      if (isScrolling.current) return;
-      const children = Array.from(container.children) as HTMLElement[];
-      const center = container.scrollTop + container.clientHeight / 2;
-      let newIndex = 0;
-      for (let i = 0; i < children.length; i++) {
-        const el = children[i];
-        const elTop = el.offsetTop;
-        const elBottom = elTop + el.clientHeight;
-        if (center >= elTop && center <= elBottom) {
-          newIndex = i;
-          break;
+      if (rafId.current) return;
+      rafId.current = requestAnimationFrame(() => {
+        rafId.current = 0;
+        const children = Array.from(container.children) as HTMLElement[];
+        const center = container.scrollTop + container.clientHeight / 2;
+        let newIndex = 0;
+        for (let i = 0; i < children.length; i++) {
+          const el = children[i];
+          const rect = el.getBoundingClientRect();
+          const elTop = container.scrollTop + rect.top;
+          const elBottom = elTop + rect.height;
+          if (center >= elTop && center <= elBottom) {
+            newIndex = i;
+            break;
+          }
         }
-      }
-      if (newIndex !== activeIndex) {
-        setActiveIndex(newIndex);
-      }
+        if (newIndex !== activeIndexRef.current) {
+          activeIndexRef.current = newIndex;
+          setActiveIndex(newIndex);
+        }
+      });
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [activeIndex]);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+    };
+  }, []);
 
   const goToCreateReel = useCallback(() => {
     router.push("/reels/create");
@@ -100,8 +111,8 @@ export default function ReelsPage() {
     <div className="relative h-screen w-full bg-black overflow-hidden">
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="h-full w-full overflow-y-scroll snap-y snap-mandatory"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", overscrollBehavior: "contain" }}
       >
         {reels.map((reel, index) => (
           <ReelItem

@@ -3,6 +3,7 @@ import { UserAvatar } from "@/components/user/user-avatar";
 import { NotificationResponse } from "@/types/notification";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getNotificationHref } from "@/lib/notification-link";
 
 interface NotificationToastProps {
     toastId: string | number;
@@ -14,11 +15,7 @@ export function NotificationToast({ toastId, notification, text }: NotificationT
     const router = useRouter();
 
     const handleToastClick = () => {
-        // Khớp với logic chuyển hướng ở Dropdown của bạn
-        let link = "#";
-        if (notification.type.includes("Friend")) link = `/${notification.actor?.username}`;
-        if (notification.type === "CommentMention") link = `/post/${notification.referenceId}`;
-        if (notification.type === "GroupInvitationReceived") link = "/groups/invitations";
+        const link = getNotificationHref(notification);
 
         // Đóng toast ngay khi click
         toast.dismiss(toastId);

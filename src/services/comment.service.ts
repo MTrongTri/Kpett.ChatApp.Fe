@@ -19,15 +19,14 @@ export const updateComment = async (
   commentId: string,
   newContent: string
 ): Promise<Comment> => {
-  const response = await http.put(`/comments/posts/${commentId}`, {
+  const response = await http.put(`/comments/${commentId}`, {
     content: newContent
   });
   return response.data;
 };
 
-export const deleteComment = async (commentId: string): Promise<Comment> => {
-  const response = await http.delete(`/comments/posts/${commentId}`);
-  return response.data;
+export const deleteComment = async (commentId: string): Promise<void> => {
+  await http.delete(`/comments/${commentId}`);
 };
 
 export const likeComment = async (commentId: string): Promise<void> => {

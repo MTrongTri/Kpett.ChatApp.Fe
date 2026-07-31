@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import clsx from "clsx";
+import { getNotificationHref } from "@/lib/notification-link";
 
 export default function NotificationDropdown() {
     const [isOpen, setIsOpen] = useState(false);
@@ -84,10 +85,7 @@ export default function NotificationDropdown() {
                     ) : (
                         <div className="flex flex-col">
                             {notifications.map((n) => {
-                                // Tạo link click dựa vào loại thông báo
-                                let link = "#";
-                                if (n.type.includes("Friend")) link = `/${n.actor?.username}`;
-                                if (n.type === "CommentMention") link = `/post/${n.referenceId}`;
+                                const link = getNotificationHref(n);
 
                                 return (
                                     <Link

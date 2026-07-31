@@ -26,6 +26,7 @@ import { deletePost } from "@/services/post.service";
 
 import CommentButton from "@/components/posts/comment-button";
 import LikeButton from "@/components/posts/like-button";
+import ShareButton from "@/components/posts/share-button";
 import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
 import PostMediaSlider from "@/components/posts/post-media-slider";
@@ -185,6 +186,7 @@ export default function PostCard({ post }: PostCardProps) {
         <div className={cn("flex items-center gap-1 px-3 py-2.5", post.isNsfw && !showNsfw && "blur-sm select-none pointer-events-none")}>
           <LikeButton postId={post.id} initialLiked={post.viewerContext.isLiked ?? false} initialLikeCount={post.metrics.likeCount} initialReactionType={post.viewerContext.reactionType ?? null} />
           <CommentButton commentCount={post.metrics.commentCount} onClick={handleOpenLightBox} />
+          <ShareButton postId={post.id} />
           <div className="flex-1" />
           <SaveButton postId={post.id} initialSaved={post.viewerContext.isSaved ?? false} />
         </div>

@@ -6,6 +6,7 @@ import PostContent from "@/components/posts/post-content";
 import { PostHeader } from "@/components/posts/post-header";
 import PostMediaSlider from "@/components/posts/post-media-slider";
 import SaveButton from "@/components/posts/save-button";
+import ShareButton from "@/components/posts/share-button";
 import { usePostDetail } from "@/hooks/post/use-post-detail";
 import type { Post } from "@/types/post";
 import { PostCardSkeleton } from "../../../components/posts/post-card-skeleton";
@@ -55,8 +56,8 @@ export default function PostDetailClient({
 
   return (
     <div className="bg-background min-h-screen pt-14.5">
-      <div className="mx-auto w-full h-screen max-w-240 px-0 py-0 md:px-4 md:py-5">
-        <article className="h-screen bg-card border-border rounded-xl border transition-all duration-200">
+      <div className="mx-auto w-full max-w-240 px-0 py-0 md:px-4 md:py-5">
+        <article className="bg-card border-border overflow-hidden rounded-xl border transition-all duration-200">
           <DialogHeader className="px-4 pr-6 py-2 shrink-0">
             <div className="flex w-full items-center justify-between border-b border-border">
               <PostHeader
@@ -90,6 +91,8 @@ export default function PostDetailClient({
               commentCount={post.metrics.commentCount}
               onClick={scrollToComments}
             />
+
+            <ShareButton postId={post.id} />
 
             <div className="flex-1" />
 

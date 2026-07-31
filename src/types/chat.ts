@@ -23,10 +23,12 @@ export interface MessageAttachmentResponse {
 export interface MessageSnippetResponse {
   id: string;
   senderId: string;
-  senderName: string;
+  senderName?: string;
   type: string;
-  content: string;
+  content: string | null;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
   actionMetadata?: SystemMessageMetadata;
 }
 
@@ -76,8 +78,10 @@ export interface MessageResponse {
   senderName: string;
   senderAvatarUrl?: string;
   type: string;
-  content: string;
+  content: string | null;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
   actionMetadata?: SystemMessageMetadata;
   replyToMessageId?: string;
   attachments?: MessageAttachmentResponse[];

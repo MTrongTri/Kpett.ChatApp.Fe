@@ -12,7 +12,7 @@ import {
   logout as logoutAction,
   setCredentials,
 } from "@/store/features/auth-slice";
-import { refreshToken, restoreAccessTokenFromCookie } from "@/lib/axios";
+import { refreshToken } from "@/lib/axios";
 import { sessionStorage } from "@/lib/cookie-storage-utils";
 import Logo from "../layouts/main/logo";
 import { useDispatch, useSelector } from "react-redux";
@@ -109,11 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        try {
-          await restoreAccessTokenFromCookie();
-        } catch {
           await refreshToken();
-        }
       } catch (error) {
         console.error("Auth Init Error:", error);
         await persistor.purge();

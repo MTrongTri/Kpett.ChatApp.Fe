@@ -2,39 +2,29 @@
 
 import { useMemo, useCallback, useEffect, useRef } from "react";
 import {
-    InfiniteData,
     useInfiniteQuery,
     useQueryClient
 } from "@tanstack/react-query";
 import { produce } from "immer";
 import { useSignalR } from "@/components/providers/signalr-provider";
 import { chatService } from "@/services/chat.service";
+import { MessageResponse } from "@/types/chat";
 import {
-    ConversationResponse,
-    MessageResponse,
-} from "@/types/chat";
-import { PaginatedData } from "@/types/common/api";
+    ConversationsCache,
+    MessagesCache,
+    updateConversationCacheWithMessage,
+    upsertMessageInMessagesCache,
+} from "./chat-cache-utils";
 
 const MESSAGES_LIMIT = 20;
-
-type MessagesCache = InfiniteData<
-    PaginatedData<MessageResponse>,
-    string | undefined
->;
-
-type ConversationsCache = InfiniteData<
-    PaginatedData<ConversationResponse>,
-    string | undefined
->;
 
 export function useChatMessages(
     conversationId: string | null,
     isMinimized = false
 ) {
     const queryClient = useQueryClient();
-    const { connection, isConnected } = useSignalR();
+    const { connection, isConnected, reconnectVersion } = useSignalR();
     const lastMarkedRef = useRef<string | null>(null);
-    const lastMarkedTimeRef = useRef<number>(0);
 
     const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
         useInfiniteQuery({
@@ -96,71 +86,14 @@ export function useChatMessages(
 
     const addMessageToCache = useCallback(
         (newMessage: MessageResponse) => {
-            queryClient.setQueryData<MessagesCache>(
-                ["chat-messages", conversationId],
-                (oldData) => {
-                    if (!oldData?.pages.length) return oldData;
+            if (!conversationId) return;
 
-                    return produce(oldData, (draft) => {
-                        const currentItems = draft.pages[0]?.items;
-                        if (!currentItems) return;
-
-                        const existingIndex = currentItems.findIndex(
-                            (message) =>
-                                message.id === newMessage.id ||
-                                (newMessage.clientMessageId
-                                    ? message.id === newMessage.clientMessageId
-                                    : false)
-                        );
-
-                        if (existingIndex > -1) {
-                            currentItems[existingIndex] = newMessage;
-                            return;
-                        }
-
-                        currentItems.unshift(newMessage);
-                    });
-                }
-            );
-
-            queryClient.setQueryData<ConversationsCache>(
-                ["conversations"],
-                (oldData) => {
-                    if (!oldData?.pages.length) return oldData;
-
-                    return produce(oldData, (draft) => {
-                        let foundConversation:
-                            | ConversationResponse
-                            | undefined;
-                        let pageIndex = -1;
-                        let itemIndex = -1;
-
-                        for (let index = 0; index < draft.pages.length; index += 1) {
-                            const conversationIndex = draft.pages[index].items.findIndex(
-                                (conversation) => conversation.id === conversationId
-                            );
-
-                            if (conversationIndex > -1) {
-                                foundConversation =
-                                    draft.pages[index].items[conversationIndex];
-                                pageIndex = index;
-                                itemIndex = conversationIndex;
-                                break;
-                            }
-                        }
-
-                        if (!foundConversation || pageIndex === -1 || itemIndex === -1) {
-                            return;
-                        }
-
-                        foundConversation.lastMessageAt = newMessage.createdAt;
-                        foundConversation.lastMessage = { ...newMessage };
-                        foundConversation.hasUnread = isMinimized;
-
-                        draft.pages[pageIndex].items.splice(itemIndex, 1);
-                        draft.pages[0].items.unshift(foundConversation);
-                    });
-                }
+            upsertMessageInMessagesCache(queryClient, conversationId, newMessage);
+            updateConversationCacheWithMessage(
+                queryClient,
+                conversationId,
+                newMessage,
+                isMinimized
             );
         },
         [queryClient, conversationId, isMinimized]
@@ -168,40 +101,6 @@ export function useChatMessages(
 
     useEffect(() => {
         if (!isConnected || !connection || !conversationId) return;
-
-        const handleNewMessage = (newMessage: MessageResponse) => {
-            const targetConversationId = newMessage.conversationId ?? conversationId;
-            if (targetConversationId !== conversationId) return;
-
-            // Chỉ update messages cache — conversations cache do useChatRealtime xử lý
-            queryClient.setQueryData<MessagesCache>(
-                ["chat-messages", conversationId],
-                (oldData) => {
-                    if (!oldData?.pages.length) return oldData;
-                    return produce(oldData, (draft) => {
-                        const currentItems = draft.pages[0]?.items;
-                        if (!currentItems) return;
-                        const existingIndex = currentItems.findIndex(
-                            (m) => m.id === newMessage.id ||
-                                  (newMessage.clientMessageId && m.id === newMessage.clientMessageId)
-                        );
-                        if (existingIndex > -1) {
-                            currentItems[existingIndex] = newMessage;
-                            return;
-                        }
-                        currentItems.unshift(newMessage);
-                    });
-                }
-            );
-
-            if (!isMinimized) {
-                const now = Date.now();
-                if (now - lastMarkedTimeRef.current > 2000) {
-                    lastMarkedTimeRef.current = now;
-                    chatService.markAsRead(conversationId).catch(() => undefined);
-                }
-            }
-        };
 
         const handleUserRead = (
             targetConversationId: string,
@@ -239,19 +138,65 @@ export function useChatMessages(
             );
         };
 
-        connection.on("ReceiveNewMessage", handleNewMessage);
+        const handleMessageUpdated = (updatedMessage: MessageResponse) => {
+            if (updatedMessage.conversationId !== conversationId) return;
+
+            queryClient.setQueryData<MessagesCache>(
+                ["chat-messages", conversationId],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
+                    return produce(oldData, (draft) => {
+                        for (const page of draft.pages) {
+                            const index = page.items.findIndex(
+                                (m) => m.id === updatedMessage.id
+                            );
+                            if (index > -1) {
+                                page.items[index] = updatedMessage;
+                                return;
+                            }
+                        }
+                    });
+                }
+            );
+        };
+
+        const handleMessageDeleted = (payload: { conversationId: string; messageId: string }) => {
+            if (payload.conversationId !== conversationId) return;
+
+            queryClient.setQueryData<MessagesCache>(
+                ["chat-messages", conversationId],
+                (oldData) => {
+                    if (!oldData?.pages.length) return oldData;
+                    return produce(oldData, (draft) => {
+                        for (const page of draft.pages) {
+                            const index = page.items.findIndex(
+                                (m) => m.id === payload.messageId
+                            );
+                            if (index > -1) {
+                                page.items[index].isDeleted = true;
+                                page.items[index].content = null;
+                            }
+                        }
+                    });
+                }
+            );
+        };
+
         connection.on("UserReadMessage", handleUserRead);
+        connection.on("MessageUpdated", handleMessageUpdated);
+        connection.on("MessageDeleted", handleMessageDeleted);
 
         return () => {
-            connection.off("ReceiveNewMessage", handleNewMessage);
             connection.off("UserReadMessage", handleUserRead);
+            connection.off("MessageUpdated", handleMessageUpdated);
+            connection.off("MessageDeleted", handleMessageDeleted);
         };
     }, [
         connection,
         isConnected,
+        reconnectVersion,
         conversationId,
-        queryClient,
-        isMinimized
+        queryClient
     ]);
 
     useEffect(() => {

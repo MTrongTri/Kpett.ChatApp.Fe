@@ -29,14 +29,13 @@ export const useManageComment = ({ postId, commentId, onSuccess, onDeleteSuccess
 
     const mutationDelete = useMutation({
         mutationFn: () => deleteComment(commentId),
-        onSuccess: (response) => {
-            if (response) {
-                queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-                queryClient.invalidateQueries({ queryKey: ["replies", postId] });
-                if (onDeleteSuccess) onDeleteSuccess();
-            } else {
-                toast.error("Không thể xóa bình luận");
-            }
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+            queryClient.invalidateQueries({ queryKey: ["replies", postId] });
+            if (onDeleteSuccess) onDeleteSuccess();
+        },
+        onError: () => {
+            toast.error("Không thể xóa bình luận");
         }
     });
 

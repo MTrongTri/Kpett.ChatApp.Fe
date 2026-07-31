@@ -128,7 +128,7 @@ export default function ChatPopup({
         const isRecent = Date.now() - messageTimestamp < 10000;
         lastHandledMessageIdRef.current = newMessage.id;
 
-        if (isRecent) {
+        if (isRecent && newMessage.content) {
             showPreview(newMessage.content);
         }
     }, [newMessage, isMinimized, showPreview]);

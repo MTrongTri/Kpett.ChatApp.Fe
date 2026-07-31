@@ -6,7 +6,7 @@ export const useTrackPresence = (
     userIds: string[],
     onStatusChange?: (data: { userId: string; isOnline: boolean }) => void
 ) => {
-    const { connection, isConnected } = useSignalR();
+    const { connection, isConnected, reconnectVersion } = useSignalR();
 
     // Chuyển array thành string để tối ưu dependencies cho useEffect (tránh re-render vô hạn)
     const userIdsString = useMemo(() => {
@@ -25,7 +25,7 @@ export const useTrackPresence = (
             // Hủy đăng ký khi unmount hoặc khi callback thay đổi
             connection.off("UserStatusChanged", onStatusChange);
         };
-    }, [connection, isConnected, onStatusChange]);
+    }, [connection, isConnected, reconnectVersion, onStatusChange]);
 
     // GỬI YÊU CẦU ĐĂNG KÝ THEO DÕI (SUBSCRIBE/UNSUBSCRIBE)
     useEffect(() => {
@@ -45,5 +45,5 @@ export const useTrackPresence = (
                     .catch(err => console.error("Lỗi khi unsubscribe presence:", err));
             }
         };
-    }, [connection, isConnected, userIdsString]);
+    }, [connection, isConnected, reconnectVersion, userIdsString]);
 };

@@ -6,6 +6,7 @@ import { useAuth } from '@/components/providers/auth-provider';
 import { formatSystemMessage } from '@/lib/message-utils';
 import { formatRelativeTime } from '@/lib/format-date-utils';
 import { cn } from '@/lib/utils';
+import { ChatMessageText } from './chat-message-text';
 
 interface BubbleProps {
     msg: MessageResponse;
@@ -13,9 +14,10 @@ interface BubbleProps {
     isConsecutive: boolean;
     readers?: ParticipantResponse[];
     isLastMessage?: boolean;
+    participants?: ParticipantResponse[];
 }
 
-export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers = [], isLastMessage = false }: BubbleProps) {
+export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers = [], isLastMessage = false, participants = [] }: BubbleProps) {
     const { user } = useAuth();
     const currentUserId = user?.id;
 
@@ -103,7 +105,7 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                                         isMine ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-card text-foreground border border-border",
                                         borderRadiusClass
                                     )}>
-                                        {msg.content}
+                                        <ChatMessageText content={msg.content} isMine={isMine} mentions={msg.mentions} participants={participants} />
                                     </div>
                                 )}
                             </div>
@@ -114,7 +116,7 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
                                 isMine ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-card text-foreground border border-border",
                                 msg.localStatus === "sending" ? "opacity-70" : ""
                             )}>
-                                {msg.content}
+                                <ChatMessageText content={msg.content ?? ""} isMine={isMine} mentions={msg.mentions} participants={participants} />
                             </div>
                         )}
                     </div>

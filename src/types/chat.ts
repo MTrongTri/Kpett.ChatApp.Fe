@@ -70,6 +70,12 @@ export interface TypingEventPayload {
   timestamp: string;
 }
 
+export interface MessageMention {
+  userId: string;
+  username: string;
+  displayName?: string;
+}
+
 export interface MessageResponse {
   id: string;
   conversationId?: string;
@@ -85,5 +91,6 @@ export interface MessageResponse {
   actionMetadata?: SystemMessageMetadata;
   replyToMessageId?: string;
   attachments?: MessageAttachmentResponse[];
+  mentions?: MessageMention[];
   localStatus?: "sending" | "sent" | "error";
 }

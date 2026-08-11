@@ -47,6 +47,10 @@ export function getNotificationHref(notification: NotificationResponse) {
     return postId ? `/post/${postId}` : "#";
   }
 
+  if (notification.type === "MessageMention") {
+    return notification.referenceId ? `/chat/${notification.referenceId}` : "#";
+  }
+
   if (notification.type === "GroupInvitationReceived") {
     return "/groups/invitations";
   }

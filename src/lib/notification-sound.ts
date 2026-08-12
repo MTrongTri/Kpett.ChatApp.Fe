@@ -15,6 +15,7 @@ const NOTIFICATION_TYPE_SOUND: Record<string, string> = {
   FriendRequestReceived: "friend_request",
   FriendRequestAccepted: "friend_accept",
   CommentMention: "comment_mention",
+  MessageMention: "comment_mention",
   GroupInvitationReceived: "group_invitation",
 };
 

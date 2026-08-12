@@ -23,6 +23,8 @@ export function useNotifications(isFetch: boolean = false) {
         return "đã chấp nhận lời mời kết bạn của bạn.";
       case "CommentMention":
         return "đã nhắc đến bạn trong một bình luận.";
+      case "MessageMention":
+        return "đã nhắc đến bạn trong một tin nhắn.";
       case "GroupInvitationReceived":
         return "đã mời bạn tham gia nhóm.";
       default:

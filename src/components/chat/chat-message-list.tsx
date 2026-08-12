@@ -68,6 +68,7 @@ export function ChatMessageList({
                                 isConsecutive={isConsecutive}
                                 readers={readers}
                                 isLastMessage={isLastMessage}
+                                participants={conversation?.participants}
                             />
                         </div>
                     </React.Fragment>

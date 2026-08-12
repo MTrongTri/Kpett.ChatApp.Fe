@@ -290,6 +290,15 @@ export default function ChatWindow({ conversationId, toggleInfo, mobileBackHref 
                 onSendSticker={handleSendSticker}
                 onTyping={notifyTyping}
                 onStopTyping={notifyStopTyping}
+                allowMentions={currentConversation?.type === "Group"}
+                mentionableUsers={currentConversation?.participants
+                    ?.filter((p) => p.id !== user?.id)
+                    .map((p) => ({
+                        id: p.id,
+                        displayName: p.displayName,
+                        username: p.username,
+                        avatarUrl: p.avatarUrl,
+                    }))}
             />
         </div>
     );

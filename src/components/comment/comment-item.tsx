@@ -209,7 +209,7 @@ export const CommentItem = memo(({
               <Link href={`/${currentComment.author.username}`} className="text-card-foreground text-[12.5px] font-semibold">
                 {currentComment.author.displayName}
               </Link>
-              <span className="text-foreground/80 text-[12.5px]">
+              <span className="text-foreground/80 min-w-0 text-[12.5px]">
                 <CommentText content={currentComment.content} mentions={currentComment.mentions} />
               </span>
             </div>

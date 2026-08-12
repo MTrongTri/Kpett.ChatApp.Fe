@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addComment } from "@/services/comment.service";
 import { Comment } from "@/types/comment";
+import { ApiResponse } from "@/types/common/api";
 import { toast } from "sonner";
 
 interface UseCreateReplyProps {
@@ -18,7 +19,7 @@ export const useCreateCommentReply = ({
 }: UseCreateReplyProps) => {
     const queryClient = useQueryClient();
 
-    const mutation = useMutation({
+    const mutation = useMutation<Comment, ApiResponse, string>({
         mutationFn: (content: string) => addComment(postId, content, submitParentId),
         onSuccess: (response) => {
             if (response) {
@@ -46,7 +47,9 @@ export const useCreateCommentReply = ({
         },
         onError: (error) => {
             console.error("Lỗi khi gửi reply:", error);
-            toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
+            if (error.statusCode < 500) {
+                toast.error(error.message || "Không thể gửi phản hồi.");
+            }
         }
     });
 

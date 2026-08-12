@@ -690,8 +690,8 @@ function MembersTab({ groupId }: { groupId: string }) {
                       className="h-10 w-10"
                     />
                     <div>
-                      <p className="text-sm font-bold text-foreground">{member.displayName || member.username}</p>
-                      <p className="text-xs text-muted-foreground">@{member.username}</p>
+                      <p className="text-sm font-bold text-foreground wrap-break-word">{member.displayName || member.username}</p>
+                      <p className="text-xs text-muted-foreground wrap-break-word">@{member.username}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -752,7 +752,7 @@ function MemberRow({ member, groupId, onKick, onRoleChange }: {
           className="h-10 w-10"
         />
         <div>
-          <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <p className="text-sm font-bold text-foreground wrap-break-word flex items-center gap-1.5">
             {member.displayName || member.username}
             {member.role === "admin" && <Crown size={14} className="text-amber-500" />}
             {member.role === "moderator" && <Shield size={14} className="text-blue-500" />}
@@ -880,10 +880,10 @@ function PendingPostsTab({ groupId }: { groupId: string }) {
                     className="h-10 w-10"
                   />
                   <div>
-                    <p className="text-sm font-bold text-foreground">{post.author?.displayName || "Người dùng"}</p>
+                    <p className="text-sm font-bold text-foreground wrap-break-word">{post.author?.displayName || "Người dùng"}</p>
                   </div>
                 </div>
-                <p className="text-foreground text-[15px] mb-5">{post.content}</p>
+                <p className="text-foreground wrap-break-word text-[15px] mb-5">{post.content}</p>
                 <div className="flex gap-2">
                   <Button className="flex-1 rounded-xl" onClick={() => handleApprove(post.id)}>
                     <Check size={18} className="mr-2" /> Duyệt bài

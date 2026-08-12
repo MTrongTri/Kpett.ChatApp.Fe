@@ -45,7 +45,7 @@ export default function ChatInfo({
             {/* Profile chung */}
             <div className="flex flex-col items-center py-6 border-b border-border">
                 <ConversationAvatar conversation={currentConversation} className="w-20 h-20 mb-3" />
-                <h2 className="text-lg font-bold text-foreground">{chatName}</h2>
+                <h2 className="text-lg wrap-break-word font-bold text-foreground">{chatName}</h2>
                 <p className="text-sm text-muted-foreground">{isGroup ? `${currentConversation.participants?.length} thành viên` : 'Đang hoạt động'}</p>
 
                 <div className="flex gap-6 mt-5 text-foreground">

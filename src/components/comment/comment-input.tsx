@@ -12,7 +12,7 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import tippy, {
   type GetReferenceClientRect,
   Instance as TippyInstance,
@@ -73,6 +73,7 @@ export const CommentInput = ({
   const [hasContent, setHasContent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const isMentionPopupOpen = useRef(false);
   const { resolvedTheme } = useTheme();
 
   const isEditing = !!defaultValue;
@@ -129,6 +130,7 @@ export const CommentInput = ({
 
             return {
               onStart: (props) => {
+                isMentionPopupOpen.current = true;
                 component = new ReactRenderer(MentionList, {
                   props,
                   editor: props.editor,
@@ -174,6 +176,7 @@ export const CommentInput = ({
               },
 
               onExit() {
+                isMentionPopupOpen.current = false;
                 popup?.[0]?.destroy();
                 component?.destroy();
               },
@@ -226,8 +229,8 @@ export const CommentInput = ({
 
   const handleFocus = () => editor?.chain().focus('end').run();
 
-  const handlePublish = async () => {
-    if (!editor || editor.isEmpty) return;
+  const handlePublish = useCallback(async () => {
+    if (!editor || editor.isEmpty || isSubmitting) return;
 
     const json = editor.getJSON();
     let parsedContent = "";
@@ -262,7 +265,27 @@ export const CommentInput = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [editor, isEditing, onSubmit, isSubmitting]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.isComposing &&
+        !isMentionPopupOpen.current
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        handlePublish();
+      }
+    };
+
+    editor.view.dom.addEventListener("keydown", handleKeyDown, true);
+    return () => editor.view.dom.removeEventListener("keydown", handleKeyDown, true);
+  }, [editor, handlePublish]);
 
   const isButtonDisabled = !editor || !hasContent || isLoading || isSubmitting;
 

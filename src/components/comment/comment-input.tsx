@@ -189,7 +189,7 @@ export const CommentInput = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[20px] max-h-32 overflow-y-auto py-1 pr-12 text-[14px] leading-5 text-foreground placeholder:text-muted-foreground/60",
+          "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[20px] max-h-32 overflow-y-auto py-1 pr-12 text-[14px] leading-5 text-foreground placeholder:text-muted-foreground/60 break-all wrap-break-word [overflow-wrap:anywhere]",
       },
     },
   });
@@ -290,14 +290,14 @@ export const CommentInput = ({
   const isButtonDisabled = !editor || !hasContent || isLoading || isSubmitting;
 
   return (
-    <div className="z-10 shrink-0 bg-transparent">
-      <div className="flex items-center gap-3">
+    <div className="z-10 shrink-0 bg-transparent w-full min-w-0">
+      <div className="flex items-center gap-3 w-full min-w-0">
         {
           !defaultValue && <UserAvatar user={author} />
         }
 
-        <div className="bg-background border-foreground/40 relative flex flex-1 items-end gap-4 rounded-xl border px-3 py-2">
-          <div className="flex-1 cursor-text" onClick={handleFocus}>
+        <div className="bg-background border-foreground/40 relative flex flex-1 min-w-0 items-end gap-4 rounded-xl border px-3 py-2">
+          <div className="flex-1 min-w-0 cursor-text overflow-hidden" onClick={handleFocus}>
             <EditorContent editor={editor} />
           </div>
 

@@ -16,7 +16,7 @@ export const CommentList = ({ postId, comments }: CommentListProps) => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 w-full min-w-0">
       {comments.map((comment) => (
         <CommentItem key={comment.id} comment={comment} postId={postId} />
       ))}

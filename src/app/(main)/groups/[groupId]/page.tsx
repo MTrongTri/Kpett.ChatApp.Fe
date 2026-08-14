@@ -235,7 +235,7 @@ function TabHome({ group, user }: { group: GroupDetailResponse; user: BaseUser |
           <h3 className="text-[15px] font-bold text-foreground mb-3">
             Về nhóm này
           </h3>
-          <p className="text-sm text-muted-foreground wrap-break-word leading-relaxed">
+          <p className="text-sm text-muted-foreground wrap-break-word break-all leading-relaxed">
             {group.description || "Nhóm này chưa có mô tả. Quản trị viên có thể cập nhật thông tin tại phần cài đặt."}
           </p>
           <div className="mt-4 space-y-3">
@@ -280,9 +280,9 @@ function TabHome({ group, user }: { group: GroupDetailResponse; user: BaseUser |
                 <li key={rule.id} className="flex gap-2 text-sm">
                   <span className="font-bold text-primary shrink-0 mt-0.5">{rule.order}.</span>
                   <div>
-                    <span className="font-semibold text-foreground wrap-break-word">{rule.title}</span>
+                    <span className="font-semibold text-foreground wrap-break-word break-all">{rule.title}</span>
                     {rule.description && (
-                      <p className="text-muted-foreground mt-0.5 wrap-break-word text-[13px]">{rule.description}</p>
+                      <p className="text-muted-foreground mt-0.5 wrap-break-word break-all text-[13px]">{rule.description}</p>
                     )}
                   </div>
                 </li>
@@ -304,7 +304,7 @@ function TabAbout({ group }: { group: GroupDetailResponse }) {
     <div className="max-w-2xl space-y-6">
       <div className="bg-card rounded-3xl border border-border p-6 shadow-sm space-y-5">
         <h3 className="text-lg font-bold text-foreground">Giới thiệu</h3>
-        <p className="text-sm text-muted-foreground wrap-break-word leading-relaxed">
+        <p className="text-sm text-muted-foreground wrap-break-word break-all leading-relaxed">
           {group.description || "Nhóm này chưa có mô tả chi tiết."}
         </p>
 
@@ -557,7 +557,7 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
                       <div className="flex items-center gap-3">
                         <UserAvatar user={friend} className="w-8 h-8" />
                         <div>
-                          <div className="wrap-break-word text-sm font-semibold">{friend.displayName || friend.username}</div>
+                          <div className="wrap-break-word break-all text-sm font-semibold">{friend.displayName || friend.username}</div>
                           <div className="text-xs text-muted-foreground">@{friend.username}</div>
                         </div>
                       </div>
@@ -616,11 +616,11 @@ function TabMembers({ group }: { group: GroupDetailResponse }) {
                   className="h-10 w-10"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground wrap-break-word flex min-w-0 items-center gap-1.5">
+                  <p className="text-sm font-semibold text-foreground wrap-break-word break-all flex min-w-0 items-center gap-1.5">
                     {member.displayName || member.username}
                     {getRoleIcon(member.role)}
                   </p>
-                  <p className="text-xs text-muted-foreground wrap-break-word">@{member.username}</p>
+                  <p className="text-xs text-muted-foreground wrap-break-word break-all">@{member.username}</p>
                 </div>
                 {member.role === "admin" && (
                   <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">
@@ -780,7 +780,7 @@ export default function GroupDetailPage() {
 
             {/* Info */}
             <div className="flex-1 min-w-0 md:pt-4 lg:pt-6 pb-2">
-              <h1 className="text-2xl wrap-break-word md:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl wrap-break-word break-all md:text-3xl font-bold tracking-tight text-foreground">
                 {group.name}
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

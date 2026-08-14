@@ -128,6 +128,14 @@ export default function ReelPlayer({ src, isActive, thumbnailUrl, className }: R
           muted={isMuted}
           onTimeUpdate={handleTimeUpdate}
           onClick={togglePlay}
+          onPlay={(e) => {
+            const videos = document.querySelectorAll<HTMLVideoElement>("video");
+            videos.forEach((vid) => {
+              if (vid !== e.currentTarget) {
+                vid.pause();
+              }
+            });
+          }}
         />
 
         {thumbnailUrl && !isActive && (

@@ -28,7 +28,7 @@ export function ChatMessageText({
   };
 
   return (
-    <span className="whitespace-pre-wrap break-words">
+    <span className="whitespace-pre-wrap break-words break-all">
       {parts.map((part, index) => {
         const match = part.match(/^<@([^>]+)>$/);
 

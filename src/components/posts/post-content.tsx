@@ -20,7 +20,7 @@ export default function PostContent({ content, tags, isNsfw, showNsfwContent }: 
   return (
     <div className={cn("text-foreground/65 text-[13.5px] leading-relaxed", isNsfw && !showNsfwContent && "blur-sm select-none")}>
       <div
-        className={`wrap-break-word whitespace-pre-wrap ${!isExpanded && isLongContent ? "line-clamp-4" : ""
+        className={`wrap-break-word break-all whitespace-pre-wrap ${!isExpanded && isLongContent ? "line-clamp-4" : ""
           }`}
         dangerouslySetInnerHTML={{ __html: content }}
       />

@@ -24,7 +24,7 @@ export default function ChatMessageBubble({ msg, isMine, isConsecutive, readers 
     if (msg.type === "System") {
         return (
             <div className="w-full flex justify-center items-center my-6">
-                <span className="text-[10px] wrap-break-word text-muted-foreground bg-muted/50 px-4 py-1.5 rounded-full font-medium text-center max-w-[85%] border border-border/50 shadow-sm">
+                <span className="text-[10px] wrap-break-word break-all text-muted-foreground bg-muted/50 px-4 py-1.5 rounded-full font-medium text-center max-w-[85%] border border-border/50 shadow-sm">
                     {formatSystemMessage(msg, currentUserId)}
                 </span>
             </div>

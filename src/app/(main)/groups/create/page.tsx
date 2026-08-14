@@ -343,7 +343,7 @@ export default function CreateGroupPage() {
 
                         {/* Group Header Info */}
                         <div className="px-6 md:px-10 pt-2 pb-6 border-b border-border">
-                            <h2 className="text-[32px] wrap-break-word font-extrabold text-foreground mb-2 leading-tight">
+                            <h2 className="text-[32px] wrap-break-word break-all font-extrabold text-foreground mb-2 leading-tight">
                                 {groupName || 'Tên nhóm của bạn'}
                             </h2>
                             <div className="flex items-center text-muted-foreground text-[15px] gap-2 mb-6 font-medium">

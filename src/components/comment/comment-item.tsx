@@ -205,11 +205,11 @@ export const CommentItem = memo(({
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-baseline gap-1.5 mt-1">
-              <Link href={`/${currentComment.author.username}`} className="text-card-foreground wrap-break-word text-[12.5px] font-semibold">
+            <div className="flex flex-wrap items-baseline gap-1.5 mt-1 min-w-0 overflow-hidden">
+              <Link href={`/${currentComment.author.username}`} className="text-card-foreground wrap-break-word text-[12.5px] font-semibold shrink-0">
                 {currentComment.author.displayName}
               </Link>
-              <span className="text-foreground/80 min-w-0 text-[12.5px]">
+              <span className="text-foreground/80 min-w-0 text-[12.5px] break-all">
                 <CommentText content={currentComment.content} mentions={currentComment.mentions} />
               </span>
             </div>

@@ -205,7 +205,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
       {/* Name & role */}
       <div className="mb-4 space-y-1.5">
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <h1 className="text-foreground wrap-break-word text-2xl font-extrabold tracking-tight md:text-[28px]">
+          <h1 className="text-foreground wrap-break-word break-all text-2xl font-extrabold tracking-tight md:text-[28px]">
             {profile.displayName}
           </h1>
 
@@ -216,7 +216,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
           )}
         </div>
 
-        <p className="text-foreground/50 wrap-break-word flex justify-center text-sm font-medium">
+        <p className="text-foreground/50 wrap-break-word break-all flex justify-center text-sm font-medium">
           @{profile.username} {profile.location && <>· {profile.occupation}</>}
         </p>
       </div>
@@ -242,7 +242,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
             href={profile.socialMedia.website}
             target="_blank"
             rel="noreferrer"
-            className="text-primary hover:text-primary/80 wrap-break-word flex min-w-0 items-center gap-1.5 text-[13px] font-medium transition-colors"
+            className="text-primary hover:text-primary/80 wrap-break-word break-all flex min-w-0 items-center gap-1.5 text-[13px] font-medium transition-colors"
           >
             <Link2 size={14} className="shrink-0" />
             {profile.socialMedia.website}
@@ -252,7 +252,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
 
       {profile.biography && (
         <div className="mb-6 flex justify-center px-4">
-          <p className="text-foreground/70 wrap-break-word max-w-2xl text-center text-[14px] leading-relaxed whitespace-pre-wrap">
+          <p className="text-foreground/70 wrap-break-word break-all max-w-2xl text-center text-[14px] leading-relaxed whitespace-pre-wrap">
             {profile.biography}
           </p>
         </div>

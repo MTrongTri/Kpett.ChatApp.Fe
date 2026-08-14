@@ -87,7 +87,7 @@ export default function ProfileCard() {
             <UserAvatar user={userStats} className="h-12 w-12" />
           </div>
           <div>
-            <p className="text-card-foreground wrap-break-word text-sm leading-tight font-semibold">
+            <p className="text-card-foreground wrap-break-word break-all text-sm leading-tight font-semibold">
               {userStats.displayName}
             </p>
             <p className="text-foreground/40 mt-0.5 text-[11px]">

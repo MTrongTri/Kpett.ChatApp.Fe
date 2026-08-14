@@ -107,6 +107,14 @@ export function MediaLightbox({
                           controls
                           autoPlay
                           className="max-h-full max-w-full shadow-2xl"
+                          onPlay={(e) => {
+                            const videos = document.querySelectorAll<HTMLVideoElement>("video");
+                            videos.forEach((vid) => {
+                              if (vid !== e.currentTarget) {
+                                vid.pause();
+                              }
+                            });
+                          }}
                         />
                         <button
                           onClick={(e) => {

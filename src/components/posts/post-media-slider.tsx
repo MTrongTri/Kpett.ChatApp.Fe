@@ -92,7 +92,7 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                                 loop
                                                 playsInline
                                                 onPlay={(e) => {
-                                                    const videos = document.querySelectorAll<HTMLVideoElement>(".post-media-slider video");
+                                                    const videos = document.querySelectorAll<HTMLVideoElement>("video");
                                                     videos.forEach((vid) => {
                                                         if (vid !== e.currentTarget) {
                                                             vid.pause();

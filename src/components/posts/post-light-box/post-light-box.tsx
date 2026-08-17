@@ -99,7 +99,7 @@ export default function PostLightbox({
           {isPostLoading || !post ? (
             <PostLightboxSkeleton />
           ) : (
-            <div className="flex flex-col h-full px-0 md:px-6 overflow-hidden">
+            <div className="flex flex-col h-full px-0 md:px-6 overflow-hidden min-w-0 w-full">
               <DialogHeader className="hidden md:block px-4 pr-6 py-2 shrink-0">
                 <div className="flex w-full items-center justify-between border-b border-border">
                   <PostHeader
@@ -115,7 +115,7 @@ export default function PostLightbox({
                 </div>
               </DialogHeader>
 
-              <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto flex flex-col">
+              <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto flex flex-col min-w-0 w-full">
                 <div className="hidden md:block px-4 py-3 shrink-0">
                   <PostContent content={post.content} tags={post.hashtags} />
                 </div>

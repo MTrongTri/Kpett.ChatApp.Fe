@@ -13,7 +13,7 @@ export const CommentText = ({ content, mentions = [] }: CommentTextProps) => {
   const parts = content.split(/(<@[^>]+>)/g);
 
   return (
-    <span className="wrap-break-word break-all text-[12.5px] leading-relaxed whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+    <span className="wrap-break-word break-all [overflow-wrap:anywhere] text-[12.5px] leading-relaxed whitespace-pre-wrap text-gray-800 dark:text-gray-200 inline-block w-full min-w-0">
       {parts.map((part, index) => {
         const match = part.match(/^<@([^>]+)>$/);
 

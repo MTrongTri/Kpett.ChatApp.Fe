@@ -95,14 +95,14 @@ export default function PostCommentSection({
     return (
         <>
             {/* KHU VỰC HIỂN THỊ BÌNH LUẬN */}
-            <div className="px-3 flex-1 flex flex-col">
+            <div className="px-3 flex-1 flex flex-col min-w-0 w-full">
                 <p id="comment-list-area" className="text-foreground/60 mb-3 text-[12px] font-semibold">
                     {post.metrics.commentCount} Bình luận
                 </p>
 
                 {/* XỬ LÝ TRẠNG THÁI LỖI TOÀN BỘ */}
                 {commentsError && comments.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-center flex-1">
+                    <div className="flex flex-col items-center justify-center py-10 text-center flex-1 min-w-0 w-full">
                         <div className="bg-destructive/10 text-destructive flex h-12 w-12 items-center justify-center rounded-full mb-3">
                             <AlertCircle size={24} />
                         </div>
@@ -114,7 +114,7 @@ export default function PostCommentSection({
                         </p>
                     </div>
                 ) : (
-                    <div>
+                    <div className="min-w-0 w-full">
                         {isCommentsLoading && comments.length === 0 ? (
                             <>
                                 <CommentItemSkeleton />
@@ -174,7 +174,7 @@ export default function PostCommentSection({
                     </div>
                 </div>
             ) : currentUser ? (
-                <div className="border-border/50 sticky bottom-0 bg-card border-t px-4 pt-4 pb-4 mt-auto z-10">
+                <div className="border-border/50 sticky bottom-0 bg-card border-t px-4 pt-4 pb-4 mt-auto z-10 w-full min-w-0">
                     <CommentInput
                         author={currentUser}
                         fetchMentions={debouncedFetchMentions}

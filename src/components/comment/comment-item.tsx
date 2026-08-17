@@ -183,15 +183,15 @@ export const CommentItem = memo(({
   }
 
   return (
-    <div className="flex w-full gap-2.5 group">
-      <div className="flex flex-col items-center pt-1">
+    <div className="flex w-full min-w-0 gap-2.5 group">
+      <div className="flex flex-col items-center pt-1 shrink-0">
         <Link href={`/${currentComment.author.username}`}>
           <UserAvatar user={currentComment.author} />
         </Link>
         {showVerticalLine && <div className="bg-border mt-2 mb-1 w-0.5 flex-1 rounded-full opacity-50" />}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-hidden">
         {isEditing ? (
           <div className="mt-1">
             <CommentInput
@@ -205,13 +205,13 @@ export const CommentItem = memo(({
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-baseline gap-1.5 mt-1 min-w-0 overflow-hidden">
+            <div className="flex flex-wrap items-baseline gap-1.5 mt-1 min-w-0 overflow-hidden w-full">
               <Link href={`/${currentComment.author.username}`} className="text-card-foreground wrap-break-word text-[12.5px] font-semibold shrink-0">
                 {currentComment.author.displayName}
               </Link>
-              <span className="text-foreground/80 min-w-0 text-[12.5px] break-all">
+              <div className="text-foreground/80 min-w-0 text-[12.5px] break-all flex-1">
                 <CommentText content={currentComment.content} mentions={currentComment.mentions} />
-              </span>
+              </div>
             </div>
 
             <div className="text-foreground/40 mt-1.5 flex items-center gap-3 text-[11px]">

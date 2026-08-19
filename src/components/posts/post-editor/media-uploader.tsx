@@ -65,7 +65,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     for (const file of files) {
       const validation = validateFile(file, {
         allowedTypes: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"],
-        maxVideoSize: 150 * 1024 * 1024,
+        maxVideoSize: 250 * 1024 * 1024,
         maxImageSize: 5 * 1024 * 1024,
       });
 
@@ -85,9 +85,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
       const processedFiles = await Promise.all(
         validFiles.map(async (file) => {
           try {
-            return await compressImageClientSide(file, {
-
-            });
+            return await compressImageClientSide(file, {});
           } catch (error) {
             console.error("Lỗi nén file:", file.name, error);
             return file;
@@ -250,10 +248,6 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
         onChange={handleFileChange}
       />
 
-      {/* <div className="text-muted-foreground mb-3 text-[11px]">
-        Chọn ảnh/video hoặc kéo thả trực tiếp vào đây (Hỗ trợ JPG, PNG, MP4, WEBM).
-      </div> */}
-
       {media.length === 0 && !isUploading ? (
         <div
           onClick={() => fileInputRef.current?.click()}
@@ -268,6 +262,9 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
           </div>
           <p className="text-foreground text-sm font-semibold">
             {isDragging ? "Thả file vào đây để tải lên" : "Nhấn hoặc Kéo thả ảnh/video vào đây"}
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Hỗ trợ JPG, PNG, WebP (tối đa 5MB) và MP4, WebM, QuickTime (tối đa 250MB)
           </p>
         </div>
       ) : (

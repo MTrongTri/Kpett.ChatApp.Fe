@@ -1,121 +1,155 @@
 "use client";
 
-import { useState } from "react";
-import { Heart, MessageCircle, Bookmark, Send, ChevronDown, Music2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCompactNumber } from "@/lib/format-number-utils";
-import { UserAvatar } from "@/components/user/user-avatar";
-import { Button } from "@/components/ui/button";
 import { Post } from "@/types/post";
-import { addReaction, removeReaction } from "@/services/post.service";
+import { useCheckSaved, useSavePost, useUnsavePost } from "@/hooks/post/use-save-post";
 import { toast } from "sonner";
 
 interface ReelActionsProps {
   reel: Post;
+  liked: boolean;
+  likeCount: number;
+  onLikeToggle: () => void;
   onCommentClick: () => void;
-  onUserClick: () => void;
+  isOverlay?: boolean;
 }
 
-export default function ReelActions({ reel, onCommentClick, onUserClick }: ReelActionsProps) {
-  const [liked, setLiked] = useState(reel.viewerContext?.isLiked ?? false);
-  const [likeCount, setLikeCount] = useState(reel.metrics?.likeCount ?? 0);
+export default function ReelActions({
+  reel,
+  liked,
+  likeCount,
+  onLikeToggle,
+  onCommentClick,
+  isOverlay = false,
+}: ReelActionsProps) {
+  const { data: isSaved } = useCheckSaved(reel.id);
+  const { mutate: doSave, isPending: isSaving } = useSavePost(reel.id);
+  const { mutate: doUnsave, isPending: isUnsaving } = useUnsavePost(reel.id);
 
-  const handleLike = async () => {
-    const prev = liked;
-    const prevCount = likeCount;
-    setLiked(!liked);
-    setLikeCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
-    try {
-      if (prev) {
-        await removeReaction(reel.id);
-      } else {
-        await addReaction(reel.id, 1);
+  const saved = isSaved ?? false;
+  const saving = isSaving || isUnsaving;
+
+  const handleSaveToggle = () => {
+    if (saving) return;
+    if (saved) {
+      doUnsave();
+      toast.success("Đã bỏ lưu Reel");
+    } else {
+      doSave();
+      toast.success("Đã lưu Reel vào mục Đã lưu");
+    }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/post/${reel.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Reel của ${reel.author?.displayName || "Kpett"}`,
+          text: reel.content || "Xem Reel trên Kpett ChatApp",
+          url,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
       }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Đã sao chép liên kết vào bộ nhớ tạm");
     } catch {
-      setLiked(prev);
-      setLikeCount(prevCount);
-      toast.error("Không thể thực hiện tương tác");
+      toast.error("Không thể sao chép liên kết");
     }
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-12">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-3">
-            <button onClick={onUserClick} className="shrink-0">
-              <UserAvatar
-                user={{
-                  id: reel.author?.id ?? "",
-                  username: reel.author?.username,
-                  displayName: reel.author?.displayName,
-                  avatarUrl: reel.author?.avatarUrl,
-                }}
-                className="h-10 w-10 ring-2 ring-white/50"
-              />
-            </button>
-            <div className="min-w-0">
-              <button
-                onClick={onUserClick}
-                className="text-sm font-bold text-white truncate block hover:underline"
-              >
-                {reel.author?.displayName ?? reel.author?.username ?? "Unknown"}
-              </button>
-              {reel.content && (
-                <p className="text-xs text-white/80 line-clamp-2 mt-0.5">{reel.content}</p>
-              )}
-            </div>
-          </div>
-          {reel.content && (
-            <button
-              onClick={onCommentClick}
-              className="text-xs text-white/60 hover:text-white transition-colors"
-            >
-              Xem {formatCompactNumber(reel.metrics?.commentCount ?? 0)} bình luận
-            </button>
+    <div className={cn("flex flex-col items-center gap-3.5 sm:gap-4", isOverlay && "gap-3")}>
+      {/* Nút Like */}
+      <button
+        type="button"
+        onClick={onLikeToggle}
+        className="group flex flex-col items-center gap-1 cursor-pointer focus:outline-none select-none"
+        title="Thích"
+      >
+        <div
+          className={cn(
+            "flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full transition-all duration-200 shadow-md",
+            liked
+              ? "bg-rose-500/25 text-rose-500 hover:bg-rose-500/35 scale-105"
+              : "bg-white/15 text-white backdrop-blur-md hover:bg-white/25 hover:scale-105 active:scale-95"
           )}
+        >
+          <Heart
+            className={cn(
+              "h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200",
+              liked ? "fill-rose-500 scale-110" : "group-hover:scale-110"
+            )}
+          />
         </div>
+        <span className="text-[11px] sm:text-xs font-semibold text-white drop-shadow-md">
+          {formatCompactNumber(likeCount)}
+        </span>
+      </button>
 
-        <div className="flex flex-col items-center gap-5">
-          <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-            <div
-              className={cn(
-                "rounded-full p-2.5 transition-all",
-                liked
-                  ? "bg-rose-500/20 text-rose-400"
-                  : "bg-white/10 text-white group-hover:bg-white/20"
-              )}
-            >
-              <Heart
-                className={cn("h-6 w-6 transition-all", liked && "fill-rose-400 scale-110")}
-              />
-            </div>
-            <span className="text-[11px] font-semibold text-white">{formatCompactNumber(likeCount)}</span>
-          </button>
-
-          <button onClick={onCommentClick} className="flex flex-col items-center gap-1 group">
-            <div className="rounded-full bg-white/10 p-2.5 text-white transition-all group-hover:bg-white/20">
-              <MessageCircle className="h-6 w-6" />
-            </div>
-            <span className="text-[11px] font-semibold text-white">
-              {formatCompactNumber(reel.metrics?.commentCount ?? 0)}
-            </span>
-          </button>
-
-          <button className="flex flex-col items-center gap-1 group">
-            <div className="rounded-full bg-white/10 p-2.5 text-white transition-all group-hover:bg-white/20">
-              <Send className="h-6 w-6" />
-            </div>
-            <span className="text-[11px] font-semibold text-white">Share</span>
-          </button>
-
-          <button className="flex flex-col items-center gap-1 group">
-            <div className="rounded-full bg-white/10 p-2.5 text-white transition-all group-hover:bg-white/20">
-              <Bookmark className="h-6 w-6" />
-            </div>
-          </button>
+      {/* Nút Bình luận */}
+      <button
+        type="button"
+        onClick={onCommentClick}
+        className="group flex flex-col items-center gap-1 cursor-pointer focus:outline-none select-none"
+        title="Bình luận"
+      >
+        <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95 shadow-md">
+          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-200" />
         </div>
-      </div>
+        <span className="text-[11px] sm:text-xs font-semibold text-white drop-shadow-md">
+          {formatCompactNumber(reel.metrics?.commentCount ?? 0)}
+        </span>
+      </button>
+
+      {/* Nút Lưu / Bookmark */}
+      <button
+        type="button"
+        onClick={handleSaveToggle}
+        disabled={saving}
+        className="group flex flex-col items-center gap-1 cursor-pointer focus:outline-none disabled:opacity-60 select-none"
+        title={saved ? "Bỏ lưu" : "Lưu"}
+      >
+        <div
+          className={cn(
+            "flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full transition-all duration-200 shadow-md",
+            saved
+              ? "bg-amber-500/25 text-amber-400 hover:bg-amber-500/35 scale-105"
+              : "bg-white/15 text-white backdrop-blur-md hover:bg-white/25 hover:scale-105 active:scale-95"
+          )}
+        >
+          <Bookmark
+            className={cn(
+              "h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200",
+              saved ? "fill-amber-400 scale-110" : "group-hover:scale-110"
+            )}
+          />
+        </div>
+        <span className="text-[11px] sm:text-xs font-semibold text-white drop-shadow-md">
+          {saved ? "Đã lưu" : "Lưu"}
+        </span>
+      </button>
+
+      {/* Nút Chia sẻ */}
+      <button
+        type="button"
+        onClick={handleShare}
+        className="group flex flex-col items-center gap-1 cursor-pointer focus:outline-none select-none"
+        title="Chia sẻ"
+      >
+        <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95 shadow-md">
+          <Share2 className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-200" />
+        </div>
+        <span className="text-[11px] sm:text-xs font-semibold text-white drop-shadow-md">
+          Chia sẻ
+        </span>
+      </button>
     </div>
   );
 }

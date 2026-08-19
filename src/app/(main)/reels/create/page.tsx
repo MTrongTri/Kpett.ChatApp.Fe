@@ -27,8 +27,8 @@ export default function CreateReelPage() {
       return;
     }
 
-    if (file.size > 200 * 1024 * 1024) {
-      toast.error("Video không được vượt quá 200MB");
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Video Reel không được vượt quá 100MB");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function CreateReelPage() {
     setUploadProgress(0);
 
     try {
-      const uploaded = await uploadFile(videoFile, "videos", (progress) => {
+      const uploaded = await uploadFile(videoFile, "reels", (progress) => {
         setUploadProgress(progress);
       });
 
@@ -98,7 +98,7 @@ export default function CreateReelPage() {
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold">Chọn video để tải lên</p>
-              <p className="mt-1 text-sm text-white/50">Hỗ trợ MP4, WebM, MOV (tối đa 200MB)</p>
+              <p className="mt-1 text-sm text-white/50">Hỗ trợ MP4, WebM, MOV (tối đa 100MB)</p>
             </div>
             <input
               ref={fileInputRef}

@@ -21,8 +21,9 @@ export interface ValidationResult {
 
 // Cấu hình mặc định (fallback nếu không truyền options)
 export const DEFAULT_FILE_LIMITS = {
-  MAX_IMAGE_SIZE: 5 * 1024 * 1024,   // 5MB
-  MAX_VIDEO_SIZE: 1024 * 1024 * 1024, // 1GB
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024,     // 5MB
+  MAX_VIDEO_SIZE: 250 * 1024 * 1024,   // 250MB (Post video)
+  MAX_REEL_SIZE: 100 * 1024 * 1024,    // 100MB (Reel video)
   ALLOWED_TYPES: [
     "image/jpeg", "image/png", "image/webp",
     "video/mp4", "video/webm", "video/quicktime"

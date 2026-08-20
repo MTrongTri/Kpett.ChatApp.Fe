@@ -25,7 +25,7 @@ export const DEFAULT_FILE_LIMITS = {
   MAX_VIDEO_SIZE: 500 * 1024 * 1024,   // 500MB (Post video)
   MAX_REEL_SIZE: 250 * 1024 * 1024,    // 250MB (Reel video)
   ALLOWED_TYPES: [
-    "image/jpeg", "image/png", "image/webp",
+    "image/jpeg", "image/png", "image/webp", "image/gif",
     "video/mp4", "video/webm", "video/quicktime"
   ]
 };

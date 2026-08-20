@@ -64,7 +64,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
 
     for (const file of files) {
       const validation = validateFile(file, {
-        allowedTypes: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"],
+        allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm", "video/quicktime"],
         maxVideoSize: 500 * 1024 * 1024,
         maxImageSize: 5 * 1024 * 1024,
       });

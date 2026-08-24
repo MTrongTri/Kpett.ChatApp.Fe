@@ -65,7 +65,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
     for (const file of files) {
       const validation = validateFile(file, {
         allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm", "video/quicktime"],
-        maxVideoSize: 500 * 1024 * 1024,
+        maxVideoSize: Infinity,
         maxImageSize: 5 * 1024 * 1024,
       });
 
@@ -264,7 +264,7 @@ export default function MediaUploader({ media, onChange, onLoadingChange }: Medi
             {isDragging ? "Thả file vào đây để tải lên" : "Nhấn hoặc Kéo thả ảnh/video vào đây"}
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
-            Hỗ trợ JPG, PNG, WebP (tối đa 5MB) và MP4, WebM, QuickTime (tối đa 500MB)
+            Hỗ trợ JPG, PNG, WebP (tối đa 5MB) và MP4, WebM, QuickTime (không giới hạn dung lượng)
           </p>
         </div>
       ) : (

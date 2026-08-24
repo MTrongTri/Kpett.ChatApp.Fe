@@ -22,7 +22,7 @@ export interface ValidationResult {
 // Cấu hình mặc định (fallback nếu không truyền options)
 export const DEFAULT_FILE_LIMITS = {
   MAX_IMAGE_SIZE: 5 * 1024 * 1024,     // 5MB
-  MAX_VIDEO_SIZE: 500 * 1024 * 1024,   // 500MB (Post video)
+  MAX_VIDEO_SIZE: Infinity,            // Không giới hạn dung lượng cho Post video
   MAX_REEL_SIZE: 250 * 1024 * 1024,    // 250MB (Reel video)
   ALLOWED_TYPES: [
     "image/jpeg", "image/png", "image/webp", "image/gif",
@@ -49,17 +49,17 @@ export const validateFile = (
   let maxSize = options?.maxSize;
 
   // Nếu không set maxSize chung, tự động nhận diện theo loại file
-  if (!maxSize) {
+  if (maxSize === undefined) {
     if (file.type.startsWith('video/')) {
-      maxSize = options?.maxVideoSize || DEFAULT_FILE_LIMITS.MAX_VIDEO_SIZE;
+      maxSize = options?.maxVideoSize !== undefined ? options.maxVideoSize : DEFAULT_FILE_LIMITS.MAX_VIDEO_SIZE;
     } else if (file.type.startsWith('image/')) {
-      maxSize = options?.maxImageSize || DEFAULT_FILE_LIMITS.MAX_IMAGE_SIZE;
+      maxSize = options?.maxImageSize !== undefined ? options.maxImageSize : DEFAULT_FILE_LIMITS.MAX_IMAGE_SIZE;
     } else {
       maxSize = 5 * 1024 * 1024; // 5MB
     }
   }
 
-  if (file.size > maxSize) {
+  if (maxSize !== Infinity && maxSize > 0 && file.size > maxSize) {
     const sizeInMB = (maxSize / (1024 * 1024)).toFixed(1);
     const formattedSize = sizeInMB.endsWith('.0') ? sizeInMB.slice(0, -2) : sizeInMB;
 

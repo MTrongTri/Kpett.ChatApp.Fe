@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Image as ImageIcon, Mic, Send, Smile, Sticker } from "lucide-react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { useTheme } from "next-themes";
@@ -69,6 +69,7 @@ export function ChatInputArea({
   const mentionListRef = useRef<MentionListHandle>(null);
   const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
   const { resolvedTheme } = useTheme();
 
   const emojiTheme = resolvedTheme === "dark" ? Theme.DARK : Theme.LIGHT;
@@ -89,6 +90,21 @@ export function ChatInputArea({
     setMentionQuery("");
     mentionAnchorRef.current = null;
   };
+
+  const saveCurrentRange = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    try {
+      const range = selection.getRangeAt(0).cloneRange();
+      const el = editorRef.current;
+      if (!el) return;
+      if (el.contains(range.startContainer) || el === range.startContainer) {
+        savedRangeRef.current = range;
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const serializeContent = (): string => {
     const el = editorRef.current;
@@ -122,24 +138,82 @@ export function ChatInputArea({
 
   const insertTextAtCaret = (text: string) => {
     const el = editorRef.current;
-    const selection = window.getSelection();
     if (!el) return;
 
-    if (!selection || selection.rangeCount === 0) {
-      el.appendChild(document.createTextNode(text));
+    const selection = window.getSelection();
+    let range: Range | null = null;
+
+    // Prefer current selection if inside editor
+    if (selection && selection.rangeCount > 0) {
+      try {
+        const curRange = selection.getRangeAt(0);
+        if (el.contains(curRange.startContainer) || el === curRange.startContainer) {
+          range = curRange.cloneRange();
+        }
+      } catch {
+        range = null;
+      }
+    }
+
+    // Fallback to last saved range (when Popover stole focus)
+    if (!range && savedRangeRef.current) {
+      const saved = savedRangeRef.current;
+      // Verify saved range is still inside editor and its nodes are still attached
+      try {
+        if (el.contains(saved.startContainer) || el === saved.startContainer) {
+          range = saved.cloneRange();
+        } else {
+          savedRangeRef.current = null;
+        }
+      } catch {
+        savedRangeRef.current = null;
+        range = null;
+      }
+    }
+
+    // Still no range -> append at end
+    if (!range) {
+      const node = document.createTextNode(text);
+      el.appendChild(node);
+      try {
+        const newRange = document.createRange();
+        newRange.setStartAfter(node);
+        newRange.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(newRange);
+        savedRangeRef.current = newRange.cloneRange();
+      } catch {
+        // ignore
+      }
+      el.normalize();
+      const content = el.innerText ?? "";
+      const hasText = !!content.trim();
+      setHasContent(hasText);
+      if (hasText) onTyping?.();
+      else onStopTyping?.();
       return;
     }
 
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    const node = document.createTextNode(text);
-    range.insertNode(node);
-    range.setStartAfter(node);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    try {
+      range.deleteContents();
+      const node = document.createTextNode(text);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      savedRangeRef.current = range.cloneRange();
+    } catch {
+      el.appendChild(document.createTextNode(text));
+    }
     el.normalize();
-    setHasContent(true);
+    {
+      const content = el.innerText ?? "";
+      const hasText = !!content.trim();
+      setHasContent(hasText);
+      if (hasText) onTyping?.();
+      else onStopTyping?.();
+    }
   };
 
   const handleSelectMention = (user: MentionUser) => {
@@ -203,6 +277,8 @@ export function ChatInputArea({
   const handleInput = () => {
     const el = editorRef.current;
     const text = el?.innerText ?? "";
+    // Always remember caret position when user is typing
+    saveCurrentRange();
     if (text.trim()) {
       onTyping?.();
     } else {
@@ -291,6 +367,7 @@ export function ChatInputArea({
       editorRef.current.innerHTML = "";
     }
     setHasContent(false);
+    savedRangeRef.current = null;
     closeMention();
     editorRef.current?.focus();
   };
@@ -304,6 +381,18 @@ export function ChatInputArea({
     const plainText = e.clipboardData.getData("text/plain");
     document.execCommand("insertText", false, plainText);
     handleInput();
+  };
+
+  const handleEditorKeyUp = () => {
+    saveCurrentRange();
+  };
+
+  const handleEditorMouseUp = () => {
+    saveCurrentRange();
+  };
+
+  const handleEditorFocus = () => {
+    saveCurrentRange();
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -352,6 +441,43 @@ export function ChatInputArea({
     return () =>
       document.removeEventListener("mousedown", handleOutsideMouseDown);
   }, [mentionOpen]);
+
+  // Keep caret even when Popover steals focus (Radix portal)
+  useEffect(() => {
+    const onSelectionChange = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const el = editorRef.current;
+      if (!el) return;
+      if (el.contains(range.startContainer) || el === range.startContainer) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    };
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => document.removeEventListener("selectionchange", onSelectionChange);
+  }, []);
+
+  // When emoji Popover opens, snapshot current caret; when it closes, restore focus
+  const handleEmojiOpenChange = (open: boolean) => {
+    if (open) {
+      saveCurrentRange();
+    } else {
+      // Return focus to editor so next emoji insertion has a valid range
+      editorRef.current?.focus();
+      if (savedRangeRef.current) {
+        try {
+          const sel = window.getSelection();
+          const range = savedRangeRef.current.cloneRange();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        } catch {
+          // ignore
+        }
+      }
+    }
+    setIsEmojiOpen(open);
+  };
 
   return (
     <div ref={rootRef} className="bg-background border-t border-border p-2">
@@ -403,7 +529,14 @@ export function ChatInputArea({
             aria-label="Tin nhắn"
             onInput={handleInput}
             onKeyDown={handleKeyDown}
-            onBlur={() => onStopTyping?.()}
+            onKeyUp={handleEditorKeyUp}
+            onMouseUp={handleEditorMouseUp}
+            onFocus={handleEditorFocus}
+            onClick={saveCurrentRange}
+            onBlur={() => {
+              saveCurrentRange();
+              onStopTyping?.();
+            }}
             onPaste={handlePaste}
             data-placeholder={isUploading ? "Đang tải ảnh lên..." : "Aa"}
             suppressContentEditableWarning
@@ -425,10 +558,12 @@ export function ChatInputArea({
             </div>
           )}
 
-          <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
+          <Popover open={isEmojiOpen} onOpenChange={handleEmojiOpenChange}>
             <PopoverTrigger asChild>
               <button
                 type="button"
+                onMouseDown={saveCurrentRange}
+                onTouchStart={saveCurrentRange}
                 className="hover:bg-background/50 rounded-full p-1 transition outline-none"
               >
                 <Smile size={18} className="text-primary cursor-pointer" />

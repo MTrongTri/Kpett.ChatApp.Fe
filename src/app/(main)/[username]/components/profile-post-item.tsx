@@ -19,10 +19,16 @@ export default function ProfilePostItem({
   onClick,
 }: ProfilePostItemProps) {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const isVideo = post.mediaThumbnail?.type.toLocaleLowerCase() === "video";
-  const mediaUrl = post.mediaThumbnail?.url;
+  // Decode &amp; -> & cho URL từ RSS (vnecdn) và xử lý type null-safe
+  const rawMediaUrl = post.mediaThumbnail?.url;
+  const mediaUrl = rawMediaUrl ? rawMediaUrl.replace(/&amp;/g, "&") : undefined;
+  const isVideo = post.mediaThumbnail?.type?.toLowerCase() === "video";
+  const isImage = post.mediaThumbnail?.type?.toLowerCase() === "image";
+  const isExternal = !!mediaUrl && mediaUrl.startsWith("http") && !mediaUrl.includes("cloudinary.com") && !mediaUrl.includes("localhost");
 
   // Xử lý logic play/pause video mượt mà khi hover
   useEffect(() => {
@@ -74,19 +80,43 @@ export default function ProfilePostItem({
       >
         {post.mediaThumbnail ? (
           // NẾU CÓ MEDIA: Kiểm tra xem đó là ảnh hay video
-          post.mediaThumbnail.type.toLocaleLowerCase() === "image" ? (
-            <Image
-              src={mediaUrl!}
-              alt={post.content?.slice(0, 50) || "Post thumbnail"}
-              fill
-              className="object-cover"
-            />
+          isImage ? (
+            !imgError ? (
+              <Image
+                src={mediaUrl!}
+                alt={post.content?.slice(0, 50) || "Post thumbnail"}
+                fill
+                className="object-cover"
+                unoptimized={isExternal}
+                onError={() => setImgError(true)}
+              />
+            ) : !fallbackError ? (
+              // Fallback: thử <img> thường nếu Next Image optimize fail (vnecdn &amp;)
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mediaUrl!}
+                alt={post.content?.slice(0, 50) || "Post thumbnail"}
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={() => setFallbackError(true)}
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-br from-secondary/50 to-muted p-4 text-center dark:from-zinc-800 dark:to-zinc-900">
+                {post.content ? (
+                  <p className="line-clamp-4 text-xs font-medium text-muted-foreground sm:text-sm md:text-base">
+                    {post.content}
+                  </p>
+                ) : (
+                  <AlignLeft className="h-10 w-10 text-muted-foreground/50 sm:h-12 sm:w-12" strokeWidth={1.5} />
+                )}
+              </div>
+            )
           ) : (
             // Nếu là Video: Dùng trick lấy frame 0.1s làm ảnh tĩnh thay vì tải ảnh riêng
             <video
               src={`${mediaUrl}#t=0.1`}
               preload="metadata"
               className="absolute inset-0 h-full w-full object-cover"
+              onError={() => setFallbackError(true)}
             />
           )
         ) : (
@@ -101,6 +131,12 @@ export default function ProfilePostItem({
               // Fallback cuối cùng nếu rỗng tuếch
               <AlignLeft className="h-10 w-10 text-muted-foreground/50 sm:h-12 sm:w-12" strokeWidth={1.5} />
             )}
+          </div>
+        )}
+        {/* Fallback icon khi video thumb lỗi */}
+        {isVideo && fallbackError && (
+          <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-muted">
+            <Clapperboard className="h-10 w-10 text-muted-foreground/50" strokeWidth={1.5} />
           </div>
         )}
       </div>

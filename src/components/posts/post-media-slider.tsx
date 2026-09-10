@@ -3,7 +3,7 @@
 import { getOptimizedCloudinaryUrl } from "@/lib/cloudinary-utils";
 import { openMediaLightBox } from "@/store/features/modal-slice";
 import { Media } from "@/types/media";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageIcon, Play } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -22,6 +22,8 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
     const [prevEl, setPrevEl] = useState<HTMLButtonElement | null>(null);
     const [nextEl, setNextEl] = useState<HTMLButtonElement | null>(null);
     const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+    const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+    const [fallbackFailed, setFallbackFailed] = useState<Set<number>>(new Set());
 
     const { ref, inView } = useInView({
         threshold: 0,
@@ -64,33 +66,50 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                     className="h-full w-full"
                 >
                     {media.map((item, index) => {
-                        const isImage = item.type.toLocaleLowerCase() === "image";
-                        const optimizedUrl = getOptimizedCloudinaryUrl(
+                        const isImage = item.type?.toLowerCase() === "image";
+                        const rawOptimizedUrl = getOptimizedCloudinaryUrl(
                             item.url,
                             isImage ? "image" : "video"
                         );
+                        // Decode &amp; -> & (RSS vnecdn) và external fallback
+                        const optimizedUrl = rawOptimizedUrl ? rawOptimizedUrl.replace(/&amp;/g, "&") : rawOptimizedUrl;
                         // External URL (vnecdn, etc.) fallback sang unoptimized nếu chưa có remotePatterns
                         const isExternal = !optimizedUrl.includes("cloudinary.com") && !optimizedUrl.includes("localhost") && optimizedUrl.startsWith("http");
+                        const isFailed = failedImages.has(index);
+                        const isFallbackFailed = fallbackFailed.has(index);
 
                         return (
                             <SwiperSlide key={index}>
                                 <div className="relative h-full w-full bg-black/5">
                                     {isImage ? (
-                                        <Image
-                                            src={optimizedUrl}
-                                            alt="Post media"
-                                            fill
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                            className="object-contain cursor-pointer"
-                                            unoptimized={isExternal}
-                                            onClick={() => openLightbox(index)}
-                                            onError={(e) => {
-                                                // fallback: nếu optimizer vẫn lỗi, thử hiện img thường
-                                                const target = e.currentTarget as HTMLImageElement;
-                                                target.style.display = "none";
-                                            }}
-                                        />
-                                    ) : visiblePlayingIndex === index ? (
+                                        !isFailed ? (
+                                            <Image
+                                                src={optimizedUrl}
+                                                alt="Post media"
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                className="object-contain cursor-pointer"
+                                                unoptimized={isExternal}
+                                                onClick={() => openLightbox(index)}
+                                                onError={() => setFailedImages((prev) => new Set(prev).add(index))}
+                                            />
+                                        ) : !isFallbackFailed ? (
+                                            // Fallback plain <img> nếu Next Image optimize fail (thử decode lại)
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={optimizedUrl}
+                                                alt="Post media"
+                                                className="h-full w-full object-contain cursor-pointer"
+                                                onClick={() => openLightbox(index)}
+                                                onError={() => setFallbackFailed((prev) => new Set(prev).add(index))}
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center">
+                                                <ImageIcon className="h-10 w-10 text-muted-foreground/30" strokeWidth={1.5} />
+                                                <p className="text-xs text-muted-foreground">Không tải được ảnh</p>
+                                            </div>
+                                        )
+                                        ) : visiblePlayingIndex === index ? (
                                         <>
                                             <video
                                                 src={optimizedUrl}

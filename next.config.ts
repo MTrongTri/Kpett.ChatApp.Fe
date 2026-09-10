@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
       "kpettapi.idct.duckdns.org",
       "localhost",
     ],
+    remotePatterns: [
+      { protocol: "https", hostname: "**.vnecdn.net" },
+      { protocol: "https", hostname: "**.vnexpress.net" },
+      { protocol: "https", hostname: "**.cloudinary.com" },
+      { protocol: "https", hostname: "**.unsplash.com" },
+      { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
+    ],
   },
 };
 

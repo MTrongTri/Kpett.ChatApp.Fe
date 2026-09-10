@@ -69,6 +69,8 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                             item.url,
                             isImage ? "image" : "video"
                         );
+                        // External URL (vnecdn, etc.) fallback sang unoptimized nếu chưa có remotePatterns
+                        const isExternal = !optimizedUrl.includes("cloudinary.com") && !optimizedUrl.includes("localhost") && optimizedUrl.startsWith("http");
 
                         return (
                             <SwiperSlide key={index}>
@@ -80,7 +82,13 @@ export default function PostMediaSlider({ media, isNsfw, showNsfwContent }: Post
                                             fill
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                             className="object-contain cursor-pointer"
+                                            unoptimized={isExternal}
                                             onClick={() => openLightbox(index)}
+                                            onError={(e) => {
+                                                // fallback: nếu optimizer vẫn lỗi, thử hiện img thường
+                                                const target = e.currentTarget as HTMLImageElement;
+                                                target.style.display = "none";
+                                            }}
                                         />
                                     ) : visiblePlayingIndex === index ? (
                                         <>

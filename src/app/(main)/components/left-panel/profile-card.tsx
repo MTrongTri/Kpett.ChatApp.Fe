@@ -91,7 +91,7 @@ export default function ProfileCard() {
               {userStats.displayName}
             </p>
             <p className="text-foreground/40 mt-0.5 text-[11px]">
-              @{userStats.username.toLowerCase().replace(" ", "")}
+              @{userStats.username.replace(" ", "")}
             </p>
           </div>
         </div>

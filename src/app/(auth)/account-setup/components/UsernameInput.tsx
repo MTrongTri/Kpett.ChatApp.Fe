@@ -26,11 +26,11 @@ export default function UsernameInput({
       return false;
     }
 
-    return /[^a-z0-9._]/.test(value);
+    return /[^a-zA-Z0-9._]/.test(value);
   }, [value]);
 
   const shouldFetch =
-    debouncedUsername.length >= 3 && !/[^a-z0-9._]/.test(debouncedUsername);
+    debouncedUsername.length >= 3 && !/[^a-zA-Z0-9._]/.test(debouncedUsername);
 
   const { data, isFetching, error } = useQuery({
     queryKey: ["check-username", debouncedUsername],
@@ -85,7 +85,7 @@ export default function UsernameInput({
   }, [isValid, onValidation]);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.value.toLowerCase());
+    onChange(event.target.value);
   };
 
   const showSuccess = shouldFetch && !isFetching && data?.isAvailable;
